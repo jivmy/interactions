@@ -2,6 +2,7 @@ import SwiftUI
 
 struct FrostView: View {
     @StateObject private var model = FrostModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         GeometryReader { _ in
@@ -32,6 +33,9 @@ struct FrostView: View {
                 LabHintOverlay(text: "Touch.")
             }
             .onAppear { model.start() }
+            .onChange(of: scenePhase) { _, phase in
+                phase == .active ? model.start() : model.stop()
+            }
             .onDisappear { model.stop() }
         }
         .ignoresSafeArea()

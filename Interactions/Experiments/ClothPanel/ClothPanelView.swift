@@ -10,7 +10,7 @@ struct ClothPanelView: View {
             let cols = sim.cols
             let rows = sim.rows
             ZStack {
-                Color(red: 0.12, green: 0.13, blue: 0.14).ignoresSafeArea()
+                LabPalette.studio.ignoresSafeArea()
                 Canvas { context, size in
                     ClothRenderer.draw(in: &context, positions: positions, cols: cols, rows: rows)
                 }

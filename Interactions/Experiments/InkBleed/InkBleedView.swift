@@ -2,6 +2,7 @@ import SwiftUI
 
 struct InkBleedView: View {
     @StateObject private var model = InkBleedModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         GeometryReader { geo in
@@ -9,7 +10,7 @@ struct InkBleedView: View {
             let cols = model.cols
             let rows = model.rows
             ZStack {
-                Color(red: 0.91, green: 0.87, blue: 0.79).ignoresSafeArea()
+                LabPalette.paperDeep.ignoresSafeArea()
                 Canvas { context, size in
                     InkBleedRenderer.draw(in: &context, size: size, field: field, cols: cols, rows: rows)
                 }
@@ -29,6 +30,9 @@ struct InkBleedView: View {
                 model.start()
             }
             .onChange(of: geo.size) { _, size in model.ensure(size: size) }
+            .onChange(of: scenePhase) { _, phase in
+                phase == .active ? model.start() : model.stop()
+            }
             .onDisappear { model.stop() }
         }
         .ignoresSafeArea()
@@ -40,15 +44,18 @@ final class InkBleedModel: ObservableObject {
     let cols = 64
     let rows = 112
     @Published var field: [Float] = []
+    private var cells: [Float] = []
     private var grain: [Float] = []
     private let ticker = FrameTicker()
     private var size: CGSize = .zero
     private var wet: [Float] = []
+    private var publishAccum: CGFloat = 0
 
     func ensure(size: CGSize) {
         self.size = size
-        if field.count != cols * rows {
-            field = Array(repeating: 0, count: cols * rows)
+        if cells.count != cols * rows {
+            cells = Array(repeating: 0, count: cols * rows)
+            field = cells
             wet = Array(repeating: 0, count: cols * rows)
             grain = (0..<(cols * rows)).map { _ in Float.random(in: 0.65...1.35) }
         }
@@ -71,30 +78,36 @@ final class InkBleedModel: ObservableObject {
                 if xx >= 0 && xx < cols && yy >= 0 && yy < rows {
                     let i = yy * cols + xx
                     let falloff = 1 - Float(dx * dx + dy * dy) / 12
-                    field[i] = min(1, field[i] + 0.55 * max(0, falloff))
+                    cells[i] = min(1, cells[i] + 0.55 * max(0, falloff))
                     wet[i] = min(1, wet[i] + 0.8)
                 }
             }
         }
+        field = cells
     }
 
     private func step(dt: CGFloat) {
-        guard field.count == cols * rows else { return }
-        var next = field
+        guard cells.count == cols * rows else { return }
+        var next = cells
         var nextWet = wet
         let k = Float(dt) * 3.2
         for y in 1..<(rows - 1) {
             for x in 1..<(cols - 1) {
                 let i = y * cols + x
                 let g = grain[i]
-                let lap = (field[i - 1] + field[i + 1] - 2 * field[i]) * 1.35 * g
-                    + (field[i - cols] + field[i + cols] - 2 * field[i]) * 0.55
-                next[i] = min(1, max(0, field[i] + lap * k * (0.25 + wet[i])))
+                let lap = (cells[i - 1] + cells[i + 1] - 2 * cells[i]) * 1.35 * g
+                    + (cells[i - cols] + cells[i + cols] - 2 * cells[i]) * 0.55
+                next[i] = min(1, max(0, cells[i] + lap * k * (0.25 + wet[i])))
                 nextWet[i] = max(0, wet[i] - Float(dt) * 0.22)
             }
         }
-        field = next
+        cells = next
         wet = nextWet
+        publishAccum += dt
+        if publishAccum >= 1.0 / 60.0 {
+            publishAccum = 0
+            field = cells
+        }
     }
 }
 

@@ -9,7 +9,7 @@ struct FaceSpecularView: View {
         GeometryReader { _ in
             let offset = model.offset
             ZStack {
-                Color(red: 0.07, green: 0.07, blue: 0.08).ignoresSafeArea()
+                LabPalette.studio.ignoresSafeArea()
                 Canvas { context, size in
                     FaceSpecularRenderer.draw(in: &context, size: size, offset: offset)
                 }
@@ -133,8 +133,8 @@ private enum FaceSpecularRenderer {
         context.stroke(bezel, with: .color(Color(white: 0.20)), lineWidth: 7)
         context.stroke(bezel, with: .color(Color.white.opacity(0.08)), lineWidth: 1.2)
         for a in [0.25, 0.75, 1.25, 1.75] {
-            let sx = center.x + cos(a * .pi) * (radius + 7)
-            let sy = center.y + sin(a * .pi) * (radius + 7)
+            let sx = center.x + LabMath.cos(a * .pi) * (radius + 7)
+            let sy = center.y + LabMath.sin(a * .pi) * (radius + 7)
             context.fill(Path(ellipseIn: CGRect(x: sx - 2.2, y: sy - 2.2, width: 4.4, height: 4.4)), with: .color(Color(white: 0.28)))
         }
     }

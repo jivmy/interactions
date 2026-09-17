@@ -35,6 +35,7 @@ struct MetalLabView: UIViewRepresentable {
     var fragmentName: String
     var uniforms: LabUniforms
     var fallback: Color = LabPalette.paper
+    var isActive: Bool = true
 
     func makeCoordinator() -> Coordinator {
         Coordinator(fragmentName: fragmentName, fallback: UIColor(fallback))
@@ -49,7 +50,13 @@ struct MetalLabView: UIViewRepresentable {
 
     func updateUIView(_ uiView: MTKView, context: Context) {
         context.coordinator.uniforms = uniforms
-        uiView.setNeedsDisplay()
+        uiView.isPaused = !isActive
+        uiView.enableSetNeedsDisplay = !isActive
+        if isActive {
+            uiView.preferredFramesPerSecond = 120
+        } else {
+            uiView.setNeedsDisplay()
+        }
     }
 
     final class Coordinator: NSObject, MTKViewDelegate {

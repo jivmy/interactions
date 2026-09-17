@@ -8,7 +8,7 @@ struct MetaballMercuryView: View {
         GeometryReader { geo in
             ZStack {
                 LabPaperBackground()
-                MetalLabView(fragmentName: "metaballFragment", uniforms: model.uniforms)
+                MetalLabView(fragmentName: "metaballFragment", uniforms: model.uniforms, isActive: scenePhase == .active)
                     .ignoresSafeArea()
                     .gesture(
                         DragGesture(minimumDistance: 0)
