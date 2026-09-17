@@ -1,15 +1,34 @@
 # Interactions
 
-Blank-slate native iOS app. SwiftUI, no sample content — just an empty white screen.
+Jimmy’s lab for native iOS interaction experiments. SwiftUI, bundle ID `com.jimmy.interactions`.
+
+Shipping today: **A1 Hanging chain** — a Verlet rope pinned at the top of the screen, swung by real device motion.
 
 - Display name: **Interactions**
 - Bundle ID: `com.jimmy.interactions`
-- Language / UI: Swift + SwiftUI
+- Language / UI: Swift + SwiftUI (Canvas + CoreMotion)
 - Minimum iOS: 17.0
+- iPhone orientation: portrait (so tilting the phone swings the chain instead of rotating the UI)
+
+## A1 Hanging chain — what to feel
+
+Open the app. A metal-ish chain hangs from a pin under the status bar.
+
+On a **real iPhone** (TestFlight or Xcode):
+
+1. Hold the phone upright — the chain hangs down.
+2. Tilt left / right — it should swing and then hang toward the floor.
+3. Flick or shake the phone — inertia travels down the links.
+4. Lay the phone flat on a table — gravity leaves the screen plane and the chain goes slack.
+5. Drag a link (or the pendant) with a finger and toss it.
+
+On the **Simulator** there is no CoreMotion hardware. The chain hangs under a default downward gravity; drag a link to play. The caption will say tilt needs a real iPhone.
+
+This is a feel prototype, not game polish. Physics is classic Verlet integration (Jakobsen-style distance constraints) so later rope / tail / cloth experiments can reuse it.
 
 ## Requirements
 
-- A Mac with [Xcode 15](https://developer.apple.com/xcode/) or later (Xcode 16 is fine)
+- A Mac with [Xcode 15](https://developer.apple.com/xcode/) or later (Xcode 16 is fine; TestFlight CI uses Xcode 26)
 - For a physical iPhone: a free Apple ID, or a paid Apple Developer Program team
 
 ## Open in Xcode
@@ -29,13 +48,15 @@ Blank-slate native iOS app. SwiftUI, no sample content — just an empty white s
 1. In the Xcode toolbar, click the destination control (to the right of the Run ▶ button).
 2. Under **iOS Simulator**, pick an iPhone (any iOS 17+ simulator is fine).
 3. Press **Run** (▶) or **Command-R**.
-4. Simulator launches the app. You should see a blank white screen and no crash.
+4. Simulator launches the app. You should see the hanging chain on a warm paper background. Drag a link — it will not respond to simulated Device → Shake as CoreMotion gravity.
 
 If no simulators are listed: **Xcode → Settings → Platforms** (or **Components**) and download an iOS simulator runtime.
 
 ## Run on a physical iPhone
 
-Xcode signs the app with your Apple ID / developer team. Automatic signing is already enabled; you only need to choose your team.
+This is the real experiment. Xcode signs the app with your Apple ID / developer team. Automatic signing is already enabled; you only need to choose your team.
+
+The first launch may show a motion-usage prompt (`NSMotionUsageDescription`). Allow it so the chain can read the accelerometer / device motion.
 
 ### 1. Add your Apple ID in Xcode
 
@@ -77,8 +98,6 @@ On the iPhone:
    - Tap **Trust …** and confirm
 3. Run again from Xcode, or tap the **Interactions** icon on the Home Screen.
 
-You should get the same blank white screen as in Simulator.
-
 A free Personal Team install expires after a week; reopen the project in Xcode and Run again to refresh it. A paid Developer Program membership is only required for TestFlight / App Store, not for this local install.
 
 ## Ship to TestFlight (no Mac)
@@ -109,6 +128,7 @@ Full walkthrough (create the ASC app, API key, secrets, run the workflow, instal
 1. **Actions → TestFlight → Run workflow** (optional: push a `v*` tag).
 2. Marketing version is **1.0**. The build number is `github.run_number`.
 3. When App Store Connect finishes processing, add the build to an Internal Testing group and install from the **TestFlight** iOS app.
+4. On device, tilt the phone — the hanging chain should swing with gravity.
 
 ## Project layout
 
@@ -116,9 +136,19 @@ Full walkthrough (create the ASC app, API key, secrets, run the workflow, instal
 Interactions.xcodeproj    Open this in Xcode
 Interactions/
   InteractionsApp.swift   App entry (@main)
-  ContentView.swift       Empty root screen
+  ContentView.swift       Root: featured experiment (A1)
+  Info.plist              NSMotionUsageDescription (merged with generated keys)
+  Experiments/
+    ExperimentCatalog.swift   Registry — add future experiments here
+    HangingChain/
+      HangingChainView.swift
+      HangingChainSimulation.swift
+      VerletRope.swift
+      DeviceMotionSource.swift
   Assets.xcassets         App icon + accent color
 fastlane/                 TestFlight lanes (API key auth)
 .github/workflows/testflight.yml
 docs/TESTFLIGHT.md        ASC app + secrets + workflow checklist
 ```
+
+Adding the next experiment: append to `ExperimentCatalog.all`. Until there is a second one, A1 stays the home screen.

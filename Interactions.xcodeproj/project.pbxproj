@@ -10,6 +10,11 @@
 		AA11BB22000000000000000D /* InteractionsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22000000000000000A /* InteractionsApp.swift */; };
 		AA11BB22000000000000000E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22000000000000000B /* ContentView.swift */; };
 		AA11BB22000000000000000F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA11BB22000000000000000C /* Assets.xcassets */; };
+		A1E0000000000000000011 /* ExperimentCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E0000000000000000001 /* ExperimentCatalog.swift */; };
+		A1E0000000000000000012 /* VerletRope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E0000000000000000002 /* VerletRope.swift */; };
+		A1E0000000000000000013 /* DeviceMotionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E0000000000000000003 /* DeviceMotionSource.swift */; };
+		A1E0000000000000000014 /* HangingChainSimulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E0000000000000000004 /* HangingChainSimulation.swift */; };
+		A1E0000000000000000015 /* HangingChainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E0000000000000000005 /* HangingChainView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -17,6 +22,12 @@
 		AA11BB22000000000000000A /* InteractionsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionsApp.swift; sourceTree = "<group>"; };
 		AA11BB22000000000000000B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA11BB22000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1E0000000000000000001 /* ExperimentCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentCatalog.swift; sourceTree = "<group>"; };
+		A1E0000000000000000002 /* VerletRope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerletRope.swift; sourceTree = "<group>"; };
+		A1E0000000000000000003 /* DeviceMotionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMotionSource.swift; sourceTree = "<group>"; };
+		A1E0000000000000000004 /* HangingChainSimulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangingChainSimulation.swift; sourceTree = "<group>"; };
+		A1E0000000000000000005 /* HangingChainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangingChainView.swift; sourceTree = "<group>"; };
+		A1E0000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,9 +54,31 @@
 			children = (
 				AA11BB22000000000000000A /* InteractionsApp.swift */,
 				AA11BB22000000000000000B /* ContentView.swift */,
+				A1E0000000000000000021 /* Experiments */,
 				AA11BB22000000000000000C /* Assets.xcassets */,
+				A1E0000000000000000006 /* Info.plist */,
 			);
 			path = Interactions;
+			sourceTree = "<group>";
+		};
+		A1E0000000000000000021 /* Experiments */ = {
+			isa = PBXGroup;
+			children = (
+				A1E0000000000000000001 /* ExperimentCatalog.swift */,
+				A1E0000000000000000022 /* HangingChain */,
+			);
+			path = Experiments;
+			sourceTree = "<group>";
+		};
+		A1E0000000000000000022 /* HangingChain */ = {
+			isa = PBXGroup;
+			children = (
+				A1E0000000000000000005 /* HangingChainView.swift */,
+				A1E0000000000000000004 /* HangingChainSimulation.swift */,
+				A1E0000000000000000002 /* VerletRope.swift */,
+				A1E0000000000000000003 /* DeviceMotionSource.swift */,
+			);
+			path = HangingChain;
 			sourceTree = "<group>";
 		};
 		AA11BB220000000000000009 /* Products */ = {
@@ -127,6 +160,11 @@
 			files = (
 				AA11BB22000000000000000E /* ContentView.swift in Sources */,
 				AA11BB22000000000000000D /* InteractionsApp.swift in Sources */,
+				A1E0000000000000000011 /* ExperimentCatalog.swift in Sources */,
+				A1E0000000000000000015 /* HangingChainView.swift in Sources */,
+				A1E0000000000000000014 /* HangingChainSimulation.swift in Sources */,
+				A1E0000000000000000012 /* VerletRope.swift in Sources */,
+				A1E0000000000000000013 /* DeviceMotionSource.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -261,14 +299,16 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Interactions/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Interactions;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
+				INFOPLIST_KEY_NSMotionUsageDescription = "Device motion makes the hanging chain swing as you tilt and move the phone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -293,14 +333,16 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Interactions/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Interactions;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
+				INFOPLIST_KEY_NSMotionUsageDescription = "Device motion makes the hanging chain swing as you tilt and move the phone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
