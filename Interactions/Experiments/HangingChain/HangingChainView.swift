@@ -30,11 +30,15 @@ struct HangingChainView: View {
                 )
 
                 VStack(spacing: 0) {
-                    Text("\(ExperimentCatalog.hangingChain.code)  ·  \(ExperimentCatalog.hangingChain.title)")
-                        .font(.system(.caption, design: .rounded, weight: .medium))
-                        .tracking(0.6)
-                        .foregroundStyle(HangingChainPalette.caption)
-                        .padding(.top, ViewSpaceMotion.windowSafeAreaTop() + 6)
+                    HStack {
+                        Text("\(ExperimentCatalog.hangingChain.code)  ·  \(ExperimentCatalog.hangingChain.title)")
+                            .font(.system(.caption, design: .rounded, weight: .medium))
+                            .tracking(0.6)
+                            .foregroundStyle(HangingChainPalette.caption)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, ViewSpaceMotion.windowSafeAreaTop() + 6)
                     Spacer()
                     if showHint {
                         Text(hintText)

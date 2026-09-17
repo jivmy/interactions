@@ -5,7 +5,7 @@ import UIKit
 
 enum HangingChainTuning {
     static let nodeCount = 18
-    static let lengthFraction: CGFloat = 0.64
+    static let lengthFraction: CGFloat = 0.56
     /// Points per g. High enough to feel like metal, with substeps so constraints hold.
     static let pixelsPerG: CGFloat = 20000
     static let damping60: CGFloat = 0.988
@@ -41,7 +41,6 @@ final class HangingChainSimulation: NSObject, ObservableObject {
 
     func updateViewport(size: CGSize) {
         viewport = size
-        rope.bounds = CGRect(origin: .zero, size: size)
         let usable = max(size.height - anchor.y - 40, 120)
         let rest = (usable * HangingChainTuning.lengthFraction) / CGFloat(HangingChainTuning.nodeCount - 1)
 
@@ -53,7 +52,6 @@ final class HangingChainSimulation: NSObject, ObservableObject {
                 damping60: HangingChainTuning.damping60,
                 iterations: HangingChainTuning.iterations
             )
-            rope.bounds = CGRect(origin: .zero, size: size)
             didLayout = true
             positions = rope.positions
         } else {
