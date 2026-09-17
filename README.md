@@ -10,7 +10,7 @@ One idea at a time. The app opens into the active prototype — full screen, alm
 
 Right now the only real room is **Hanging chain**: a metal Verlet rope that hangs from a pin and answers CoreMotion gravity. On Simulator, drag a link. Switching, when there is more than one room, is only quiet left/right chevrons.
 
-Reduce Motion is honored on chrome (the coaching word, paging), not on physics.
+Reduce Motion is honored on chrome (the page spring), not on physics.
 
 ## Hanging chain
 
@@ -18,7 +18,6 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 
 - **Device:** tilt or flick the phone
 - **Simulator:** drag a link — there is no motion hardware
-- Coaching is one word (`Tilt.` / `Drag.`), then gone
 
 ## Requirements
 
@@ -124,7 +123,7 @@ Full walkthrough (create the ASC app, API key, secrets, run the workflow, instal
 
 ## Switching
 
-Left / right chevrons only. No catalog, search, favorites, track chips, or switcher sheet. The ordered list lives in `PrototypeCatalog`; arrows stay disabled while there is only one room.
+Left / right chevrons only — icon, 44pt hit, low contrast, no pills. Next arrives from the right on one spring. No catalog, search, favorites, track chips, or copy. The ordered list lives in `PrototypeCatalog`; arrows stay disabled while there is only one room.
 
 ## Project layout
 
