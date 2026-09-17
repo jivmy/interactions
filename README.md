@@ -83,7 +83,7 @@ A free Personal Team install expires after a week; reopen the project in Xcode a
 
 ## Ship to TestFlight (no Mac)
 
-You do **not** need a local Mac. GitHub Actions on `macos-14` archives the app and uploads it to TestFlight with Fastlane + an App Store Connect API key.
+You do **not** need a local Mac. GitHub Actions on `macos-15` selects **Xcode 26** (iOS 26 SDK), archives the app, and uploads it to TestFlight with Fastlane + an App Store Connect API key.
 
 Full walkthrough (create the ASC app, API key, secrets, run the workflow, install): **[docs/TESTFLIGHT.md](docs/TESTFLIGHT.md)**.
 

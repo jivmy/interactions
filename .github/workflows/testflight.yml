@@ -5,6 +5,10 @@ name: TestFlight
 # Archive is unsigned; IPA export uses automatic App Store signing + ASC API key
 # (cloud-managed Apple Distribution). See docs/TESTFLIGHT.md.
 #
+# App Store Connect rejects IPAs built with an SDK older than iOS 26
+# (ITMS 409). macos-15's default Xcode is still 16.4 (iOS 18.5 SDK), so this
+# job explicitly selects the latest preinstalled Xcode 26.x.
+#
 # Secrets (repo Settings → Secrets and variables → Actions):
 #   APP_STORE_CONNECT_API_KEY_ID
 #   APP_STORE_CONNECT_ISSUER_ID
@@ -34,7 +38,7 @@ permissions:
 jobs:
   testflight:
     name: Archive and upload to TestFlight
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 75
     env:
       APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
@@ -69,11 +73,22 @@ jobs:
           fi
           echo "All required secrets are set."
 
+      # macos-15 ships Xcode 26.0.1–26.3 (iOS 26 SDK) plus default 16.4.
+      # SemVer "26" picks the newest 26.x on the image (26.3 as of 2026-09).
+      - name: Select Xcode 26
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "26"
+
       - name: Show Xcode version
         run: |
           xcodebuild -version
           xcodebuild -showsdks
           xcodebuild -list -project Interactions.xcodeproj
+          if ! xcodebuild -showsdks | grep -E 'iphoneos2[6-9]|iphoneos[3-9]'; then
+            echo "::error::Selected Xcode does not provide the iOS 26+ SDK required by App Store Connect."
+            exit 1
+          fi
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1

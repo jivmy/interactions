@@ -1,6 +1,6 @@
 # TestFlight (no Mac)
 
-Ship **Interactions** (`com.jimmy.interactions`) to TestFlight from GitHub Actions. You do not need a local Mac. The workflow runs on GitHub-hosted `macos-14` runners (not a Cursor Mac pool).
+Ship **Interactions** (`com.jimmy.interactions`) to TestFlight from GitHub Actions. You do not need a local Mac. The workflow runs on GitHub-hosted `macos-15` runners (not a Cursor Mac pool) and selects **Xcode 26** so the IPA is built with the iOS 26 SDK App Store Connect requires.
 
 Version **1.0**; each CI run uses `github.run_number` as the build number (`CFBundleVersion`).
 
@@ -95,7 +95,7 @@ Confirm the names match exactly. The workflow fails fast with a missing-secret e
 
 The Xcode project stays on **automatic signing** for local Macs. CI does **not** store a `.p12` or a match repo.
 
-GitHub-hosted `macos-14` runners are ephemeral (empty keychain every job). Automatic **archive** signing always wants an **Apple Development** certificate for “this machine” plus an **iOS App Development** profile. The first CI archive can create that Development cert; the next runner does not have the private key and fails with:
+GitHub-hosted `macos-15` runners are ephemeral (empty keychain every job). Automatic **archive** signing always wants an **Apple Development** certificate for “this machine” plus an **iOS App Development** profile. The first CI archive can create that Development cert; the next runner does not have the private key and fails with:
 
 > Revoke certificate: Your account already has an Apple Development signing certificate for this machine, but its private key is not installed in your keychain.
 
@@ -192,6 +192,7 @@ bundle exec fastlane ios beta     # archive + TestFlight (needs the same env var
 | `Authentication credentials are missing or invalid` | Issuer ID, Key ID, and `.p8` belong to the same key; PEM includes BEGIN/END |
 | Duplicate `CFBundleVersion` | Re-run the workflow (new `run_number`) |
 | Build stuck on export compliance | Confirm `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO` in the target |
+| App Store Connect 409 / “This app was built with the iOS 17.5 SDK” / requires iOS 26 SDK | CI must use **Xcode 26+**. The workflow runs on `macos-15` and selects Xcode 26 via `maxim-lobanov/setup-xcode` (`xcode-version: "26"`). Do not use `macos-14` (Xcode 15.4 / iOS 17.5 SDK) or the default macos-15 Xcode 16.4. |
 | `App does not exist` / could not find bundle | [§2](#2-create-the-app-store-connect-app) |
 | Agreements missing | App Store Connect → Business → Agreements |
 | Icon validation | A 1024×1024 `AppIcon.png` is in the asset catalog (required to archive) |
