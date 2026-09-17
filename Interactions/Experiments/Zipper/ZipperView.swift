@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ZipperView: View {
     @StateObject private var model = ZipperModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         GeometryReader { geo in
@@ -36,7 +37,11 @@ struct ZipperView: View {
                 LabHintOverlay(text: "Pull.")
             }
         }
-        .onDisappear { model.endDrag() }
+        .onAppear { model.wake() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { model.sleep() } else { model.wake() }
+        }
+        .onDisappear { model.sleep() }
         .ignoresSafeArea()
     }
 }
@@ -66,6 +71,13 @@ final class ZipperModel: ObservableObject {
     func endDrag() {
         haptics.stopZipper()
         lastTooth = -1
+    }
+
+    func wake() { haptics.startEngine() }
+
+    func sleep() {
+        endDrag()
+        haptics.shutdown()
     }
 
     func nudge(teeth delta: Int) {

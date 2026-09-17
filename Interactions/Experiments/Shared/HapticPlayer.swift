@@ -9,6 +9,7 @@ final class HapticPlayer {
     private var meltPlayer: CHHapticAdvancedPatternPlayer?
     private var zipperPlayer: CHHapticAdvancedPatternPlayer?
     private var scrapePlayer: CHHapticAdvancedPatternPlayer?
+    private var humPlayer: CHHapticAdvancedPatternPlayer?
 
     private let light = UIImpactFeedbackGenerator(style: .light)
     private let medium = UIImpactFeedbackGenerator(style: .medium)
@@ -342,6 +343,32 @@ final class HapticPlayer {
     func stopMelt() {
         try? meltPlayer?.stop(atTime: CHHapticTimeImmediate)
         meltPlayer = nil
+    }
+
+    /// Soft magnetic / field rumble. Filings, cloth grab sustain.
+    func startHum(intensity: Float = 0.12, sharpness: Float = 0.20) {
+        stopHum()
+        guard let player = makeContinuous(intensity: intensity, sharpness: sharpness, duration: 40) else { return }
+        humPlayer = player
+    }
+
+    func updateHum(intensity: Float, sharpness: Float = 0.22) {
+        send(to: humPlayer, intensity: intensity, sharpness: sharpness)
+    }
+
+    func stopHum() {
+        try? humPlayer?.stop(atTime: CHHapticTimeImmediate)
+        humPlayer = nil
+    }
+
+    func shutdown() {
+        stopMelt()
+        stopZipper()
+        stopScrape()
+        stopHum()
+        engine?.stop(completionHandler: { _ in })
+        engine = nil
+        supportsCore = false
     }
 
     private func makeContinuous(intensity: Float, sharpness: Float, duration: TimeInterval) -> CHHapticAdvancedPatternPlayer? {

@@ -46,6 +46,7 @@ final class SoapFilmModel: ObservableObject {
     private var popping = false
 
     func start() {
+        haptics.startEngine()
         motion.start()
         ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
@@ -54,6 +55,7 @@ final class SoapFilmModel: ObservableObject {
     func stop() {
         ticker.stop()
         motion.stop()
+        haptics.shutdown()
     }
 
     func pop() {

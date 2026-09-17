@@ -56,9 +56,10 @@ final class DioramaModel: ObservableObject {
     }
 
     private func step() {
-        faceTracking = face.isTracking
+        let tracking = face.isTracking
+        if tracking != faceTracking { faceTracking = tracking }
         let target: CGSize
-        if face.isTracking {
+        if tracking {
             target = face.offset
         } else {
             let a = ViewSpaceMotion.acceleration(motion.acceleration, interface: ViewSpaceMotion.currentInterfaceOrientation())
@@ -66,7 +67,9 @@ final class DioramaModel: ObservableObject {
         }
         displayed.width += (target.width - displayed.width) * 0.16
         displayed.height += (target.height - displayed.height) * 0.16
-        offset = displayed
+        if hypot(displayed.width - offset.width, displayed.height - offset.height) > 0.0008 {
+            offset = displayed
+        }
     }
 }
 
@@ -169,6 +172,31 @@ private enum DioramaRenderer {
         context.fill(Path(CGRect(x: 4 + front.width, y: 94 + front.height, width: 28, height: size.height - 180)), with: .color(Color(red: 0.46, green: 0.08, blue: 0.12)))
         context.fill(Path(CGRect(x: size.width - 32 + front.width, y: 94 + front.height, width: 28, height: size.height - 180)), with: .color(Color(red: 0.46, green: 0.08, blue: 0.12)))
         context.fill(Path(CGRect(x: 4 + front.width, y: 94 + front.height, width: size.width - 8, height: 16)), with: .color(Color(red: 0.40, green: 0.07, blue: 0.10)))
+
+        let lamp = layer(0.52)
+        let lx = cx + 96 + lamp.width
+        let lyTop = 108 + lamp.height
+        var cord = Path()
+        cord.move(to: CGPoint(x: lx, y: lyTop))
+        cord.addLine(to: CGPoint(x: lx - 4, y: cy - 88 + lamp.height))
+        context.stroke(cord, with: .color(Color(white: 0.55).opacity(0.55)), style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
+        let bulb = CGRect(x: lx - 11, y: cy - 92 + lamp.height, width: 14, height: 18)
+        context.fill(Path(ellipseIn: bulb), with: .color(Color(red: 0.98, green: 0.90, blue: 0.62)))
+        context.fill(
+            Path(ellipseIn: bulb.insetBy(dx: -16, dy: -10)),
+            with: .color(Color(red: 1, green: 0.86, blue: 0.48).opacity(0.10))
+        )
+
+        for i in 0..<12 {
+            let depth: CGFloat = 0.22 + CGFloat(i) * 0.08
+            let o = layer(depth)
+            let x = size.width * (0.16 + 0.062 * CGFloat(i % 8))
+            let y = size.height * (0.24 + 0.048 * CGFloat((i * 3) % 10))
+            context.fill(
+                Path(ellipseIn: CGRect(x: x + o.width, y: y + o.height, width: 1.7, height: 1.7)),
+                with: .color(.white.opacity(0.08 + Double(i % 3) * 0.035))
+            )
+        }
     }
 }
 

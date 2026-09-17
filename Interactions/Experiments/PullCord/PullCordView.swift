@@ -132,13 +132,17 @@ final class PullCordSimulation: ObservableObject {
     }
 
     func start() {
+        haptics.startEngine()
         ticker.onTick = { [weak self] dt in
             self?.step(dt: dt)
         }
         ticker.start()
     }
 
-    func stop() { ticker.stop() }
+    func stop() {
+        ticker.stop()
+        haptics.shutdown()
+    }
 
     func drag(to point: CGPoint) {
         if !dragging {

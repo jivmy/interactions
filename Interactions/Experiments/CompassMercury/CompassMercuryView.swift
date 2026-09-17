@@ -12,7 +12,7 @@ struct CompassMercuryView: View {
             ZStack {
                 LabPaperBackground()
                 Canvas { context, size in
-                    CompassMercuryRenderer.draw(in: &context, size: size, heading: heading, hardware: isHardware)
+                    CompassMercuryRenderer.draw(in: &context, size: size, heading: heading, hardware: isHardware, aligned: model.aligned)
                 }
                 .accessibilityLabel("Mercury compass")
                 .accessibilityValue(statusText)
@@ -51,23 +51,43 @@ final class CompassMercuryModel: ObservableObject {
     @Published var heading: Double = 0
     @Published var isHardware = false
     @Published var isTrueNorth = false
+    @Published var aligned = false
 
     private let source = HeadingSource()
     private let ticker = FrameTicker()
+    private let haptics = HapticPlayer()
     private var displayed: Double = 0
+    private var wasAligned = false
 
     func start() {
+        haptics.startEngine()
         source.start()
         ticker.onTick = { [weak self] _ in
             guard let self else { return }
             self.source.pullMotionIfNeeded()
-            self.isHardware = self.source.isHardware
-            self.isTrueNorth = self.source.isTrueNorth
+            let hardware = self.source.isHardware
+            let trueNorth = self.source.isTrueNorth
             var target = self.source.degrees
             while target - self.displayed > 180 { target -= 360 }
             while target - self.displayed < -180 { target += 360 }
             self.displayed += (target - self.displayed) * 0.16
-            self.heading = self.displayed
+            var wrapped = self.displayed.truncatingRemainder(dividingBy: 360)
+            if wrapped < 0 { wrapped += 360 }
+            let offset = min(wrapped, 360 - wrapped)
+            let nowAligned = hardware && offset < 6
+            if nowAligned && !self.wasAligned {
+                self.haptics.tick()
+            }
+            self.wasAligned = nowAligned
+            if abs(self.heading - self.displayed) > 0.08
+                || hardware != self.isHardware
+                || trueNorth != self.isTrueNorth
+                || nowAligned != self.aligned {
+                self.isHardware = hardware
+                self.isTrueNorth = trueNorth
+                self.aligned = nowAligned
+                self.heading = self.displayed
+            }
         }
         ticker.start()
     }
@@ -75,11 +95,12 @@ final class CompassMercuryModel: ObservableObject {
     func stop() {
         ticker.stop()
         source.stop()
+        haptics.shutdown()
     }
 }
 
 private enum CompassMercuryRenderer {
-    static func draw(in context: inout GraphicsContext, size: CGSize, heading: Double, hardware: Bool) {
+    static func draw(in context: inout GraphicsContext, size: CGSize, heading: Double, hardware: Bool, aligned: Bool) {
         let center = CGPoint(x: size.width / 2, y: size.height * 0.52)
         let radius = min(size.width, size.height) * 0.33
 
@@ -120,10 +141,16 @@ private enum CompassMercuryRenderer {
         }
 
         let nPoint = CGPoint(x: center.x, y: center.y - radius + 48)
+        if aligned {
+            context.fill(
+                Path(ellipseIn: CGRect(x: nPoint.x - 14, y: nPoint.y - 12, width: 28, height: 24)),
+                with: .color(LabPalette.rust.opacity(0.22))
+            )
+        }
         context.draw(
             Text("N")
                 .font(.system(size: 12, weight: .semibold, design: .serif))
-                .foregroundColor(LabPalette.rust),
+                .foregroundColor(aligned ? LabPalette.rust : LabPalette.rust.opacity(0.86)),
             at: nPoint
         )
 

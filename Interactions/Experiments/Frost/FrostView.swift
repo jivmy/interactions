@@ -5,7 +5,7 @@ struct FrostView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        GeometryReader { _ in
+        GeometryReader { geo in
             let crystals = model.crystals
             ZStack {
                 LinearGradient(
@@ -32,7 +32,13 @@ struct FrostView: View {
 
                 LabHintOverlay(text: "Touch.")
             }
-            .onAppear { model.start() }
+            .onAppear {
+                model.preFrost(in: CGRect(x: 18, y: 88, width: geo.size.width - 36, height: geo.size.height - 150))
+                model.start()
+            }
+            .onChange(of: geo.size) { _, size in
+                model.preFrost(in: CGRect(x: 18, y: 88, width: size.width - 36, height: size.height - 150))
+            }
             .onChange(of: scenePhase) { _, phase in
                 phase == .active ? model.start() : model.stop()
             }
@@ -60,20 +66,40 @@ final class FrostModel: ObservableObject {
 
     private var growing: [Crystal] = []
     private let ticker = FrameTicker()
+    private let haptics = HapticPlayer()
     private var lastSeed = CGPoint(x: -999, y: -999)
     private var cooldown: CGFloat = 0
+    private var didPrefrost = false
 
     func start() {
+        haptics.startEngine()
         ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
     }
 
-    func stop() { ticker.stop() }
+    func stop() {
+        ticker.stop()
+        haptics.shutdown()
+    }
 
-    func seed(at point: CGPoint) {
+    func preFrost(in pane: CGRect) {
+        guard !didPrefrost, pane.width > 40 else { return }
+        didPrefrost = true
+        let corners = [
+            CGPoint(x: pane.minX + 18, y: pane.minY + 16),
+            CGPoint(x: pane.maxX - 22, y: pane.minY + 20),
+            CGPoint(x: pane.minX + 28, y: pane.maxY - 24)
+        ]
+        for point in corners {
+            seed(at: point, haptic: false)
+        }
+    }
+
+    func seed(at point: CGPoint, haptic: Bool = true) {
         guard cooldown <= 0 || hypot(point.x - lastSeed.x, point.y - lastSeed.y) > 28 else { return }
         lastSeed = point
         cooldown = 0.08
+        if haptic { haptics.tick() }
         let count = 5 + Int.random(in: 0...3)
         for i in 0..<count {
             let heading = CGFloat(i) / CGFloat(count) * .pi * 2 + CGFloat.random(in: -0.2...0.2)
@@ -83,6 +109,7 @@ final class FrostModel: ObservableObject {
 
     private func step(dt: CGFloat) {
         cooldown = max(0, cooldown - dt)
+        if growing.allSatisfy({ !$0.alive }) { return }
         let speed: CGFloat = 46
         var spawned: [Crystal] = []
         for i in growing.indices where growing[i].alive {

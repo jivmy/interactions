@@ -66,12 +66,13 @@ final class MatchbookModel: ObservableObject {
     private var burn: CGFloat = 0
 
     func start() {
+        haptics.startEngine()
         ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
     }
 
     func stop() {
-        haptics.stopScrape()
+        haptics.shutdown()
         ticker.stop()
     }
 

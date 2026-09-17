@@ -53,7 +53,7 @@ struct MetalLabView: UIViewRepresentable {
         uiView.isPaused = !isActive
         uiView.enableSetNeedsDisplay = !isActive
         if isActive {
-            uiView.preferredFramesPerSecond = 120
+            uiView.preferredFramesPerSecond = LabCadence.metalFPS
         } else {
             uiView.setNeedsDisplay()
         }
@@ -89,7 +89,7 @@ struct MetalLabView: UIViewRepresentable {
             view.isOpaque = true
             view.enableSetNeedsDisplay = false
             view.isPaused = false
-            view.preferredFramesPerSecond = 120
+            view.preferredFramesPerSecond = LabCadence.metalFPS
             view.colorPixelFormat = .bgra8Unorm
             view.clearColor = MTLClearColorMake(0.957, 0.949, 0.929, 1)
             queue = device.makeCommandQueue()

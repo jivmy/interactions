@@ -67,16 +67,27 @@ final class HangingChainSimulation: NSObject, ObservableObject {
         guard displayLink == nil else { return }
         lastTimestamp = 0
         let link = CADisplayLink(target: self, selector: #selector(handleDisplayLink(_:)))
-        link.preferredFrameRateRange = CAFrameRateRange(minimum: 48, maximum: 120, preferred: 120)
+        LabCadence.apply(link)
         link.add(to: .main, forMode: .common)
         displayLink = link
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(powerChanged),
+            name: .NSProcessInfoPowerStateDidChange,
+            object: nil
+        )
     }
 
     func stop() {
+        NotificationCenter.default.removeObserver(self, name: .NSProcessInfoPowerStateDidChange, object: nil)
         displayLink?.invalidate()
         displayLink = nil
         lastTimestamp = 0
         motion.stop()
+    }
+
+    @objc private func powerChanged() {
+        if let displayLink { LabCadence.apply(displayLink) }
     }
 
     func beginDrag(at point: CGPoint) {

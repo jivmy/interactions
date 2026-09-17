@@ -56,7 +56,9 @@ final class ClothSimulation: ObservableObject {
     private var dragIndex: Int?
     private let ticker = FrameTicker()
     private let motion = DeviceMotionSource()
+    private let haptics = HapticPlayer()
     private var viewport: CGSize = .zero
+    private var publishAccum: CGFloat = 0
 
     func layout(size: CGSize) {
         viewport = size
@@ -83,6 +85,7 @@ final class ClothSimulation: ObservableObject {
     }
 
     func start() {
+        haptics.startEngine()
         motion.start()
         ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
@@ -91,6 +94,7 @@ final class ClothSimulation: ObservableObject {
     func stop() {
         ticker.stop()
         motion.stop()
+        haptics.shutdown()
     }
 
     func drag(to point: CGPoint) {
@@ -105,6 +109,10 @@ final class ClothSimulation: ObservableObject {
                 }
             }
             dragIndex = best
+            if best != nil {
+                haptics.tick()
+                haptics.startHum(intensity: 0.10, sharpness: 0.28)
+            }
         }
         if let dragIndex {
             particles[dragIndex].oldPosition = particles[dragIndex].position
@@ -112,10 +120,13 @@ final class ClothSimulation: ObservableObject {
         }
     }
 
-    func endDrag() { dragIndex = nil }
+    func endDrag() {
+        dragIndex = nil
+        haptics.stopHum()
+    }
 
     private func step(dt: CGFloat) {
-        usingMotion = motion.isUsingHardware
+        if motion.isUsingHardware != usingMotion { usingMotion = motion.isUsingHardware }
         let mapped = ViewSpaceMotion.acceleration(motion.acceleration, interface: ViewSpaceMotion.currentInterfaceOrientation())
         let g = CGVector(dx: mapped.dx * 14000, dy: mapped.dy * 14000)
         let damp = pow(0.985, dt * 60)
@@ -133,7 +144,11 @@ final class ClothSimulation: ObservableObject {
         for _ in 0..<8 {
             satisfy()
         }
-        positions = particles.map(\.position)
+        publishAccum += dt
+        if publishAccum >= LabCadence.publishInterval {
+            publishAccum = 0
+            positions = particles.map(\.position)
+        }
     }
 
     private func satisfy() {

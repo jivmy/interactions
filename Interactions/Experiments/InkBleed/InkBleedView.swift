@@ -1,3 +1,4 @@
+import QuartzCore
 import SwiftUI
 
 struct InkBleedView: View {
@@ -50,6 +51,8 @@ final class InkBleedModel: ObservableObject {
     private var size: CGSize = .zero
     private var wet: [Float] = []
     private var publishAccum: CGFloat = 0
+    private let haptics = HapticPlayer()
+    private var lastStampHaptic: CFTimeInterval = 0
 
     func ensure(size: CGSize) {
         self.size = size
@@ -62,13 +65,22 @@ final class InkBleedModel: ObservableObject {
     }
 
     func start() {
+        haptics.startEngine()
         ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
     }
 
-    func stop() { ticker.stop() }
+    func stop() {
+        ticker.stop()
+        haptics.shutdown()
+    }
 
     func stamp(at point: CGPoint, size: CGSize) {
+        let now = CACurrentMediaTime()
+        if now - lastStampHaptic > 0.08 {
+            lastStampHaptic = now
+            haptics.tick()
+        }
         let x = Int(point.x / max(size.width, 1) * CGFloat(cols))
         let y = Int(point.y / max(size.height, 1) * CGFloat(rows))
         for dy in -2...2 {

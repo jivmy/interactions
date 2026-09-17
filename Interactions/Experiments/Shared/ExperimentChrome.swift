@@ -73,8 +73,8 @@ struct ExperimentWorkspace: View {
 
     private var contentTransition: AnyTransition {
         if reduceMotion { return .opacity }
-        let incoming: CGFloat = slideForward ? 36 : -36
-        let outgoing: CGFloat = slideForward ? -22 : 22
+        let incoming: CGFloat = slideForward ? 28 : -28
+        let outgoing: CGFloat = slideForward ? -16 : 16
         return .asymmetric(
             insertion: .offset(x: incoming).combined(with: .opacity),
             removal: .offset(x: outgoing).combined(with: .opacity)
@@ -135,6 +135,7 @@ struct ExperimentWorkspace: View {
                     Text(experiment.section.track)
                         .font(LabType.mono())
                         .foregroundStyle(LabPalette.track(experiment.section))
+                        .contentTransition(reduceMotion ? .opacity : .interpolate)
                         .labHero("track-\(experiment.section.rawValue)")
                     HStack(spacing: 5) {
                         ForEach(ExperimentCatalog.experiments(in: experiment.section)) { item in
