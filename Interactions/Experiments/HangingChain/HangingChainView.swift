@@ -3,7 +3,6 @@ import SwiftUI
 struct HangingChainView: View {
     @StateObject private var simulation = HangingChainSimulation()
     @Environment(\.scenePhase) private var scenePhase
-    @State private var showHint = true
 
     var body: some View {
         GeometryReader { geo in
@@ -29,31 +28,11 @@ struct HangingChainView: View {
                         }
                 )
 
-                VStack(spacing: 0) {
-                    HStack {
-                        Text("\(ExperimentCatalog.hangingChain.code)  ·  \(ExperimentCatalog.hangingChain.title)")
-                            .font(.system(.caption, design: .rounded, weight: .medium))
-                            .tracking(0.6)
-                            .foregroundStyle(HangingChainPalette.caption)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, ViewSpaceMotion.windowSafeAreaTop() + 6)
-                    Spacer()
-                    if showHint {
-                        Text(hintText)
-                            .font(.system(.footnote, design: .rounded))
-                            .foregroundStyle(HangingChainPalette.caption)
-                            .padding(.bottom, max(geo.safeAreaInsets.bottom, 28))
-                            .transition(.opacity)
-                    }
-                }
-                .allowsHitTesting(false)
+                LabHintOverlay(text: hintText)
             }
             .onAppear {
                 simulation.updateViewport(size: geo.size)
                 simulation.start()
-                fadeHint()
             }
             .onChange(of: geo.size) { _, newSize in
                 simulation.updateViewport(size: newSize)
@@ -81,19 +60,10 @@ struct HangingChainView: View {
         }
     }
 
-    private func fadeHint() {
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(4.5))
-            withAnimation(.easeOut(duration: 0.8)) {
-                showHint = false
-            }
-        }
-    }
 }
 
 private enum HangingChainPalette {
     static let background = Color(red: 0.925, green: 0.914, blue: 0.890)
-    static let caption = Color(red: 0.28, green: 0.27, blue: 0.25).opacity(0.55)
     static let metal = Color(red: 0.22, green: 0.23, blue: 0.25)
     static let metalSoft = Color(red: 0.38, green: 0.38, blue: 0.40)
     static let hole = Color(red: 0.925, green: 0.914, blue: 0.890)

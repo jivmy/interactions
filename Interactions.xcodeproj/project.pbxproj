@@ -7,26 +7,80 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AA11BB22000000000000000D /* InteractionsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22000000000000000A /* InteractionsApp.swift */; };
-		AA11BB22000000000000000E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22000000000000000B /* ContentView.swift */; };
 		AA11BB22000000000000000F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA11BB22000000000000000C /* Assets.xcassets */; };
-		A1E0000000000000000011 /* ExperimentCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E0000000000000000001 /* ExperimentCatalog.swift */; };
-		A1E0000000000000000012 /* VerletRope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E0000000000000000002 /* VerletRope.swift */; };
-		A1E0000000000000000013 /* DeviceMotionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E0000000000000000003 /* DeviceMotionSource.swift */; };
-		A1E0000000000000000014 /* HangingChainSimulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E0000000000000000004 /* HangingChainSimulation.swift */; };
-		A1E0000000000000000015 /* HangingChainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E0000000000000000005 /* HangingChainView.swift */; };
+		B2E0000000000000000003E9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000001 /* ContentView.swift */; };
+		B2E0000000000000000003EA /* BarometricBalloonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000002 /* BarometricBalloonView.swift */; };
+		B2E0000000000000000003EB /* ChladniPlateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000003 /* ChladniPlateView.swift */; };
+		B2E0000000000000000003EC /* ClothPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000004 /* ClothPanelView.swift */; };
+		B2E0000000000000000003ED /* CompassMercuryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000005 /* CompassMercuryView.swift */; };
+		B2E0000000000000000003EE /* ExperimentCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000006 /* ExperimentCatalog.swift */; };
+		B2E0000000000000000003EF /* FaceSpecularView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000007 /* FaceSpecularView.swift */; };
+		B2E0000000000000000003F0 /* FrostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000008 /* FrostView.swift */; };
+		B2E0000000000000000003F1 /* HangingChainSimulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000009 /* HangingChainSimulation.swift */; };
+		B2E0000000000000000003F2 /* HangingChainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000000A /* HangingChainView.swift */; };
+		B2E0000000000000000003F3 /* InkBleedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000000B /* InkBleedView.swift */; };
+		B2E0000000000000000003F4 /* IronFilingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000000C /* IronFilingsView.swift */; };
+		B2E0000000000000000003F5 /* MatchbookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000000D /* MatchbookView.swift */; };
+		B2E0000000000000000003F6 /* MetaballMercuryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000000E /* MetaballMercuryView.swift */; };
+		B2E0000000000000000003F7 /* ParallaxDioramaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000000F /* ParallaxDioramaView.swift */; };
+		B2E0000000000000000003F8 /* PullCordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000010 /* PullCordView.swift */; };
+		B2E0000000000000000003F9 /* SafeDialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000011 /* SafeDialView.swift */; };
+		B2E0000000000000000003FA /* AltimeterSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000012 /* AltimeterSource.swift */; };
+		B2E0000000000000000003FB /* DeviceMotionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000013 /* DeviceMotionSource.swift */; };
+		B2E0000000000000000003FC /* ExperimentChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000014 /* ExperimentChrome.swift */; };
+		B2E0000000000000000003FD /* FaceTrackingSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000015 /* FaceTrackingSource.swift */; };
+		B2E0000000000000000003FE /* FrameTicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000016 /* FrameTicker.swift */; };
+		B2E0000000000000000003FF /* HapticPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000017 /* HapticPlayer.swift */; };
+		B2E000000000000000000400 /* HeadingSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000018 /* HeadingSource.swift */; };
+		B2E000000000000000000401 /* LabShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000019 /* LabShaders.metal */; };
+		B2E000000000000000000402 /* LabTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000001A /* LabTheme.swift */; };
+		B2E000000000000000000403 /* MetalLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000001B /* MetalLabView.swift */; };
+		B2E000000000000000000404 /* MicrophoneFFT.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000001C /* MicrophoneFFT.swift */; };
+		B2E000000000000000000405 /* VerletRope.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000001D /* VerletRope.swift */; };
+		B2E000000000000000000406 /* SmokeBoxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000001E /* SmokeBoxView.swift */; };
+		B2E000000000000000000407 /* SoapFilmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000001F /* SoapFilmView.swift */; };
+		B2E000000000000000000408 /* WaxSealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000020 /* WaxSealView.swift */; };
+		B2E000000000000000000409 /* ZipperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000021 /* ZipperView.swift */; };
+		B2E00000000000000000040A /* InteractionsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000022 /* InteractionsApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B2E000000000000000000001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000002 /* BarometricBalloonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarometricBalloonView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000003 /* ChladniPlateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChladniPlateView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000004 /* ClothPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothPanelView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000005 /* CompassMercuryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompassMercuryView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000006 /* ExperimentCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentCatalog.swift; sourceTree = "<group>"; };
+		B2E000000000000000000007 /* FaceSpecularView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceSpecularView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000008 /* FrostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrostView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000009 /* HangingChainSimulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangingChainSimulation.swift; sourceTree = "<group>"; };
+		B2E00000000000000000000A /* HangingChainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangingChainView.swift; sourceTree = "<group>"; };
+		B2E00000000000000000000B /* InkBleedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkBleedView.swift; sourceTree = "<group>"; };
+		B2E00000000000000000000C /* IronFilingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IronFilingsView.swift; sourceTree = "<group>"; };
+		B2E00000000000000000000D /* MatchbookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchbookView.swift; sourceTree = "<group>"; };
+		B2E00000000000000000000E /* MetaballMercuryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaballMercuryView.swift; sourceTree = "<group>"; };
+		B2E00000000000000000000F /* ParallaxDioramaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParallaxDioramaView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000010 /* PullCordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PullCordView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000011 /* SafeDialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeDialView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000012 /* AltimeterSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AltimeterSource.swift; sourceTree = "<group>"; };
+		B2E000000000000000000013 /* DeviceMotionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMotionSource.swift; sourceTree = "<group>"; };
+		B2E000000000000000000014 /* ExperimentChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentChrome.swift; sourceTree = "<group>"; };
+		B2E000000000000000000015 /* FaceTrackingSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceTrackingSource.swift; sourceTree = "<group>"; };
+		B2E000000000000000000016 /* FrameTicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameTicker.swift; sourceTree = "<group>"; };
+		B2E000000000000000000017 /* HapticPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticPlayer.swift; sourceTree = "<group>"; };
+		B2E000000000000000000018 /* HeadingSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadingSource.swift; sourceTree = "<group>"; };
+		B2E000000000000000000019 /* LabShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = LabShaders.metal; sourceTree = "<group>"; };
+		B2E00000000000000000001A /* LabTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabTheme.swift; sourceTree = "<group>"; };
+		B2E00000000000000000001B /* MetalLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalLabView.swift; sourceTree = "<group>"; };
+		B2E00000000000000000001C /* MicrophoneFFT.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicrophoneFFT.swift; sourceTree = "<group>"; };
+		B2E00000000000000000001D /* VerletRope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerletRope.swift; sourceTree = "<group>"; };
+		B2E00000000000000000001E /* SmokeBoxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokeBoxView.swift; sourceTree = "<group>"; };
+		B2E00000000000000000001F /* SoapFilmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoapFilmView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000020 /* WaxSealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaxSealView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000021 /* ZipperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipperView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000022 /* InteractionsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionsApp.swift; sourceTree = "<group>"; };
 		AA11BB220000000000000003 /* Interactions.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Interactions.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA11BB22000000000000000A /* InteractionsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionsApp.swift; sourceTree = "<group>"; };
-		AA11BB22000000000000000B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA11BB22000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		A1E0000000000000000001 /* ExperimentCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentCatalog.swift; sourceTree = "<group>"; };
-		A1E0000000000000000002 /* VerletRope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerletRope.swift; sourceTree = "<group>"; };
-		A1E0000000000000000003 /* DeviceMotionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMotionSource.swift; sourceTree = "<group>"; };
-		A1E0000000000000000004 /* HangingChainSimulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangingChainSimulation.swift; sourceTree = "<group>"; };
-		A1E0000000000000000005 /* HangingChainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangingChainView.swift; sourceTree = "<group>"; };
 		A1E0000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -52,33 +106,204 @@
 		AA11BB220000000000000008 /* Interactions */ = {
 			isa = PBXGroup;
 			children = (
-				AA11BB22000000000000000A /* InteractionsApp.swift */,
-				AA11BB22000000000000000B /* ContentView.swift */,
-				A1E0000000000000000021 /* Experiments */,
+				B2E000000000000000000001 /* ContentView.swift */,
+				B2E000000000000000000022 /* InteractionsApp.swift */,
+				B2E0000000000000000007D0 /* Experiments */,
 				AA11BB22000000000000000C /* Assets.xcassets */,
 				A1E0000000000000000006 /* Info.plist */,
 			);
 			path = Interactions;
 			sourceTree = "<group>";
 		};
-		A1E0000000000000000021 /* Experiments */ = {
+		B2E0000000000000000007D0 /* Experiments */ = {
 			isa = PBXGroup;
 			children = (
-				A1E0000000000000000001 /* ExperimentCatalog.swift */,
-				A1E0000000000000000022 /* HangingChain */,
+				B2E000000000000000000006 /* ExperimentCatalog.swift */,
+				B2E000000000000000000835 /* BarometricBalloon */,
+				B2E000000000000000000836 /* ChladniPlate */,
+				B2E000000000000000000837 /* ClothPanel */,
+				B2E000000000000000000838 /* CompassMercury */,
+				B2E000000000000000000839 /* FaceSpecular */,
+				B2E00000000000000000083A /* Frost */,
+				B2E00000000000000000083B /* HangingChain */,
+				B2E00000000000000000083C /* InkBleed */,
+				B2E00000000000000000083D /* IronFilings */,
+				B2E00000000000000000083E /* Matchbook */,
+				B2E00000000000000000083F /* MetaballMercury */,
+				B2E000000000000000000840 /* ParallaxDiorama */,
+				B2E000000000000000000841 /* PullCord */,
+				B2E000000000000000000842 /* SafeDial */,
+				B2E000000000000000000843 /* Shared */,
+				B2E000000000000000000844 /* SmokeBox */,
+				B2E000000000000000000845 /* SoapFilm */,
+				B2E000000000000000000846 /* WaxSeal */,
+				B2E000000000000000000847 /* Zipper */,
 			);
 			path = Experiments;
 			sourceTree = "<group>";
 		};
-		A1E0000000000000000022 /* HangingChain */ = {
+		B2E000000000000000000835 /* BarometricBalloon */ = {
 			isa = PBXGroup;
 			children = (
-				A1E0000000000000000005 /* HangingChainView.swift */,
-				A1E0000000000000000004 /* HangingChainSimulation.swift */,
-				A1E0000000000000000002 /* VerletRope.swift */,
-				A1E0000000000000000003 /* DeviceMotionSource.swift */,
+				B2E000000000000000000002 /* BarometricBalloonView.swift */,
+			);
+			path = BarometricBalloon;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000836 /* ChladniPlate */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000003 /* ChladniPlateView.swift */,
+			);
+			path = ChladniPlate;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000837 /* ClothPanel */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000004 /* ClothPanelView.swift */,
+			);
+			path = ClothPanel;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000838 /* CompassMercury */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000005 /* CompassMercuryView.swift */,
+			);
+			path = CompassMercury;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000839 /* FaceSpecular */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000007 /* FaceSpecularView.swift */,
+			);
+			path = FaceSpecular;
+			sourceTree = "<group>";
+		};
+		B2E00000000000000000083A /* Frost */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000008 /* FrostView.swift */,
+			);
+			path = Frost;
+			sourceTree = "<group>";
+		};
+		B2E00000000000000000083B /* HangingChain */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000009 /* HangingChainSimulation.swift */,
+				B2E00000000000000000000A /* HangingChainView.swift */,
 			);
 			path = HangingChain;
+			sourceTree = "<group>";
+		};
+		B2E00000000000000000083C /* InkBleed */ = {
+			isa = PBXGroup;
+			children = (
+				B2E00000000000000000000B /* InkBleedView.swift */,
+			);
+			path = InkBleed;
+			sourceTree = "<group>";
+		};
+		B2E00000000000000000083D /* IronFilings */ = {
+			isa = PBXGroup;
+			children = (
+				B2E00000000000000000000C /* IronFilingsView.swift */,
+			);
+			path = IronFilings;
+			sourceTree = "<group>";
+		};
+		B2E00000000000000000083E /* Matchbook */ = {
+			isa = PBXGroup;
+			children = (
+				B2E00000000000000000000D /* MatchbookView.swift */,
+			);
+			path = Matchbook;
+			sourceTree = "<group>";
+		};
+		B2E00000000000000000083F /* MetaballMercury */ = {
+			isa = PBXGroup;
+			children = (
+				B2E00000000000000000000E /* MetaballMercuryView.swift */,
+			);
+			path = MetaballMercury;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000840 /* ParallaxDiorama */ = {
+			isa = PBXGroup;
+			children = (
+				B2E00000000000000000000F /* ParallaxDioramaView.swift */,
+			);
+			path = ParallaxDiorama;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000841 /* PullCord */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000010 /* PullCordView.swift */,
+			);
+			path = PullCord;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000842 /* SafeDial */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000011 /* SafeDialView.swift */,
+			);
+			path = SafeDial;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000843 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000012 /* AltimeterSource.swift */,
+				B2E000000000000000000013 /* DeviceMotionSource.swift */,
+				B2E000000000000000000014 /* ExperimentChrome.swift */,
+				B2E000000000000000000015 /* FaceTrackingSource.swift */,
+				B2E000000000000000000016 /* FrameTicker.swift */,
+				B2E000000000000000000017 /* HapticPlayer.swift */,
+				B2E000000000000000000018 /* HeadingSource.swift */,
+				B2E000000000000000000019 /* LabShaders.metal */,
+				B2E00000000000000000001A /* LabTheme.swift */,
+				B2E00000000000000000001B /* MetalLabView.swift */,
+				B2E00000000000000000001C /* MicrophoneFFT.swift */,
+				B2E00000000000000000001D /* VerletRope.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000844 /* SmokeBox */ = {
+			isa = PBXGroup;
+			children = (
+				B2E00000000000000000001E /* SmokeBoxView.swift */,
+			);
+			path = SmokeBox;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000845 /* SoapFilm */ = {
+			isa = PBXGroup;
+			children = (
+				B2E00000000000000000001F /* SoapFilmView.swift */,
+			);
+			path = SoapFilm;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000846 /* WaxSeal */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000020 /* WaxSealView.swift */,
+			);
+			path = WaxSeal;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000847 /* Zipper */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000021 /* ZipperView.swift */,
+			);
+			path = Zipper;
 			sourceTree = "<group>";
 		};
 		AA11BB220000000000000009 /* Products */ = {
@@ -158,13 +383,40 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA11BB22000000000000000E /* ContentView.swift in Sources */,
-				AA11BB22000000000000000D /* InteractionsApp.swift in Sources */,
-				A1E0000000000000000011 /* ExperimentCatalog.swift in Sources */,
-				A1E0000000000000000015 /* HangingChainView.swift in Sources */,
-				A1E0000000000000000014 /* HangingChainSimulation.swift in Sources */,
-				A1E0000000000000000012 /* VerletRope.swift in Sources */,
-				A1E0000000000000000013 /* DeviceMotionSource.swift in Sources */,
+				B2E0000000000000000003E9 /* ContentView.swift in Sources */,
+				B2E0000000000000000003EA /* BarometricBalloonView.swift in Sources */,
+				B2E0000000000000000003EB /* ChladniPlateView.swift in Sources */,
+				B2E0000000000000000003EC /* ClothPanelView.swift in Sources */,
+				B2E0000000000000000003ED /* CompassMercuryView.swift in Sources */,
+				B2E0000000000000000003EE /* ExperimentCatalog.swift in Sources */,
+				B2E0000000000000000003EF /* FaceSpecularView.swift in Sources */,
+				B2E0000000000000000003F0 /* FrostView.swift in Sources */,
+				B2E0000000000000000003F1 /* HangingChainSimulation.swift in Sources */,
+				B2E0000000000000000003F2 /* HangingChainView.swift in Sources */,
+				B2E0000000000000000003F3 /* InkBleedView.swift in Sources */,
+				B2E0000000000000000003F4 /* IronFilingsView.swift in Sources */,
+				B2E0000000000000000003F5 /* MatchbookView.swift in Sources */,
+				B2E0000000000000000003F6 /* MetaballMercuryView.swift in Sources */,
+				B2E0000000000000000003F7 /* ParallaxDioramaView.swift in Sources */,
+				B2E0000000000000000003F8 /* PullCordView.swift in Sources */,
+				B2E0000000000000000003F9 /* SafeDialView.swift in Sources */,
+				B2E0000000000000000003FA /* AltimeterSource.swift in Sources */,
+				B2E0000000000000000003FB /* DeviceMotionSource.swift in Sources */,
+				B2E0000000000000000003FC /* ExperimentChrome.swift in Sources */,
+				B2E0000000000000000003FD /* FaceTrackingSource.swift in Sources */,
+				B2E0000000000000000003FE /* FrameTicker.swift in Sources */,
+				B2E0000000000000000003FF /* HapticPlayer.swift in Sources */,
+				B2E000000000000000000400 /* HeadingSource.swift in Sources */,
+				B2E000000000000000000401 /* LabShaders.metal in Sources */,
+				B2E000000000000000000402 /* LabTheme.swift in Sources */,
+				B2E000000000000000000403 /* MetalLabView.swift in Sources */,
+				B2E000000000000000000404 /* MicrophoneFFT.swift in Sources */,
+				B2E000000000000000000405 /* VerletRope.swift in Sources */,
+				B2E000000000000000000406 /* SmokeBoxView.swift in Sources */,
+				B2E000000000000000000407 /* SoapFilmView.swift in Sources */,
+				B2E000000000000000000408 /* WaxSealView.swift in Sources */,
+				B2E000000000000000000409 /* ZipperView.swift in Sources */,
+				B2E00000000000000000040A /* InteractionsApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -303,7 +555,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Interactions;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
-				INFOPLIST_KEY_NSMotionUsageDescription = "Device motion makes the hanging chain swing as you tilt and move the phone.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "The TrueDepth camera tracks your face so metal highlights and the diorama can move with your head.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location is used only to correct magnetic north into true north for the mercury compass.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The microphone listens for tones so sand on the Chladni plate can settle on standing-wave nodes.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Motion, compass, and barometer swing the hanging chain, raise the balloon, tilt smoke and cloth, and aim the mercury.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -337,7 +592,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Interactions;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
-				INFOPLIST_KEY_NSMotionUsageDescription = "Device motion makes the hanging chain swing as you tilt and move the phone.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "The TrueDepth camera tracks your face so metal highlights and the diorama can move with your head.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location is used only to correct magnetic north into true north for the mercury compass.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The microphone listens for tones so sand on the Chladni plate can settle on standing-wave nodes.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Motion, compass, and barometer swing the hanging chain, raise the balloon, tilt smoke and cloth, and aim the mercury.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

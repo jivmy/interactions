@@ -3,6 +3,12 @@
 <plist version="1.0">
 <dict>
 	<key>NSMotionUsageDescription</key>
-	<string>Device motion makes the hanging chain swing as you tilt and move the phone.</string>
+	<string>Motion, compass, and barometer swing the hanging chain, raise the balloon, tilt smoke and cloth, and aim the mercury.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The microphone listens for tones so sand on the Chladni plate can settle on standing-wave nodes.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>The TrueDepth camera tracks your face so metal highlights and the diorama can move with your head.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location is used only to correct magnetic north into true north for the mercury compass.</string>
 </dict>
 </plist>
