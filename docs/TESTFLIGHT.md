@@ -153,9 +153,9 @@ On the iPhone:
 1. Install **TestFlight** from the App Store.
 2. Accept the tester invite email / redeem code, or open TestFlight while signed into the same Apple ID.
 3. Install **Interactions**.
-4. You should see the blank white screen (same as Simulator).
+4. You should see **A1 Hanging chain**. On a real iPhone, tilt the phone and the chain should swing with gravity. Simulator has no CoreMotion hardware — drag a link instead.
 
-External testers need Beta App Review the first time, plus compliance details. This blank app sets `ITSAppUsesNonExemptEncryption = NO` so export-compliance questions do not block processing.
+External testers need Beta App Review the first time, plus compliance details. The app sets `ITSAppUsesNonExemptEncryption = NO` so export-compliance questions do not block processing.
 
 ## What CI changes vs what stays in git
 
@@ -168,7 +168,7 @@ External testers need Beta App Review the first time, plus compliance details. T
 | Signing | Archive unsigned; export automatic App Store (cloud-managed Distribution) |
 | Team | `DEVELOPMENT_TEAM` secret (CI only; not committed) |
 
-The SwiftUI UI is unchanged. CI injects the team id and build number through `xcodebuild` / Fastlane and does not commit those edits.
+CI injects the team id and build number through `xcodebuild` / Fastlane and does not commit those edits. The hanging chain experiment is in git; it does not change signing.
 
 ## Local Fastlane (optional)
 
