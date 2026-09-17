@@ -7,32 +7,27 @@ struct HangingChainView: View {
     var body: some View {
         GeometryReader { geo in
             let nodes = simulation.positions
-            ZStack {
-                LabPaperBackground()
 
-                Canvas { context, size in
-                    HangingChainRenderer.draw(in: &context, nodes: nodes, canvasSize: size)
-                }
-                .animation(nil, value: nodes)
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            if simulation.isDragging {
-                                simulation.moveDrag(to: value.location)
-                            } else {
-                                simulation.beginDrag(at: value.startLocation)
-                            }
-                        }
-                        .onEnded { _ in
-                            simulation.endDrag()
-                        }
-                )
-                .accessibilityLabel("Hanging metal chain")
-                .accessibilityValue(simulation.isUsingDeviceMotion ? "Tilt" : "Drag")
-                .accessibilityHint(hintText)
-
-                LabHintOverlay(text: hintText)
+            Canvas { context, _ in
+                HangingChainRenderer.draw(in: &context, nodes: nodes)
             }
+            .animation(nil, value: nodes)
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        if simulation.isDragging {
+                            simulation.moveDrag(to: value.location)
+                        } else {
+                            simulation.beginDrag(at: value.startLocation)
+                        }
+                    }
+                    .onEnded { _ in
+                        simulation.endDrag()
+                    }
+            )
+            .accessibilityLabel("Hanging metal chain")
+            .accessibilityValue(simulation.isUsingDeviceMotion ? "Tilt" : "Drag")
+            .accessibilityHint(simulation.isUsingDeviceMotion ? "Tilt the phone" : "Drag a link")
             .onAppear {
                 simulation.updateViewport(size: geo.size)
                 simulation.start()
@@ -54,113 +49,122 @@ struct HangingChainView: View {
         }
         .ignoresSafeArea()
     }
+}
 
-    private var hintText: String {
-        simulation.isUsingDeviceMotion ? "Tilt." : "Drag."
+/// One metal. Highlight is light on the material, not a second finish.
+private enum HangingChainPalette {
+    static func metal(_ opacity: Double = 1) -> Color {
+        Color(red: 0.18, green: 0.19, blue: 0.21).opacity(opacity)
+    }
+
+    static func metalMid(_ opacity: Double = 1) -> Color {
+        Color(red: 0.34, green: 0.35, blue: 0.37).opacity(opacity)
+    }
+
+    static func shine(_ opacity: Double = 0.28) -> Color {
+        Color.white.opacity(opacity)
     }
 }
 
-private enum HangingChainPalette {
-    static let metal = Color(red: 0.20, green: 0.21, blue: 0.23)
-    static let metalSoft = Color(red: 0.40, green: 0.41, blue: 0.43)
-    static let highlight = Color.white.opacity(0.28)
-    static let hole = Color(red: 0.957, green: 0.949, blue: 0.929)
-}
-
+/// Nonisolated draw. Callers snapshot MainActor node positions before entering Canvas.
 private enum HangingChainRenderer {
-    static func draw(in context: inout GraphicsContext, nodes: [CGPoint], canvasSize: CGSize) {
+    static func draw(in context: inout GraphicsContext, nodes: [CGPoint]) {
         guard nodes.count >= 2 else { return }
 
-        drawMount(in: &context, at: nodes[0], width: canvasSize.width)
-        drawGroundingShadow(in: &context, nodes: nodes, size: canvasSize)
-        drawLinks(in: &context, nodes: nodes)
+        drawEdgeLinks(in: &context, nodes: nodes)
+        drawFaceLinks(in: &context, nodes: nodes)
         drawPin(in: &context, at: nodes[0])
-        drawPendant(in: &context, at: nodes[nodes.count - 1], previous: nodes[nodes.count - 2])
+        drawWeight(in: &context, at: nodes[nodes.count - 1], previous: nodes[nodes.count - 2])
     }
 
-    private static func drawMount(in context: inout GraphicsContext, at point: CGPoint, width: CGFloat) {
-        let plate = CGRect(x: point.x - 42, y: point.y - 18, width: 84, height: 14)
-        context.fill(Path(roundedRect: plate, cornerRadius: 3), with: .color(HangingChainPalette.metal))
-        context.fill(
-            Path(roundedRect: CGRect(x: point.x - 36, y: point.y - 16, width: 28, height: 4), cornerRadius: 1),
-            with: .color(HangingChainPalette.highlight)
-        )
-        let rail = CGRect(x: 24, y: point.y - 22, width: width - 48, height: 4)
-        context.fill(Path(roundedRect: rail, cornerRadius: 2), with: .color(HangingChainPalette.metal.opacity(0.55)))
+    private static func drawEdgeLinks(in context: inout GraphicsContext, nodes: [CGPoint]) {
+        for index in 0..<(nodes.count - 1) where index % 2 == 1 {
+            drawLink(in: &context, from: nodes[index], to: nodes[index + 1], facing: false)
+        }
     }
 
-    private static func drawGroundingShadow(in context: inout GraphicsContext, nodes: [CGPoint], size: CGSize) {
-        guard let last = nodes.last else { return }
-        let y = min(max(last.y, size.height * 0.4), size.height - 24)
-        let oval = CGRect(x: last.x - 32, y: y + 12, width: 64, height: 11)
-        context.fill(Path(ellipseIn: oval), with: .color(.black.opacity(0.07)))
+    private static func drawFaceLinks(in context: inout GraphicsContext, nodes: [CGPoint]) {
+        for index in 0..<(nodes.count - 1) where index % 2 == 0 {
+            drawLink(in: &context, from: nodes[index], to: nodes[index + 1], facing: true)
+        }
     }
 
-    private static func drawLinks(in context: inout GraphicsContext, nodes: [CGPoint]) {
-        for index in 0..<(nodes.count - 1) {
-            let a = nodes[index]
-            let b = nodes[index + 1]
-            let dx = b.x - a.x
-            let dy = b.y - a.y
-            let length = max(hypot(dx, dy), 1)
-            let angle = atan2(dy, dx)
-            let mid = CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
-            let facing = index % 2 == 0
-            let linkLength = length + (facing ? 10 : 6)
-            let linkWidth: CGFloat = facing ? 16 : 8.5
+    private static func drawLink(
+        in context: inout GraphicsContext,
+        from a: CGPoint,
+        to b: CGPoint,
+        facing: Bool
+    ) {
+        let dx = b.x - a.x
+        let dy = b.y - a.y
+        let length = max(hypot(dx, dy), 1)
+        let angle = atan2(dy, dx)
+        let mid = CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
+        let transform = CGAffineTransform(translationX: mid.x, y: mid.y).rotated(by: angle)
 
-            var ellipse = Path(ellipseIn: CGRect(
+        if facing {
+            let linkLength = length + 11
+            let linkWidth: CGFloat = 15.5
+            let gauge: CGFloat = 3.7
+            let outer = CGRect(x: -linkLength / 2, y: -linkWidth / 2, width: linkLength, height: linkWidth)
+            let inner = outer.insetBy(dx: gauge, dy: gauge)
+            var ring = Path()
+            ring.addEllipse(in: outer)
+            ring.addEllipse(in: inner)
+            ring = ring.applying(transform)
+            context.fill(ring, with: .color(HangingChainPalette.metal()), style: FillStyle(eoFill: true))
+
+            var shine = Path()
+            shine.addEllipse(in: outer.insetBy(dx: 0.7, dy: 0.7))
+            shine = shine.applying(transform)
+            context.stroke(
+                shine,
+                with: .color(HangingChainPalette.shine()),
+                style: StrokeStyle(lineWidth: 0.6, lineCap: .round)
+            )
+        } else {
+            let linkLength = length + 6
+            let linkWidth: CGFloat = 7.2
+            var body = Path(ellipseIn: CGRect(
                 x: -linkLength / 2,
                 y: -linkWidth / 2,
                 width: linkLength,
                 height: linkWidth
             ))
-            ellipse = ellipse.applying(
-                CGAffineTransform(translationX: mid.x, y: mid.y).rotated(by: angle)
+            body = body.applying(transform)
+            context.fill(body, with: .color(HangingChainPalette.metalMid()))
+            context.stroke(
+                body,
+                with: .color(HangingChainPalette.metal()),
+                style: StrokeStyle(lineWidth: 1.1, lineCap: .round)
             )
-
-            if facing {
-                context.stroke(
-                    ellipse,
-                    with: .color(HangingChainPalette.metal),
-                    style: StrokeStyle(lineWidth: 3.6, lineCap: .round)
-                )
-                context.stroke(
-                    ellipse,
-                    with: .color(HangingChainPalette.highlight),
-                    style: StrokeStyle(lineWidth: 0.7, lineCap: .round)
-                )
-            } else {
-                context.fill(ellipse, with: .color(HangingChainPalette.metalSoft))
-                context.stroke(
-                    ellipse,
-                    with: .color(HangingChainPalette.metal),
-                    style: StrokeStyle(lineWidth: 1.5, lineCap: .round)
-                )
-            }
         }
     }
 
     private static func drawPin(in context: inout GraphicsContext, at point: CGPoint) {
-        let bar = CGRect(x: point.x - 16, y: point.y - 5, width: 32, height: 6)
-        context.fill(Path(roundedRect: bar, cornerRadius: 3), with: .color(HangingChainPalette.metal))
-        let outer = Path(ellipseIn: CGRect(x: point.x - 7, y: point.y - 7, width: 14, height: 14))
-        context.fill(outer, with: .color(HangingChainPalette.metal))
-        let inner = Path(ellipseIn: CGRect(x: point.x - 3, y: point.y - 3, width: 6, height: 6))
-        context.fill(inner, with: .color(HangingChainPalette.hole))
+        let stem = CGRect(x: point.x - 5.5, y: point.y - 13, width: 11, height: 16)
+        context.fill(Path(roundedRect: stem, cornerRadius: 3.5), with: .color(HangingChainPalette.metal()))
+        let head = Path(ellipseIn: CGRect(x: point.x - 7, y: point.y - 7, width: 14, height: 14))
+        context.fill(head, with: .color(HangingChainPalette.metal()))
+        let hole = Path(ellipseIn: CGRect(x: point.x - 2.4, y: point.y - 2.4, width: 4.8, height: 4.8))
+        context.fill(hole, with: .color(Color(white: Stage.fieldWhite)))
+        let glint = Path(ellipseIn: CGRect(x: point.x - 3.4, y: point.y - 4.0, width: 3.0, height: 2.2))
+        context.fill(glint, with: .color(HangingChainPalette.shine()))
     }
 
-    private static func drawPendant(in context: inout GraphicsContext, at point: CGPoint, previous: CGPoint) {
+    private static func drawWeight(in context: inout GraphicsContext, at point: CGPoint, previous: CGPoint) {
         let dx = point.x - previous.x
         let dy = point.y - previous.y
         let angle = atan2(dy, dx)
-        let radius: CGFloat = 10
-        var disc = Path(ellipseIn: CGRect(x: -radius, y: -radius, width: radius * 2, height: radius * 2))
-        disc = disc.applying(CGAffineTransform(translationX: point.x, y: point.y))
-        context.fill(disc, with: .color(HangingChainPalette.metal))
-        var glint = Path(ellipseIn: CGRect(x: -3.4, y: -3.8, width: 5.4, height: 4.4))
-        glint = glint.applying(CGAffineTransform(translationX: point.x, y: point.y).rotated(by: angle))
-        context.fill(glint, with: .color(.white.opacity(0.34)))
+        let transform = CGAffineTransform(translationX: point.x, y: point.y).rotated(by: angle)
+
+        var body = Path(ellipseIn: CGRect(x: -8.5, y: -7.2, width: 17, height: 14.4))
+        body = body.applying(transform)
+        context.fill(body, with: .color(HangingChainPalette.metal()))
+
+        var glint = Path(ellipseIn: CGRect(x: -3.4, y: -3.6, width: 4.8, height: 3.4))
+        glint = glint.applying(transform)
+        context.fill(glint, with: .color(HangingChainPalette.shine()))
     }
 }
 

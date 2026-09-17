@@ -2,15 +2,15 @@ import CoreGraphics
 import Foundation
 
 /// One mass point in a Verlet rope.
-struct VerletParticle {
+struct VerletParticle: Sendable {
     var position: CGPoint
     var oldPosition: CGPoint
     var pinned: Bool
 }
 
-/// Classic Jakobsen-style rope: Verlet integration + distance constraints.
-/// Equal-step particles, first point pinned. A heavier last particle reads as a pendant.
-struct VerletRope {
+/// Jakobsen-style rope: Verlet integration + distance constraints.
+/// Equal-step particles, first point pinned. A heavier last particle reads as a weight.
+struct VerletRope: Sendable {
     var particles: [VerletParticle]
     var restLength: CGFloat
     var damping60: CGFloat
@@ -80,8 +80,9 @@ struct VerletRope {
         particles[0].oldPosition = anchor
     }
 
-    mutating func beginDrag(at point: CGPoint, grabRadius: CGFloat = 56) {
-        guard particles.count > 1 else { return }
+    @discardableResult
+    mutating func beginDrag(at point: CGPoint, grabRadius: CGFloat = 56) -> Bool {
+        guard particles.count > 1 else { return false }
         var bestIndex: Int?
         var bestDistance = CGFloat.greatestFiniteMagnitude
         let last = particles.count - 1
@@ -97,7 +98,9 @@ struct VerletRope {
             }
         }
         draggedIndex = bestIndex
+        guard bestIndex != nil else { return false }
         moveDrag(to: point)
+        return true
     }
 
     mutating func moveDrag(to point: CGPoint) {
@@ -113,7 +116,7 @@ struct VerletRope {
     private func inverseMass(at index: Int) -> CGFloat {
         if particles[index].pinned { return 0 }
         if index == draggedIndex { return 0 }
-        if index == particles.count - 1 { return 0.4 }
+        if index == particles.count - 1 { return 0.36 }
         return 1
     }
 

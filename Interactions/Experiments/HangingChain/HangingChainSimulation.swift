@@ -4,12 +4,12 @@ import QuartzCore
 import UIKit
 
 enum HangingChainTuning {
-    static let nodeCount = 18
-    static let lengthFraction: CGFloat = 0.56
+    static let nodeCount = 20
+    static let lengthFraction: CGFloat = 0.58
     /// Points per g. High enough to feel like metal, with substeps so constraints hold.
     static let pixelsPerG: CGFloat = 20000
     static let damping60: CGFloat = 0.988
-    static let iterations = 12
+    static let iterations = 14
     static let substeps = 3
     static let gravitySmoothing: CGFloat = 0.22
 }
@@ -29,14 +29,15 @@ final class HangingChainSimulation: NSObject, ObservableObject {
         iterations: HangingChainTuning.iterations
     )
     private let motion = DeviceMotionSource()
-    private var displayLink: CADisplayLink?
+    private let catchHaptic = UIImpactFeedbackGenerator(style: .rigid)
+    nonisolated(unsafe) private var displayLink: CADisplayLink?
     private var lastTimestamp: CFTimeInterval = 0
     private var filteredGravity = CGVector(dx: 0, dy: HangingChainTuning.pixelsPerG)
     private var viewport: CGSize = .zero
     private var didLayout = false
 
     var anchor: CGPoint {
-        CGPoint(x: viewport.width / 2, y: ViewSpaceMotion.windowSafeAreaTop() + 62)
+        CGPoint(x: viewport.width / 2, y: ViewSpaceMotion.windowSafeAreaTop() + 54)
     }
 
     func updateViewport(size: CGSize) {
@@ -63,11 +64,12 @@ final class HangingChainSimulation: NSObject, ObservableObject {
     }
 
     func start() {
+        catchHaptic.prepare()
         motion.start()
         guard displayLink == nil else { return }
         lastTimestamp = 0
         let link = CADisplayLink(target: self, selector: #selector(handleDisplayLink(_:)))
-        LabCadence.apply(link)
+        DisplayCadence.apply(link)
         link.add(to: .main, forMode: .common)
         displayLink = link
         NotificationCenter.default.addObserver(
@@ -87,11 +89,14 @@ final class HangingChainSimulation: NSObject, ObservableObject {
     }
 
     @objc private func powerChanged() {
-        if let displayLink { LabCadence.apply(displayLink) }
+        if let displayLink { DisplayCadence.apply(displayLink) }
     }
 
     func beginDrag(at point: CGPoint) {
-        rope.beginDrag(at: point)
+        if rope.beginDrag(at: point) {
+            catchHaptic.impactOccurred(intensity: 0.78)
+            catchHaptic.prepare()
+        }
     }
 
     func moveDrag(to point: CGPoint) {

@@ -1,55 +1,27 @@
 # Interactions
 
-Jimmy’s lab for native iOS interaction experiments. SwiftUI, plus Metal, ARKit, AVFoundation, Core Haptics, and CoreMotion where an experiment needs them.
+One idea at a time. The app opens into the active prototype — full screen, almost no chrome.
 
 - Display name: **Interactions**
 - Bundle ID: `com.jimmy.interactions`
-- Language / UI: Swift + SwiftUI
+- Language / UI: Swift 6 + SwiftUI
 - Minimum iOS: 17.0
 - iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
 
-Open the app and you get a catalog of **18 feel prototypes**. Search, filter by track (A–E), favorite, and jump back in from Continue / Recents. Inside an experiment, the bottom chrome switches neighbors in the same track; the sheet jumps anywhere. Deep link with `interactions://experiment/hanging-chain` (or an `A1`-style code).
+Right now the only real room is **Hanging chain**: a metal Verlet rope that hangs from a pin and answers CoreMotion gravity. On Simulator, drag a link. Switching, when there is more than one room, is only quiet left/right chevrons.
 
-The chrome is meant to feel like an Apple design prototype: SF Pro, paper/metal materials, interruptible springs, and Core Haptics that mean something. In-track switches ease a short distance; the thumb bar is a page control. Catalog cards carry a track-color index mark so A–E keep a visual beat. Reduce Motion is honored on chrome, not physics. Metal and fluids pause off-screen. Display links and Metal drop to 60 in Low Power Mode; filings, cloth, and sand publish at 60. Haptic engines shut down when you leave. VoiceOver can adjust the zipper, the dial, and in-track neighbors. Coaching is a single word.
+Reduce Motion is honored on chrome (the page spring), not on physics.
 
-## Experiments
+## Hanging chain
 
-| Code | Title | What to feel | Best hardware | Simulator / fallback |
-| --- | --- | --- | --- | --- |
-| **A1** | Hanging chain | Metal-ish Verlet rope, gravity + flicks | CoreMotion | Drag a link; no tilt |
-| **A2** | Pull-cord light | Limp tug fails; a yank toggles the bulb | Touch velocity | Same — drag the handle |
-| **A3** | Compass mercury | Blob sits on true north | Magnetometer + location (true north) | Blob rests in the dish |
-| **A4** | Barometric balloon | Lift the phone, balloon climbs | `CMAltimeter` | Drag the balloon |
-| **B5** | Safe dial | Click per notch, heavy clunk on the drop | Core Haptics | Visual detents only |
-| **B6** | Zipper | Per-tooth ticks while you pull | Core Haptics | Visual teeth only |
-| **B7** | Matchbook strike | Fast strike lights; slow scrape is a fun fail | Touch velocity + haptics | Same gesture, no haptics |
-| **B8** | Wax seal | Hold to melt, release to stamp | Press duration + haptics | Same gesture, no haptics |
-| **C9** | Face-tracked specular | Highlight follows your eyes | TrueDepth / ARKit | Tilt via CoreMotion |
-| **C10** | Parallax diorama | Off-axis room as you move your head | TrueDepth / ARKit | Tilt via CoreMotion |
-| **C11** | Chladni plate | Sand gathers on standing-wave nodes | Microphone (FFT) | Drag vertically to pick a tone |
-| **D12** | Metaball mercury | SDF blobs, smooth-minimum merge | Metal + tilt | Touch still works |
-| **D13** | Soap film | Thin-film iridescence, then a pop | Metal + tilt | Tap to pop; colors still animate |
-| **D14** | Ink bleed | Touch wicks into paper grain | Touch | Same |
-| **D15** | Frost | Dendritic ice from a fingertip | Touch | Same |
-| **E16** | Smoke box | Stable fluids; tilt = gravity, finger = force | CoreMotion + touch | Drag to stir |
-| **E17** | Cloth panel | Mass-spring sheet | CoreMotion + touch | Drag the cloth |
-| **E18** | Iron filings | Finger is a magnetic pole | Touch | Same |
+A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gravity is filtered and stepped in substeps so the links stay taut. Catching a link ticks once; there is no decorative haptic spray.
 
-### Hardware notes (real iPhone)
-
-- **CoreMotion (A1, A4, E16, E17, tilt fallbacks):** works on any modern iPhone. Simulator has no gravity hardware.
-- **Barometer (A4):** iPhone 6 and later. Relative altitude is zeroed when you open the experiment — lift the phone ~30–40 cm.
-- **Compass (A3):** magnetometer. Allow location if you want **true** north; otherwise magnetic north. Indoor metal will pull the blob.
-- **Haptics (B5–B8):** Core Haptics on device; silent on Simulator.
-- **TrueDepth (C9, C10):** Face ID phones. The front camera usage prompt is for ARKit face tracking, not Face ID unlock. Older devices / Simulator fall back to tilt.
-- **Microphone (C11):** grant mic access, then hum or play a tone. Denied / Simulator: drag to change the mode.
-- **Metal (D12, D13):** any iPhone; if a GPU is missing the view stays on paper.
-
-First launch may ask for **Motion**, **Microphone**, **Camera**, and (A3) **Location**. Usage strings live in `Interactions/Info.plist`.
+- **Device:** tilt or flick the phone
+- **Simulator:** drag a link — there is no motion hardware
 
 ## Requirements
 
-- A Mac with [Xcode 15](https://developer.apple.com/xcode/) or later (Xcode 16 is fine; TestFlight CI uses Xcode 26)
+- A Mac with [Xcode 15](https://developer.apple.com/xcode/) or later (TestFlight CI uses Xcode 26)
 - For a physical iPhone: a free Apple ID, or a paid Apple Developer Program team
 
 ## Open in Xcode
@@ -69,13 +41,13 @@ First launch may ask for **Motion**, **Microphone**, **Camera**, and (A3) **Loca
 1. In the Xcode toolbar, click the destination control (to the right of the Run ▶ button).
 2. Under **iOS Simulator**, pick an iPhone (any iOS 17+ simulator is fine).
 3. Press **Run** (▶) or **Command-R**.
-4. You should see the catalog. Search or filter a track, then open anything. A1 hangs under default gravity — drag a link. Touch experiments (zipper, ink, frost, filings, pull-cord) still play. Tilt / compass / barometer / TrueDepth / haptics will not. The bottom bar switches neighbors; the sheet jumps tracks.
+4. The chain hangs under default gravity. Drag a link. Chevrons stay quiet until another room exists.
 
 If no simulators are listed: **Xcode → Settings → Platforms** (or **Components**) and download an iOS simulator runtime.
 
 ## Run on a physical iPhone
 
-This is the real lab. Xcode signs the app with your Apple ID / developer team. Automatic signing is already enabled; you only need to choose your team.
+This is the real thing. Xcode signs the app with your Apple ID / developer team. Automatic signing is already enabled; you only need to choose your team.
 
 ### 1. Add your Apple ID in Xcode
 
@@ -147,13 +119,11 @@ Full walkthrough (create the ASC app, API key, secrets, run the workflow, instal
 1. **Actions → TestFlight → Run workflow** (optional: push a `v*` tag).
 2. Marketing version is **1.0**. The build number is `github.run_number`.
 3. When App Store Connect finishes processing, add the build to an Internal Testing group and install from the **TestFlight** iOS app.
-4. On device, open the catalog — A1 should still swing with gravity; the rest of the list should launch without crashing.
+4. On device the app should open on the chain. Tilt — it should hang with gravity.
 
 ## Switching
 
-- **Catalog:** search, A–E track chips, favorites, recents, Continue
-- **In an experiment:** prev / next wraps inside the current track (thumb-zone page control), or open the switcher — it starts on the current track
-- **Deep link:** `interactions://experiment/<id-or-code>` — e.g. `interactions://experiment/A2`
+Left / right chevrons only — icon, 44pt hit, low contrast, no pills. Next arrives from the right on one spring. No catalog, search, favorites, track chips, or copy. The ordered list lives in `PrototypeCatalog`; arrows stay disabled while there is only one room.
 
 ## Project layout
 
@@ -161,21 +131,14 @@ Full walkthrough (create the ASC app, API key, secrets, run the workflow, instal
 Interactions.xcodeproj
 Interactions/
   InteractionsApp.swift
-  ContentView.swift              Catalog (search, tracks, favorites, recents)
-  Info.plist                     Motion / mic / camera / location + URL scheme
+  ContentView.swift              Full-screen host + chevrons
+  Info.plist                     Motion usage
   Experiments/
-    ExperimentCatalog.swift      All 18 entries + lookup / neighbors
-    Shared/                      Theme, session, chrome, motion, haptics, Metal
+    PrototypeCatalog.swift       Ordered rooms (chain only)
     HangingChain/
-    PullCord/ CompassMercury/ BarometricBalloon/
-    SafeDial/ Zipper/ Matchbook/ WaxSeal/
-    FaceSpecular/ ParallaxDiorama/ ChladniPlate/
-    MetaballMercury/ SoapFilm/ InkBleed/ Frost/
-    SmokeBox/ ClothPanel/ IronFilings/
+    Shared/                      Motion, Verlet, display cadence
   Assets.xcassets
 fastlane/
 .github/workflows/testflight.yml
 docs/TESTFLIGHT.md
 ```
-
-Adding another experiment: append a descriptor to `ExperimentCatalog.all` and put the screen under `Experiments/`.

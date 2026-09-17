@@ -1,8 +1,8 @@
 import CoreMotion
 import UIKit
 
-/// Device-frame acceleration in g's (CoreMotion axes: +x right, +y toward the top of the phone, +z out of the screen).
-struct DeviceAcceleration {
+/// Device-frame acceleration in g's (CoreMotion: +x right, +y toward the top of the phone, +z out).
+struct DeviceAcceleration: Sendable {
     var x: Double
     var y: Double
     var z: Double
@@ -56,7 +56,7 @@ private extension UIWindowScene {
 
 /// Reads gravity + user acceleration from CoreMotion.
 /// Simulator typically has no hardware; callers keep a portrait-down default.
-final class DeviceMotionSource {
+final class DeviceMotionSource: @unchecked Sendable {
     private let manager = CMMotionManager()
     private let queue: OperationQueue = {
         let queue = OperationQueue()
@@ -83,7 +83,7 @@ final class DeviceMotionSource {
 
     func start() {
         if manager.isDeviceMotionAvailable {
-            manager.deviceMotionUpdateInterval = 1.0 / 60.0
+            manager.deviceMotionUpdateInterval = 1.0 / 120.0
             manager.startDeviceMotionUpdates(to: queue) { [weak self] motion, _ in
                 guard let self, let motion else { return }
                 self.publish(
@@ -95,10 +95,9 @@ final class DeviceMotionSource {
         }
 
         if manager.isAccelerometerAvailable {
-            manager.accelerometerUpdateInterval = 1.0 / 60.0
+            manager.accelerometerUpdateInterval = 1.0 / 120.0
             manager.startAccelerometerUpdates(to: queue) { [weak self] data, _ in
                 guard let self, let data else { return }
-                // Accelerometer already includes gravity.
                 self.publish(
                     x: data.acceleration.x,
                     y: data.acceleration.y,
@@ -111,6 +110,10 @@ final class DeviceMotionSource {
     func stop() {
         manager.stopDeviceMotionUpdates()
         manager.stopAccelerometerUpdates()
+        lock.lock()
+        hardwareActive = false
+        raw = .hangingPortrait
+        lock.unlock()
     }
 
     deinit {
@@ -119,7 +122,7 @@ final class DeviceMotionSource {
     }
 
     private func publish(gravity: CMAcceleration, user: CMAcceleration) {
-        // Boost flicks a little so a wrist snap reads through the links.
+        // A wrist snap should read through the links, not just rest gravity.
         let boost = 1.55
         publish(
             x: gravity.x + user.x * boost,
