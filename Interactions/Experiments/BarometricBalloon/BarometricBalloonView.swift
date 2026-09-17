@@ -12,8 +12,9 @@ struct BarometricBalloonView: View {
             ZStack {
                 LinearGradient(
                     colors: [
-                        Color(red: 0.62, green: 0.80, blue: 0.92),
-                        Color(red: 0.90, green: 0.93, blue: 0.88)
+                        Color(red: 0.55, green: 0.74, blue: 0.90),
+                        Color(red: 0.78, green: 0.88, blue: 0.94),
+                        Color(red: 0.91, green: 0.93, blue: 0.86)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -31,6 +32,19 @@ struct BarometricBalloonView: View {
                             }
                         }
                 )
+                .accessibilityLabel("Barometric balloon")
+                .accessibilityHint(hint)
+
+                VStack {
+                    HStack {
+                        Spacer()
+                        LabFallbackChip(text: sim.isHardware ? "Barometer live" : "Drag fallback")
+                    }
+                    .padding(.top, 58)
+                    .padding(.trailing, 16)
+                    Spacer()
+                }
+                .allowsHitTesting(false)
 
                 LabHintOverlay(text: hint)
             }
@@ -94,7 +108,6 @@ final class BalloonSimulation: ObservableObject {
         let maxY = restY + 40
         let target: CGFloat
         if altimeter.isHardware {
-            // ~40 cm of lift fills most of the screen.
             let meters = CGFloat(altimeter.relativeMeters)
             let t = min(max(meters / 0.45, -0.3), 1.15)
             target = maxY - t * (maxY - minY)
@@ -110,28 +123,33 @@ final class BalloonSimulation: ObservableObject {
 
 private enum BalloonRenderer {
     static func draw(in context: inout GraphicsContext, size: CGSize, y: CGFloat, stringTo: CGFloat) {
+        var hills = Path()
+        hills.move(to: CGPoint(x: 0, y: size.height - 18))
+        hills.addQuadCurve(to: CGPoint(x: size.width * 0.38, y: size.height - 42), control: CGPoint(x: size.width * 0.18, y: size.height - 70))
+        hills.addQuadCurve(to: CGPoint(x: size.width, y: size.height - 24), control: CGPoint(x: size.width * 0.72, y: size.height - 8))
+        hills.addLine(to: CGPoint(x: size.width, y: size.height))
+        hills.addLine(to: CGPoint(x: 0, y: size.height))
+        hills.closeSubpath()
+        context.fill(hills, with: .color(Color(red: 0.48, green: 0.62, blue: 0.40)))
+
         let x = size.width * 0.5
-        let top = CGPoint(x: x, y: y)
         var string = Path()
-        string.move(to: CGPoint(x: x, y: y + 46))
-        string.addQuadCurve(to: CGPoint(x: x + 8, y: stringTo - 10), control: CGPoint(x: x - 18, y: (y + stringTo) / 2))
-        context.stroke(string, with: .color(.white.opacity(0.85)), lineWidth: 1.2)
+        string.move(to: CGPoint(x: x, y: y + 48))
+        string.addQuadCurve(to: CGPoint(x: x + 6, y: stringTo - 12), control: CGPoint(x: x - 20, y: (y + stringTo) / 2))
+        context.stroke(string, with: .color(.white.opacity(0.88)), lineWidth: 1.15)
 
-        let knot = CGRect(x: x - 4, y: y + 40, width: 8, height: 10)
-        context.fill(Path(roundedRect: knot, cornerRadius: 2), with: .color(Color(red: 0.75, green: 0.2, blue: 0.22)))
-
-        let balloon = CGRect(x: x - 34, y: y - 52, width: 68, height: 86)
-        context.fill(Path(ellipseIn: balloon), with: .color(Color(red: 0.86, green: 0.18, blue: 0.22)))
         context.fill(
-            Path(ellipseIn: CGRect(x: x - 16, y: y - 40, width: 16, height: 22)),
-            with: .color(.white.opacity(0.28))
+            Path(roundedRect: CGRect(x: x - 5, y: y + 42, width: 10, height: 12), cornerRadius: 2),
+            with: .color(Color(red: 0.72, green: 0.16, blue: 0.20))
         )
 
-        // Ground
-        var ground = Path()
-        ground.move(to: CGPoint(x: 0, y: size.height - 28))
-        ground.addLine(to: CGPoint(x: size.width, y: size.height - 28))
-        context.stroke(ground, with: .color(Color(red: 0.45, green: 0.55, blue: 0.38)), lineWidth: 6)
+        let balloon = CGRect(x: x - 36, y: y - 54, width: 72, height: 90)
+        context.fill(Path(ellipseIn: balloon), with: .color(Color(red: 0.86, green: 0.16, blue: 0.22)))
+        context.fill(
+            Path(ellipseIn: CGRect(x: x - 18, y: y - 42, width: 16, height: 24)),
+            with: .color(.white.opacity(0.30))
+        )
+        context.stroke(Path(ellipseIn: balloon), with: .color(Color.white.opacity(0.16)), lineWidth: 1)
     }
 }
 

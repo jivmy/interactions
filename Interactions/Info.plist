@@ -10,5 +10,16 @@
 	<string>The TrueDepth camera tracks your face so metal highlights and the diorama can move with your head.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Location is used only to correct magnetic north into true north for the mercury compass.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.jimmy.interactions</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>interactions</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

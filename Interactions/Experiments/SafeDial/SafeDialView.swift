@@ -12,7 +12,16 @@ struct SafeDialView: View {
             let isOpen = model.isOpen
             let notches = SafeDialModel.notches
             ZStack {
-                Color(red: 0.13, green: 0.13, blue: 0.14).ignoresSafeArea()
+                Color(red: 0.10, green: 0.10, blue: 0.11).ignoresSafeArea()
+                RadialGradient(
+                    colors: [Color.white.opacity(0.05), .clear],
+                    center: .center,
+                    startRadius: 20,
+                    endRadius: 280
+                )
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+
                 Canvas { context, size in
                     SafeDialRenderer.draw(in: &context, size: size, angle: angle, notch: notch, open: isOpen, notches: notches)
                 }
@@ -25,7 +34,11 @@ struct SafeDialView: View {
                             model.endDrag()
                         }
                 )
-                LabHintOverlay(text: isOpen ? "Open. Spin off the drop to close." : "Turn the dial. Last notch clunks.")
+                .accessibilityLabel(isOpen ? "Safe dial, open" : "Safe dial, closed")
+                .accessibilityHint("Turn the dial. Last notch clunks open.")
+                .accessibilityValue("Notch \(notch)")
+
+                LabHintOverlay(text: isOpen ? "Open. Spin off the drop to close." : "Turn the dial. The drop clunks.")
             }
         }
         .ignoresSafeArea()
@@ -35,7 +48,6 @@ struct SafeDialView: View {
 @MainActor
 final class SafeDialModel: ObservableObject {
     nonisolated static let notches = 40
-    /// Unlock sits on notch 0 — the drop.
     let dropNotch = 0
 
     @Published var angle: Double = 0
@@ -64,11 +76,11 @@ final class SafeDialModel: ObservableObject {
             lastNotch = idx
             notch = idx
             if idx == dropNotch {
-                haptics.clunk()
+                haptics.detent(isDrop: true)
                 isOpen = true
                 passedDrop = true
             } else {
-                haptics.click(intensity: 0.5, sharpness: 0.9)
+                haptics.detent(isDecade: idx % 10 == 0)
                 if passedDrop && abs(idx - dropNotch) > 2 {
                     isOpen = false
                     passedDrop = false
@@ -89,42 +101,56 @@ private enum SafeDialRenderer {
         let center = CGPoint(x: size.width / 2, y: size.height * 0.52)
         let radius: CGFloat = min(size.width, size.height) * 0.34
 
-        let door = CGRect(x: center.x - radius - 36, y: center.y - radius - 48, width: (radius + 36) * 2, height: (radius + 48) * 2 + 20)
-        context.fill(Path(roundedRect: door, cornerRadius: 18), with: .color(Color(white: 0.18)))
+        let door = CGRect(x: center.x - radius - 40, y: center.y - radius - 52, width: (radius + 40) * 2, height: (radius + 52) * 2 + 24)
+        context.fill(Path(roundedRect: door, cornerRadius: 22), with: .color(Color(white: 0.16)))
+        context.stroke(Path(roundedRect: door, cornerRadius: 22), with: .color(Color.white.opacity(0.06)), lineWidth: 1)
 
-        // Bolt
-        let boltX = center.x + radius + 10 + (open ? 28 : 0)
+        let lamp = CGRect(x: center.x - 7, y: door.minY + 16, width: 14, height: 14)
+        context.fill(Path(ellipseIn: lamp), with: .color(open ? Color(red: 0.55, green: 0.82, blue: 0.40) : Color(white: 0.28)))
+        if open {
+            context.fill(Path(ellipseIn: lamp.insetBy(dx: -6, dy: -6)), with: .color(Color(red: 0.55, green: 0.82, blue: 0.40).opacity(0.22)))
+        }
+
+        let boltX = center.x + radius + 12 + (open ? 30 : 0)
         context.fill(
-            Path(roundedRect: CGRect(x: boltX, y: center.y - 10, width: 34, height: 20), cornerRadius: 3),
-            with: .color(open ? Color(red: 0.55, green: 0.7, blue: 0.4) : Color(white: 0.45))
+            Path(roundedRect: CGRect(x: boltX, y: center.y - 11, width: 36, height: 22), cornerRadius: 4),
+            with: .color(open ? Color(red: 0.55, green: 0.72, blue: 0.40) : Color(white: 0.48))
         )
 
         var dial = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
-        context.fill(dial, with: .color(Color(white: 0.12)))
-        context.stroke(dial, with: .color(Color(white: 0.55)), lineWidth: 10)
+        context.fill(dial, with: .color(Color(white: 0.11)))
+        context.stroke(dial, with: .color(Color(white: 0.58)), lineWidth: 11)
+        context.stroke(
+            Path(ellipseIn: CGRect(x: center.x - radius + 10, y: center.y - radius + 10, width: (radius - 10) * 2, height: (radius - 10) * 2)),
+            with: .color(Color.white.opacity(0.06)),
+            lineWidth: 1
+        )
 
         for i in 0..<notches {
             let t = Double(i) / Double(notches) * .pi * 2 + angle
-            let outer = radius - 8
-            let inner = i % 10 == 0 ? radius - 28 : radius - 18
+            let outer = radius - 10
+            let inner = i % 10 == 0 ? radius - 30 : radius - 20
             var tick = Path()
             tick.move(to: CGPoint(x: center.x + CGFloat(cos(t)) * inner, y: center.y + CGFloat(sin(t)) * inner))
             tick.addLine(to: CGPoint(x: center.x + CGFloat(cos(t)) * outer, y: center.y + CGFloat(sin(t)) * outer))
-            let color: Color = i == 0 ? Color(red: 0.85, green: 0.2, blue: 0.18) : Color(white: i % 10 == 0 ? 0.85 : 0.55)
-            context.stroke(tick, with: .color(color), lineWidth: i % 10 == 0 ? 2.4 : 1.2)
+            let color: Color = i == 0 ? Color(red: 0.86, green: 0.22, blue: 0.18) : Color(white: i % 10 == 0 ? 0.88 : 0.52)
+            context.stroke(tick, with: .color(color), lineWidth: i % 10 == 0 ? 2.5 : 1.15)
         }
 
-        // Fixed drop marker at 12 o'clock
         var marker = Path()
-        marker.move(to: CGPoint(x: center.x, y: center.y - radius - 18))
-        marker.addLine(to: CGPoint(x: center.x - 7, y: center.y - radius - 4))
-        marker.addLine(to: CGPoint(x: center.x + 7, y: center.y - radius - 4))
+        marker.move(to: CGPoint(x: center.x, y: center.y - radius - 20))
+        marker.addLine(to: CGPoint(x: center.x - 7, y: center.y - radius - 5))
+        marker.addLine(to: CGPoint(x: center.x + 7, y: center.y - radius - 5))
         marker.closeSubpath()
-        context.fill(marker, with: .color(Color(red: 0.9, green: 0.75, blue: 0.35)))
+        context.fill(marker, with: .color(LabPalette.brass))
 
         context.fill(
-            Path(ellipseIn: CGRect(x: center.x - 10, y: center.y - 10, width: 20, height: 20)),
-            with: .color(Color(white: 0.3))
+            Path(ellipseIn: CGRect(x: center.x - 11, y: center.y - 11, width: 22, height: 22)),
+            with: .color(Color(white: 0.28))
+        )
+        context.fill(
+            Path(ellipseIn: CGRect(x: center.x - 4, y: center.y - 6, width: 6, height: 5)),
+            with: .color(.white.opacity(0.18))
         )
     }
 }

@@ -14,7 +14,7 @@ final class FrameTicker: NSObject, ObservableObject {
         guard displayLink == nil else { return }
         lastTimestamp = 0
         let link = CADisplayLink(target: self, selector: #selector(handle(_:)))
-        link.preferredFrameRateRange = CAFrameRateRange(minimum: 30, maximum: 120, preferred: 60)
+        link.preferredFrameRateRange = CAFrameRateRange(minimum: 48, maximum: 120, preferred: 120)
         link.add(to: .main, forMode: .common)
         displayLink = link
     }

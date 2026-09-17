@@ -8,9 +8,9 @@ Jimmy’s lab for native iOS interaction experiments. SwiftUI, plus Metal, ARKit
 - Minimum iOS: 17.0
 - iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
 
-Open the app and you get a catalog of **18 feel prototypes**. A1 Hanging chain is still the Verlet + CoreMotion rope; it now lives in the list with everything else.
+Open the app and you get a catalog of **18 feel prototypes**. Search, filter by track (A–E), favorite, and jump back in from Continue / Recents. Inside an experiment, the bottom chrome switches neighbors in the same track; the sheet jumps anywhere. Deep link with `interactions://experiment/hanging-chain` (or an `A1`-style code).
 
-These are feel sketches, not game polish.
+The chrome is meant to feel like an Apple design prototype: SF Pro, paper/metal materials, springs, and Core Haptics that mean something. Physics is unchanged — only the craft around it.
 
 ## Experiments
 
@@ -69,7 +69,7 @@ First launch may ask for **Motion**, **Microphone**, **Camera**, and (A3) **Loca
 1. In the Xcode toolbar, click the destination control (to the right of the Run ▶ button).
 2. Under **iOS Simulator**, pick an iPhone (any iOS 17+ simulator is fine).
 3. Press **Run** (▶) or **Command-R**.
-4. You should see the catalog. A1 hangs under default gravity — drag a link. Touch experiments (zipper, ink, frost, filings, pull-cord) still play. Tilt / compass / barometer / TrueDepth / haptics will not.
+4. You should see the catalog. Search or filter a track, then open anything. A1 hangs under default gravity — drag a link. Touch experiments (zipper, ink, frost, filings, pull-cord) still play. Tilt / compass / barometer / TrueDepth / haptics will not. The bottom bar switches neighbors; the sheet jumps tracks.
 
 If no simulators are listed: **Xcode → Settings → Platforms** (or **Components**) and download an iOS simulator runtime.
 
@@ -149,17 +149,23 @@ Full walkthrough (create the ASC app, API key, secrets, run the workflow, instal
 3. When App Store Connect finishes processing, add the build to an Internal Testing group and install from the **TestFlight** iOS app.
 4. On device, open the catalog — A1 should still swing with gravity; the rest of the list should launch without crashing.
 
+## Switching
+
+- **Catalog:** search, A–E track chips, favorites, recents, Continue
+- **In an experiment:** prev / next wraps inside the current track (thumb-zone bar), or open the switcher sheet
+- **Deep link:** `interactions://experiment/<id-or-code>` — e.g. `interactions://experiment/A2`
+
 ## Project layout
 
 ```
 Interactions.xcodeproj
 Interactions/
   InteractionsApp.swift
-  ContentView.swift              Catalog (NavigationStack)
-  Info.plist                     Motion / mic / camera / location usage strings
+  ContentView.swift              Catalog (search, tracks, favorites, recents)
+  Info.plist                     Motion / mic / camera / location + URL scheme
   Experiments/
-    ExperimentCatalog.swift      All 18 entries
-    Shared/                      Motion, Verlet rope, haptics, Metal, FFT, AR face
+    ExperimentCatalog.swift      All 18 entries + lookup / neighbors
+    Shared/                      Theme, session, chrome, motion, haptics, Metal
     HangingChain/
     PullCord/ CompassMercury/ BarometricBalloon/
     SafeDial/ Zipper/ Matchbook/ WaxSeal/

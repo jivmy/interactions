@@ -8,7 +8,7 @@ struct ChladniPlateView: View {
         GeometryReader { geo in
             let grains = model.grains
             ZStack {
-                Color(red: 0.12, green: 0.12, blue: 0.13).ignoresSafeArea()
+                Color(red: 0.10, green: 0.10, blue: 0.11).ignoresSafeArea()
                 Canvas { context, size in
                     ChladniRenderer.draw(in: &context, size: size, grains: grains)
                 }
@@ -21,6 +21,20 @@ struct ChladniPlateView: View {
                             }
                         }
                 )
+                .accessibilityLabel("Chladni plate")
+                .accessibilityHint(hint)
+
+                VStack {
+                    HStack {
+                        Spacer()
+                        LabFallbackChip(text: status)
+                    }
+                    .padding(.top, 58)
+                    .padding(.trailing, 16)
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+
                 LabHintOverlay(text: hint)
             }
             .onAppear {
@@ -42,8 +56,14 @@ struct ChladniPlateView: View {
         } else if model.isListening {
             "Hum or play a tone — sand finds the nodes"
         } else {
-            "Drag to pick a frequency — mic needs a real device + permission"
+            "Drag to pick a frequency — mic needs a real device"
         }
+    }
+
+    private var status: String {
+        if model.denied { return "Mic denied" }
+        if model.isListening { return "Listening" }
+        return "Drag for tone"
     }
 }
 
@@ -111,7 +131,6 @@ final class ChladniModel: ObservableObject {
             let psi = cos(nn * .pi * nx) * cos(mm * .pi * ny)
             let gx = -sin(nn * .pi * nx) * nn * .pi / w * cos(mm * .pi * ny)
             let gy = -cos(nn * .pi * nx) * sin(mm * .pi * ny) * mm * .pi / h
-            // Move away from antinodes (high |ψ|) toward nodal lines.
             let kick = CGFloat(psi * psi) * 420 * CGFloat(amp) * dt
             p.x += gx * kick + CGFloat.random(in: -0.4...0.4)
             p.y += gy * kick + CGFloat.random(in: -0.4...0.4)
@@ -125,15 +144,16 @@ final class ChladniModel: ObservableObject {
 
 private enum ChladniRenderer {
     static func draw(in context: inout GraphicsContext, size: CGSize, grains: [CGPoint]) {
-        let plate = CGRect(x: 24, y: 96, width: size.width - 48, height: size.height - 160)
-        context.fill(Path(roundedRect: plate, cornerRadius: 8), with: .color(Color(red: 0.22, green: 0.20, blue: 0.16)))
-        context.stroke(Path(roundedRect: plate, cornerRadius: 8), with: .color(Color(white: 0.45)), lineWidth: 6)
+        let plate = CGRect(x: 22, y: 92, width: size.width - 44, height: size.height - 156)
+        context.fill(Path(roundedRect: plate, cornerRadius: 10), with: .color(Color(red: 0.20, green: 0.18, blue: 0.14)))
+        context.stroke(Path(roundedRect: plate, cornerRadius: 10), with: .color(LabPalette.brass.opacity(0.7)), lineWidth: 7)
+        context.stroke(Path(roundedRect: plate.insetBy(dx: 5, dy: 5), cornerRadius: 7), with: .color(Color.white.opacity(0.06)), lineWidth: 1)
 
         var sand = Path()
         for g in grains {
-            sand.addEllipse(in: CGRect(x: g.x - 1.1, y: g.y - 1.1, width: 2.2, height: 2.2))
+            sand.addEllipse(in: CGRect(x: g.x - 1.15, y: g.y - 1.15, width: 2.3, height: 2.3))
         }
-        context.fill(sand, with: .color(Color(red: 0.82, green: 0.74, blue: 0.52)))
+        context.fill(sand, with: .color(Color(red: 0.84, green: 0.76, blue: 0.52)))
     }
 }
 

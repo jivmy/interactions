@@ -9,7 +9,7 @@ struct InkBleedView: View {
             let cols = model.cols
             let rows = model.rows
             ZStack {
-                Color(red: 0.90, green: 0.86, blue: 0.78).ignoresSafeArea()
+                Color(red: 0.91, green: 0.87, blue: 0.79).ignoresSafeArea()
                 Canvas { context, size in
                     InkBleedRenderer.draw(in: &context, size: size, field: field, cols: cols, rows: rows)
                 }
@@ -19,6 +19,9 @@ struct InkBleedView: View {
                             model.stamp(at: value.location, size: geo.size)
                         }
                 )
+                .accessibilityLabel("Ink bleed paper")
+                .accessibilityHint("Touch the paper. Ink wicks along the grain.")
+
                 LabHintOverlay(text: "Touch the paper. Ink wicks along the grain.")
             }
             .onAppear {
@@ -34,8 +37,8 @@ struct InkBleedView: View {
 
 @MainActor
 final class InkBleedModel: ObservableObject {
-    let cols = 72
-    let rows = 128
+    let cols = 64
+    let rows = 112
     @Published var field: [Float] = []
     private var grain: [Float] = []
     private let ticker = FrameTicker()
@@ -83,7 +86,6 @@ final class InkBleedModel: ObservableObject {
         for y in 1..<(rows - 1) {
             for x in 1..<(cols - 1) {
                 let i = y * cols + x
-                // Anisotropic: stronger along horizontal paper fibers, modulated by grain.
                 let g = grain[i]
                 let lap = (field[i - 1] + field[i + 1] - 2 * field[i]) * 1.35 * g
                     + (field[i - cols] + field[i + cols] - 2 * field[i]) * 0.55
@@ -101,14 +103,26 @@ private enum InkBleedRenderer {
         guard field.count == cols * rows else { return }
         let cw = size.width / CGFloat(cols)
         let rh = size.height / CGFloat(rows)
+        let sheet = CGRect(x: size.width * 0.06, y: size.height * 0.14, width: size.width * 0.88, height: size.height * 0.70)
+        context.fill(Path(roundedRect: sheet, cornerRadius: 4), with: .color(Color(red: 0.96, green: 0.93, blue: 0.86)))
+        context.stroke(Path(roundedRect: sheet, cornerRadius: 4), with: .color(Color(red: 0.78, green: 0.72, blue: 0.62)), lineWidth: 1)
+
         for y in 0..<rows {
-            for x in 0..<cols {
+            var x = 0
+            while x < cols {
                 let v = field[y * cols + x]
-                if v < 0.04 { continue }
-                let alpha = Double(min(1, v * 1.15))
+                if v < 0.04 {
+                    x += 1
+                    continue
+                }
+                let start = x
+                x += 1
+                while x < cols && field[y * cols + x] >= 0.04 { x += 1 }
+                let avg = field[y * cols + start]
+                let alpha = Double(min(1, avg * 1.15))
                 context.fill(
-                    Path(CGRect(x: CGFloat(x) * cw, y: CGFloat(y) * rh, width: cw + 0.5, height: rh + 0.5)),
-                    with: .color(Color(red: 0.12, green: 0.14, blue: 0.32).opacity(alpha))
+                    Path(CGRect(x: CGFloat(start) * cw, y: CGFloat(y) * rh, width: CGFloat(x - start) * cw + 0.4, height: rh + 0.4)),
+                    with: .color(Color(red: 0.10, green: 0.13, blue: 0.32).opacity(alpha))
                 )
             }
         }

@@ -8,7 +8,17 @@ struct MatchbookView: View {
         GeometryReader { geo in
             let drawState = MatchbookDrawState(model)
             ZStack {
-                Color(red: 0.17, green: 0.12, blue: 0.10).ignoresSafeArea()
+                Color(red: 0.13, green: 0.09, blue: 0.08).ignoresSafeArea()
+                if drawState.lit {
+                    RadialGradient(
+                        colors: [Color.orange.opacity(0.18 * Double(drawState.flame)), .clear],
+                        center: .center,
+                        startRadius: 4,
+                        endRadius: 220
+                    )
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                }
                 Canvas { context, size in
                     MatchbookRenderer.draw(in: &context, size: size, state: drawState)
                 }
@@ -21,6 +31,9 @@ struct MatchbookView: View {
                             model.endDrag()
                         }
                 )
+                .accessibilityLabel(drawState.lit ? "Matchbook, burning" : "Matchbook")
+                .accessibilityHint("Strike fast along the grit")
+
                 LabHintOverlay(text: model.lit ? "Burning. Strike again after it dies." : "Strike fast along the grit. Slow is a scrape.")
             }
             .onAppear { model.start() }
@@ -89,8 +102,8 @@ final class MatchbookModel: ObservableObject {
             haptics.ignite()
         } else if contacted && !lit {
             failFlash = 1
-            sparks = (0..<8).map { _ in
-                CGPoint(x: matchTip.x + CGFloat.random(in: -10...10), y: matchTip.y + CGFloat.random(in: -16...4))
+            sparks = (0..<10).map { _ in
+                CGPoint(x: matchTip.x + CGFloat.random(in: -12...12), y: matchTip.y + CGFloat.random(in: -18...4))
             }
             haptics.scrape()
         }
@@ -131,39 +144,47 @@ private struct MatchbookDrawState: Sendable {
 private enum MatchbookRenderer {
     static func draw(in context: inout GraphicsContext, size: CGSize, state: MatchbookDrawState) {
         let book = CGRect(x: size.width * 0.16, y: size.height * 0.38, width: size.width * 0.68, height: size.height * 0.32)
-        context.fill(Path(roundedRect: book, cornerRadius: 10), with: .color(Color(red: 0.72, green: 0.18, blue: 0.16)))
-        let cover = CGRect(x: book.minX + 10, y: book.minY + 12, width: book.width * 0.42, height: book.height - 24)
-        context.fill(Path(roundedRect: cover, cornerRadius: 4), with: .color(Color(red: 0.62, green: 0.14, blue: 0.12)))
+        context.fill(Path(roundedRect: book, cornerRadius: 12), with: .color(Color(red: 0.70, green: 0.16, blue: 0.14)))
+        context.stroke(Path(roundedRect: book, cornerRadius: 12), with: .color(Color(red: 0.42, green: 0.08, blue: 0.08)), lineWidth: 1)
+        let cover = CGRect(x: book.minX + 12, y: book.minY + 14, width: book.width * 0.42, height: book.height - 28)
+        context.fill(Path(roundedRect: cover, cornerRadius: 5), with: .color(Color(red: 0.58, green: 0.12, blue: 0.11)))
 
         let strip = CGRect(x: size.width * 0.18, y: size.height * 0.62, width: size.width * 0.64, height: 26)
-        context.fill(Path(roundedRect: strip, cornerRadius: 3), with: .color(Color(red: 0.28, green: 0.18, blue: 0.12)))
-        for i in 0..<18 {
-            let x = strip.minX + 6 + CGFloat(i) * (strip.width - 12) / 17
+        context.fill(Path(roundedRect: strip, cornerRadius: 4), with: .color(Color(red: 0.26, green: 0.16, blue: 0.11)))
+        for i in 0..<22 {
+            let x = strip.minX + 6 + CGFloat(i) * (strip.width - 12) / 21
             var grit = Path()
             grit.move(to: CGPoint(x: x, y: strip.minY + 4))
-            grit.addLine(to: CGPoint(x: x + 2, y: strip.maxY - 4))
-            context.stroke(grit, with: .color(Color(white: 0.45)), lineWidth: 1)
+            grit.addLine(to: CGPoint(x: x + 2.2, y: strip.maxY - 4))
+            context.stroke(grit, with: .color(Color(white: 0.42)), lineWidth: 1)
         }
 
-        let rest = CGPoint(x: book.minX + 28, y: book.midY)
+        let rest = CGPoint(x: book.minX + 30, y: book.midY)
         let tip = state.dragging || state.lit ? state.matchTip : rest
-        let shaftEnd = CGPoint(x: tip.x - 54, y: tip.y + 8)
+        let shaftEnd = CGPoint(x: tip.x - 56, y: tip.y + 8)
         var shaft = Path()
         shaft.move(to: shaftEnd)
         shaft.addLine(to: tip)
-        context.stroke(shaft, with: .color(Color(red: 0.85, green: 0.72, blue: 0.45)), style: StrokeStyle(lineWidth: 4, lineCap: .round))
-        context.fill(Path(ellipseIn: CGRect(x: tip.x - 5, y: tip.y - 5, width: 10, height: 10)), with: .color(state.lit ? Color.orange : Color(red: 0.35, green: 0.12, blue: 0.08)))
+        context.stroke(shaft, with: .color(Color(red: 0.86, green: 0.74, blue: 0.48)), style: StrokeStyle(lineWidth: 4.2, lineCap: .round))
+        context.fill(
+            Path(ellipseIn: CGRect(x: tip.x - 5.5, y: tip.y - 5.5, width: 11, height: 11)),
+            with: .color(state.lit ? Color.orange : Color(red: 0.32, green: 0.10, blue: 0.07))
+        )
 
         if state.lit && state.flame > 0 {
-            let h = 18 + state.flame * 28
-            let flame = CGRect(x: tip.x - 8, y: tip.y - h, width: 16, height: h)
-            context.fill(Path(ellipseIn: flame), with: .color(Color.orange.opacity(0.9)))
-            context.fill(Path(ellipseIn: flame.insetBy(dx: 4, dy: 6)), with: .color(Color.yellow.opacity(0.9)))
+            let h = 18 + state.flame * 30
+            let flame = CGRect(x: tip.x - 9, y: tip.y - h, width: 18, height: h)
+            context.fill(Path(ellipseIn: flame.insetBy(dx: -8, dy: -8)), with: .color(Color.orange.opacity(0.22)))
+            context.fill(Path(ellipseIn: flame), with: .color(Color.orange.opacity(0.92)))
+            context.fill(Path(ellipseIn: flame.insetBy(dx: 4.5, dy: 7)), with: .color(Color.yellow.opacity(0.92)))
         }
 
         if state.failFlash > 0 {
             for s in state.sparks {
-                context.fill(Path(ellipseIn: CGRect(x: s.x, y: s.y, width: 3, height: 3)), with: .color(Color.yellow.opacity(Double(state.failFlash))))
+                context.fill(
+                    Path(ellipseIn: CGRect(x: s.x, y: s.y, width: 3, height: 3)),
+                    with: .color(Color.yellow.opacity(Double(state.failFlash)))
+                )
             }
         }
     }

@@ -9,9 +9,9 @@ struct IronFilingsView: View {
             let pole = model.pole
             let poleActive = model.poleActive
             ZStack {
-                Color(red: 0.10, green: 0.10, blue: 0.11).ignoresSafeArea()
+                Color(red: 0.09, green: 0.09, blue: 0.10).ignoresSafeArea()
                 Canvas { context, size in
-                    FilingsRenderer.draw(in: &context, filings: filings, pole: pole, active: poleActive)
+                    FilingsRenderer.draw(in: &context, size: size, filings: filings, pole: pole, active: poleActive)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -23,6 +23,9 @@ struct IronFilingsView: View {
                             model.poleActive = false
                         }
                 )
+                .accessibilityLabel("Iron filings")
+                .accessibilityHint("Hold a pole. Filings align to the field.")
+
                 LabHintOverlay(text: "Hold a pole. Filings align to the field.")
             }
             .onAppear {
@@ -83,7 +86,6 @@ final class FilingsModel: ObservableObject {
             let dx = p.x - pole.x
             let dy = p.y - pole.y
             let r2 = max(dx * dx + dy * dy, 80)
-            // 2D dipole-ish field pointing out of a north pole.
             let bx = dx / (r2 * sqrt(r2)) * 90000 * strength
             let by = dy / (r2 * sqrt(r2)) * 90000 * strength
             let target = atan2(by, bx)
@@ -101,17 +103,32 @@ final class FilingsModel: ObservableObject {
 }
 
 private enum FilingsRenderer {
-    static func draw(in context: inout GraphicsContext, filings: [Filing], pole: CGPoint, active: Bool) {
+    static func draw(in context: inout GraphicsContext, size: CGSize, filings: [Filing], pole: CGPoint, active: Bool) {
+        let tray = CGRect(x: 16, y: 84, width: size.width - 32, height: size.height - 148)
+        context.fill(Path(roundedRect: tray, cornerRadius: 10), with: .color(Color(red: 0.13, green: 0.12, blue: 0.11)))
+        context.stroke(Path(roundedRect: tray, cornerRadius: 10), with: .color(Color.white.opacity(0.06)), lineWidth: 1)
+
         if active {
-            context.fill(Path(ellipseIn: CGRect(x: pole.x - 10, y: pole.y - 10, width: 20, height: 20)), with: .color(Color(red: 0.75, green: 0.18, blue: 0.16)))
-            context.stroke(Path(ellipseIn: CGRect(x: pole.x - 16, y: pole.y - 16, width: 32, height: 32)), with: .color(Color.red.opacity(0.35)), lineWidth: 2)
+            context.fill(
+                Path(ellipseIn: CGRect(x: pole.x - 18, y: pole.y - 18, width: 36, height: 36)),
+                with: .color(LabPalette.rust.opacity(0.22))
+            )
+            context.fill(
+                Path(ellipseIn: CGRect(x: pole.x - 9, y: pole.y - 9, width: 18, height: 18)),
+                with: .color(LabPalette.rust)
+            )
+            context.stroke(
+                Path(ellipseIn: CGRect(x: pole.x - 15, y: pole.y - 15, width: 30, height: 30)),
+                with: .color(LabPalette.rust.opacity(0.45)),
+                lineWidth: 1.5
+            )
         }
         for f in filings {
-            let len: CGFloat = 7
+            let len: CGFloat = 7.2
             var path = Path()
             path.move(to: CGPoint(x: f.p.x - cos(f.angle) * len, y: f.p.y - sin(f.angle) * len))
             path.addLine(to: CGPoint(x: f.p.x + cos(f.angle) * len, y: f.p.y + sin(f.angle) * len))
-            context.stroke(path, with: .color(Color(white: 0.72)), style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
+            context.stroke(path, with: .color(Color(white: 0.74)), style: StrokeStyle(lineWidth: 1.35, lineCap: .round))
         }
     }
 }

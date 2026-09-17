@@ -63,22 +63,23 @@ fragment float4 metaballFragment(VertOut in [[stage_in]], constant LabUniforms &
     d = smin(d, circleSDF(p, float2(u.b2x, u.b2y), u.b2r, u.aspect), 0.10);
     d = smin(d, circleSDF(p, float2(u.b3x, u.b3y), u.b3r, u.aspect), 0.10);
 
-    float3 paper = float3(0.925, 0.914, 0.890);
-    float3 mercury = float3(0.62, 0.64, 0.66);
-    float3 dark = float3(0.18, 0.20, 0.22);
+    float3 paper = float3(0.957, 0.949, 0.929);
+    float3 mercury = float3(0.66, 0.68, 0.70);
+    float3 dark = float3(0.16, 0.18, 0.20);
 
-    float edge = smoothstep(0.012, -0.004, d);
-    float rim = smoothstep(0.03, 0.0, d) - smoothstep(0.004, -0.01, d);
+    float edge = smoothstep(0.010, -0.003, d);
+    float rim = smoothstep(0.028, 0.0, d) - smoothstep(0.003, -0.008, d);
 
     float2 n = normalize(float2(dfdx(d), dfdy(d)) + 1e-5);
-    float2 light = normalize(float2(0.35 + u.tiltX, -0.7 + u.tiltY));
-    float spec = pow(saturate(dot(n, light)), 18.0) * edge;
-    float3 fill = mix(dark, mercury, saturate(0.45 + n.y * 0.35));
+    float2 light = normalize(float2(0.38 + u.tiltX, -0.72 + u.tiltY));
+    float spec = pow(saturate(dot(n, light)), 22.0) * edge;
+    float3 fill = mix(dark, mercury, saturate(0.48 + n.y * 0.38));
 
+    float grain = fract(sin(dot(uv, float2(12.9898, 78.233))) * 43758.5453) * 0.015;
     float3 col = mix(paper, fill, edge);
-    col += spec * 0.55;
-    col += rim * float3(0.75, 0.78, 0.80) * 0.35;
-    col += (uv.y * 0.03);
+    col += spec * 0.62;
+    col += rim * float3(0.80, 0.83, 0.85) * 0.38;
+    col += (uv.y * 0.025) + grain;
 
     return float4(col, 1.0);
 }
@@ -106,11 +107,13 @@ fragment float4 soapFragment(VertOut in [[stage_in]], constant LabUniforms &u [[
     float3 irid = 0.5 + 0.5 * cos(6.28318 * path / lambda + float3(0.0, 2.094, 4.188));
     irid = pow(clamp(irid, 0.0, 1.0), 1.35);
 
-    float3 paper = float3(0.06, 0.07, 0.09);
-    float3 col = mix(paper, irid * 0.85 + 0.08, film * holeMask);
-    col += rimHole * float3(0.9, 0.95, 1.0) * 0.65;
-    float outer = smoothstep(radius - 0.01, radius, dist) * film;
-    col += outer * float3(0.8, 0.9, 1.0) * 0.25;
+    float3 paper = float3(0.05, 0.055, 0.07);
+    float3 col = mix(paper, irid * 0.88 + 0.07, film * holeMask);
+    col += rimHole * float3(0.92, 0.96, 1.0) * 0.72;
+    float outer = smoothstep(radius - 0.012, radius, dist) * film;
+    col += outer * float3(0.82, 0.92, 1.0) * 0.32;
+    float wire = smoothstep(radius + 0.012, radius + 0.004, dist) * (1.0 - smoothstep(radius + 0.004, radius - 0.002, dist));
+    col += wire * float3(0.75, 0.78, 0.82) * 0.55;
 
     if (hole > radius) {
         col = paper;
