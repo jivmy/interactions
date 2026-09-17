@@ -70,10 +70,10 @@ fragment float4 metaballFragment(VertOut in [[stage_in]], constant LabUniforms &
     float edge = smoothstep(0.012, -0.004, d);
     float rim = smoothstep(0.03, 0.0, d) - smoothstep(0.004, -0.01, d);
 
-    float2 n = normalize(float2(dFdx(d), dFdy(d)) + 1e-5);
+    float2 n = normalize(float2(dfdx(d), dfdy(d)) + 1e-5);
     float2 light = normalize(float2(0.35 + u.tiltX, -0.7 + u.tiltY));
     float spec = pow(saturate(dot(n, light)), 18.0) * edge;
-    float fill = mix(dark, mercury, saturate(0.45 + n.y * 0.35));
+    float3 fill = mix(dark, mercury, saturate(0.45 + n.y * 0.35));
 
     float3 col = mix(paper, fill, edge);
     col += spec * 0.55;
