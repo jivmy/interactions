@@ -36,28 +36,37 @@ struct CatalogHome: View {
                 header
                 searchField
                 trackChips
-                if query.isEmpty {
-                    continueCard
-                    rail(title: "Favorites", items: session.favoriteExperiments)
-                    rail(title: "Recents", items: session.recentExperiments.filter { $0.id != session.lastExperimentID })
-                }
-                if isSearching {
-                    resultsList
-                } else {
-                    ForEach(visibleSections) { section in
-                        sectionBlock(section)
-                    }
-                }
+                catalogBody
             }
             .padding(.horizontal, LabSpace.gutter)
             .padding(.top, 8)
             .padding(.bottom, 56)
-            .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.soft), value: track)
         }
+        .scrollBounceBehavior(.basedOnSize)
         .background(LabPaperBackground())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .navigationBar)
         .scrollDismissesKeyboard(.immediately)
+    }
+
+    @ViewBuilder
+    private var catalogBody: some View {
+        VStack(alignment: .leading, spacing: 26) {
+            if query.isEmpty {
+                continueCard
+                rail(title: "Favorites", items: session.favoriteExperiments)
+                rail(title: "Recents", items: session.recentExperiments.filter { $0.id != session.lastExperimentID })
+            }
+            if isSearching {
+                resultsList
+            } else {
+                ForEach(visibleSections) { section in
+                    sectionBlock(section)
+                }
+            }
+        }
+        .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.soft), value: track)
+        .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.snappy), value: isSearching)
     }
 
     private var isSearching: Bool {
@@ -81,13 +90,20 @@ struct CatalogHome: View {
             Text("Interactions")
                 .font(LabType.display())
                 .foregroundStyle(LabPalette.ink)
-            Text("Feel prototypes.")
+            Text(headerBlurb)
                 .font(LabType.hint())
                 .foregroundStyle(LabPalette.caption)
+                .contentTransition(reduceMotion ? .opacity : .interpolate)
         }
         .padding(.top, 12)
+        .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.soft), value: track)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
+    }
+
+    private var headerBlurb: String {
+        if isSearching { return "Feel prototypes." }
+        return track?.blurb ?? "Feel prototypes."
     }
 
     private var searchField: some View {
@@ -101,8 +117,10 @@ struct CatalogHome: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .submitLabel(.search)
+                .accessibilityLabel("Search experiments")
             if !query.isEmpty {
                 Button {
+                    LabSelect.fire()
                     query = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
@@ -113,7 +131,7 @@ struct CatalogHome: View {
             }
         }
         .padding(.horizontal, 14)
-        .frame(height: 46)
+        .frame(minHeight: 46)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: LabRadius.chip, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: LabRadius.chip, style: .continuous)
@@ -142,6 +160,7 @@ struct CatalogHome: View {
                 }
             }
         }
+        .scrollBounceBehavior(.basedOnSize)
         .accessibilityLabel("Filter by track")
     }
 
@@ -161,9 +180,10 @@ struct CatalogHome: View {
             .padding(.vertical, 8)
             .background(selected ? color : Color.white.opacity(0.42), in: Capsule())
             .overlay(Capsule().strokeBorder(LabPalette.ink.opacity(selected ? 0 : 0.06), lineWidth: 1))
+            .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.snappy), value: selected)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(subtitle.map { "\(title) \($0)" } ?? title)
+        .accessibilityLabel(subtitle.map { "Track \(title), \($0)" } ?? "All tracks")
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
@@ -189,10 +209,11 @@ struct CatalogHome: View {
                         .foregroundStyle(LabPalette.caption)
                 }
                 .padding(16)
-                .labCardSurface()
+                .labCardSurface(accent: LabPalette.track(last.section))
             }
             .buttonStyle(LabCardButtonStyle())
             .accessibilityLabel("Continue \(last.code) \(last.title)")
+            .accessibilityHint(last.summary)
         }
     }
 
@@ -213,6 +234,7 @@ struct CatalogHome: View {
                         }
                     }
                 }
+                .scrollBounceBehavior(.basedOnSize)
             }
         }
     }
@@ -230,16 +252,18 @@ struct CatalogHome: View {
         }
         .padding(14)
         .frame(width: 156, alignment: .leading)
-        .labCardSurface()
+        .labCardSurface(accent: LabPalette.track(item.section))
         .accessibilityLabel("\(item.code) \(item.title)")
+        .accessibilityHint(item.summary)
     }
 
     private var resultsList: some View {
         VStack(alignment: .leading, spacing: 10) {
             if filteredAll.isEmpty {
-                Text("Nothing matches.")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(LabPalette.ink.opacity(0.72))
+                LabEmptyCard(
+                    title: "Nothing matches.",
+                    detail: track.map { "Nothing in \($0.title)." } ?? "A code or a track."
+                )
             }
             ForEach(filteredAll) { item in
                 experimentRow(item)
@@ -254,6 +278,13 @@ struct CatalogHome: View {
                 Text(section.track)
                     .font(LabType.mono())
                     .foregroundStyle(LabPalette.track(section))
+                    .overlay(alignment: .bottom) {
+                        Capsule()
+                            .fill(LabPalette.track(section).opacity(0.45))
+                            .frame(height: 1.5)
+                            .offset(y: 3)
+                            .accessibilityHidden(true)
+                    }
                     .labHero("track-\(section.rawValue)")
                 Text(section.title)
                     .font(.subheadline.weight(.semibold))
@@ -295,7 +326,7 @@ struct CatalogHome: View {
                     Spacer(minLength: 8)
                 }
                 .padding(.vertical, 14)
-                .padding(.leading, 14)
+                .padding(.leading, 16)
                 .padding(.trailing, 4)
                 .contentShape(Rectangle())
             }
@@ -312,13 +343,13 @@ struct CatalogHome: View {
                     .foregroundStyle(session.isFavorite(item.id) ? LabPalette.brass : LabPalette.caption)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
-                    .symbolEffect(.bounce, value: session.isFavorite(item.id))
+                    .symbolEffect(.bounce, value: session.isFavorite(item.id) && !reduceMotion)
             }
             .buttonStyle(.plain)
             .accessibilityLabel(session.isFavorite(item.id) ? "Remove \(item.title) from favorites" : "Add \(item.title) to favorites")
             .padding(.trailing, 6)
         }
-        .labCardSurface()
+        .labCardSurface(accent: LabPalette.track(item.section))
     }
 }
 

@@ -24,6 +24,7 @@ struct SmokeBoxView: View {
                         }
                 )
                 .accessibilityLabel("Smoke box")
+                .accessibilityValue(sim.usingMotion ? "Tilt" : "Drag")
                 .accessibilityHint(sim.usingMotion ? "Tilt and drag" : "Drag to stir")
 
                 LabHintOverlay(text: sim.usingMotion ? "Stir." : "Drag.")

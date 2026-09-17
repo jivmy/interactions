@@ -37,6 +37,13 @@ struct SafeDialView: View {
                 .accessibilityLabel(isOpen ? "Safe dial, open" : "Safe dial, closed")
                 .accessibilityHint("Turn the dial. Last notch clunks open.")
                 .accessibilityValue("Notch \(notch)")
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment: model.nudge(notches: 1)
+                    case .decrement: model.nudge(notches: -1)
+                    default: break
+                    }
+                }
 
                 LabHintOverlay(text: isOpen ? "Open." : "Turn.")
             }
@@ -93,6 +100,27 @@ final class SafeDialModel: ObservableObject {
 
     func endDrag() {
         lastFingerAngle = nil
+    }
+
+    func nudge(notches delta: Int) {
+        let n = SafeDialModel.notches
+        let next = (notch + delta % n + n) % n
+        guard next != notch else { return }
+        let tau = Double.pi * 2
+        angle = -Double(next) / Double(n) * tau
+        lastNotch = next
+        notch = next
+        if next == dropNotch {
+            haptics.detent(isDrop: true)
+            isOpen = true
+            passedDrop = true
+        } else {
+            haptics.detent(isDecade: next % 10 == 0)
+            if passedDrop && abs(next - dropNotch) > 2 {
+                isOpen = false
+                passedDrop = false
+            }
+        }
     }
 }
 

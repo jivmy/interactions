@@ -32,15 +32,18 @@ struct ExperimentWorkspace: View {
                     .transition(contentTransition)
             }
             .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.page), value: currentID)
+            .accessibilitySortPriority(5)
 
             VStack(spacing: 0) {
                 topBar
                     .padding(.horizontal, 14)
                     .padding(.top, 4)
+                    .accessibilitySortPriority(20)
                 Spacer(minLength: 0)
                 bottomBar
                     .padding(.horizontal, 14)
                     .padding(.bottom, 4)
+                    .accessibilitySortPriority(10)
             }
             .padding(.top, ViewSpaceMotion.windowSafeAreaTop())
             .padding(.bottom, 6)
@@ -88,6 +91,7 @@ struct ExperimentWorkspace: View {
                 Text(experiment.code)
                     .font(LabType.mono())
                     .foregroundStyle(LabPalette.track(experiment.section))
+                    .contentTransition(reduceMotion ? .opacity : .interpolate)
                     .labHero("code-\(experiment.id)")
                 Text(experiment.title)
                     .font(LabType.caption())
@@ -147,8 +151,19 @@ struct ExperimentWorkspace: View {
                 .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.snappy), value: currentID)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(experiment.code) \(experiment.title)")
-            .accessibilityHint("Opens the lab. Swipe for neighbors.")
+            .accessibilityLabel("Lab switcher")
+            .accessibilityValue(pageControlValue)
+            .accessibilityHint("Opens the lab. Adjust for neighbors.")
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment:
+                    if let next = neighbors.next { switchTo(next.id) }
+                case .decrement:
+                    if let prev = neighbors.prev { switchTo(prev.id) }
+                default:
+                    break
+                }
+            }
             .highPriorityGesture(
                 DragGesture(minimumDistance: 12)
                     .onEnded { value in
@@ -167,6 +182,12 @@ struct ExperimentWorkspace: View {
             }
         }
         .accessibilityElement(children: .contain)
+    }
+
+    private var pageControlValue: String {
+        let items = ExperimentCatalog.experiments(in: experiment.section)
+        let index = (items.firstIndex { $0.id == experiment.id } ?? 0) + 1
+        return "\(experiment.code), \(index) of \(items.count)"
     }
 
     private func neighborLabel(_ prefix: String, _ item: ExperimentDescriptor?) -> String {
@@ -188,6 +209,7 @@ struct ExperimentSwitcherSheet: View {
 
     @EnvironmentObject private var session: LabSession
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var query = ""
     @State private var track: ExperimentSection?
 
@@ -226,10 +248,16 @@ struct ExperimentSwitcherSheet: View {
                         }
                     }
                     if !query.isEmpty, visibleSections.allSatisfy({ filtered(in: $0).isEmpty }) {
-                        Text("Nothing matches.")
-                            .font(LabType.hint())
-                            .foregroundStyle(LabPalette.caption)
-                            .listRowBackground(Color.clear)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Nothing matches.")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(LabPalette.ink.opacity(0.72))
+                            Text(track.map { "Nothing in \($0.title)." } ?? "A code or a track.")
+                                .font(LabType.hint())
+                                .foregroundStyle(LabPalette.caption)
+                        }
+                        .accessibilityElement(children: .combine)
+                        .listRowBackground(Color.clear)
                     }
                 }
                 .listStyle(.insetGrouped)
@@ -265,20 +293,26 @@ struct ExperimentSwitcherSheet: View {
     private var trackChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                chip(title: "All", selected: track == nil, color: LabPalette.ink) {
+                chip(title: "All", label: "All tracks", selected: track == nil, color: LabPalette.ink) {
                     track = nil
                 }
                 ForEach(ExperimentSection.allCases) { section in
-                    chip(title: section.track, selected: track == section, color: LabPalette.track(section)) {
+                    chip(
+                        title: section.track,
+                        label: "Track \(section.track), \(section.title)",
+                        selected: track == section,
+                        color: LabPalette.track(section)
+                    ) {
                         track = track == section ? nil : section
                     }
                 }
             }
         }
+        .scrollBounceBehavior(.basedOnSize)
         .accessibilityLabel("Filter by track")
     }
 
-    private func chip(title: String, selected: Bool, color: Color, action: @escaping () -> Void) -> some View {
+    private func chip(title: String, label: String, selected: Bool, color: Color, action: @escaping () -> Void) -> some View {
         Button {
             LabSelect.fire()
             action()
@@ -289,8 +323,10 @@ struct ExperimentSwitcherSheet: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(selected ? color : LabPalette.paperDeep.opacity(0.7), in: Capsule())
+                .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.snappy), value: selected)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
@@ -324,8 +360,14 @@ struct ExperimentSwitcherSheet: View {
         .buttonStyle(.plain)
         .id(item.id)
         .listRowInsets(EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16))
+        .listRowBackground(
+            item.id == currentID
+                ? LabPalette.track(item.section).opacity(0.12)
+                : Color(uiColor: .secondarySystemGroupedBackground)
+        )
         .accessibilityLabel("\(item.code) \(item.title)")
         .accessibilityHint(item.id == currentID ? "Current" : "Open")
+        .accessibilityAddTraits(item.id == currentID ? [.isSelected] : [])
     }
 }
 

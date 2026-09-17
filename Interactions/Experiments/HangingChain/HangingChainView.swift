@@ -28,6 +28,7 @@ struct HangingChainView: View {
                         }
                 )
                 .accessibilityLabel("Hanging metal chain")
+                .accessibilityValue(simulation.isUsingDeviceMotion ? "Tilt" : "Drag")
                 .accessibilityHint(hintText)
 
                 LabHintOverlay(text: hintText)
