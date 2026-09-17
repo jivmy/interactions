@@ -111,6 +111,12 @@ platform :ios do
       bundle_identifier: APP_IDENTIFIER
     )
 
+    # gym 2.233+ appends both export_xcargs and xcargs to `xcodebuild -exportArchive`.
+    # Put ASC API key auth and -allowProvisioningUpdates in xcargs only so they
+    # reach archive + export once. Do not also set export_xcargs — that duplicates
+    # -authenticationKeyPath / -authenticationKeyID / -authenticationKeyIssuerID /
+    # -allowProvisioningUpdates and xcodebuild exits 64.
+    # app_store_connect_api_key above is for Spaceship / upload_to_testflight only.
     build_app(
       project: XCODEPROJ,
       scheme: SCHEME,
@@ -133,8 +139,7 @@ platform :ios do
         auth_args,
         "CURRENT_PROJECT_VERSION=#{build_number}",
         "MARKETING_VERSION=#{marketing_version}"
-      ].join(" "),
-      export_xcargs: auth_args
+      ].join(" ")
     )
 
     upload_to_testflight(
