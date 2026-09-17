@@ -25,7 +25,7 @@ struct ContentView: View {
 
 struct CatalogHome: View {
     @EnvironmentObject private var session: LabSession
-    @Environment(\.labHero) private var hero
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var query = ""
     @State private var track: ExperimentSection?
@@ -52,7 +52,7 @@ struct CatalogHome: View {
             .padding(.horizontal, LabSpace.gutter)
             .padding(.top, 8)
             .padding(.bottom, 56)
-            .animation(LabMotion.soft, value: track)
+            .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.soft), value: track)
         }
         .background(LabPaperBackground())
         .navigationBarTitleDisplayMode(.inline)
@@ -126,6 +126,7 @@ struct CatalogHome: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 filterChip(title: "All", subtitle: nil, selected: track == nil, color: LabPalette.ink) {
+                    LabSelect.fire()
                     track = nil
                 }
                 ForEach(ExperimentSection.allCases) { section in
@@ -135,6 +136,7 @@ struct CatalogHome: View {
                         selected: track == section,
                         color: LabPalette.track(section)
                     ) {
+                        LabSelect.fire()
                         track = track == section ? nil : section
                     }
                 }
@@ -252,6 +254,7 @@ struct CatalogHome: View {
                 Text(section.track)
                     .font(LabType.mono())
                     .foregroundStyle(LabPalette.track(section))
+                    .labHero("track-\(section.rawValue)")
                 Text(section.title)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(LabPalette.ink.opacity(0.86))
@@ -278,11 +281,12 @@ struct CatalogHome: View {
                         .font(LabType.mono())
                         .foregroundStyle(LabPalette.track(item.section))
                         .frame(width: 34, alignment: .leading)
-                        .labHero("code-\(item.id)", in: hero)
+                        .labHero("code-\(item.id)")
                     VStack(alignment: .leading, spacing: 3) {
                         Text(item.title)
                             .font(LabType.callout())
                             .foregroundStyle(LabPalette.ink)
+                            .labHero("title-\(item.id)")
                         Text(item.summary)
                             .font(LabType.hint())
                             .foregroundStyle(LabPalette.caption)
@@ -300,6 +304,7 @@ struct CatalogHome: View {
             .accessibilityHint(item.summary)
 
             Button {
+                LabSelect.fire()
                 session.toggleFavorite(item.id)
             } label: {
                 Image(systemName: session.isFavorite(item.id) ? "star.fill" : "star")
@@ -307,6 +312,7 @@ struct CatalogHome: View {
                     .foregroundStyle(session.isFavorite(item.id) ? LabPalette.brass : LabPalette.caption)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
+                    .symbolEffect(.bounce, value: session.isFavorite(item.id))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(session.isFavorite(item.id) ? "Remove \(item.title) from favorites" : "Add \(item.title) to favorites")

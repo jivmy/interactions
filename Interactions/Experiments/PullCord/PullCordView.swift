@@ -5,6 +5,7 @@ import SwiftUI
 struct PullCordView: View {
     @StateObject private var sim = PullCordSimulation()
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { geo in
@@ -15,7 +16,7 @@ struct PullCordView: View {
                     ? Color(red: 0.99, green: 0.93, blue: 0.76)
                     : Color(red: 0.048, green: 0.046, blue: 0.056))
                     .ignoresSafeArea()
-                    .animation(.easeInOut(duration: 0.32), value: isOn)
+                    .animation(LabMotion.adaptive(reduceMotion: reduceMotion, .easeInOut(duration: 0.32)), value: isOn)
 
                 if !isOn {
                     RoundedRectangle(cornerRadius: 3, style: .continuous)

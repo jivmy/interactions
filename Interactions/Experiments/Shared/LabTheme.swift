@@ -72,20 +72,21 @@ enum LabSpace {
 }
 
 enum LabMotion {
-    static let spring = Animation.spring(response: 0.42, dampingFraction: 0.86)
-    static let soft = Animation.spring(response: 0.56, dampingFraction: 0.90)
-    static let snappy = Animation.spring(response: 0.30, dampingFraction: 0.82)
-    static let page = Animation.spring(response: 0.48, dampingFraction: 0.92)
-    static let fade = Animation.easeOut(duration: 0.28)
+    static let spring = Animation.spring(response: 0.42, dampingFraction: 0.86, blendDuration: 0.18)
+    static let soft = Animation.spring(response: 0.56, dampingFraction: 0.90, blendDuration: 0.20)
+    static let snappy = Animation.spring(response: 0.28, dampingFraction: 0.84, blendDuration: 0.12)
+    static let page = Animation.spring(response: 0.46, dampingFraction: 0.90, blendDuration: 0.16)
+    static let fade = Animation.easeOut(duration: 0.22)
 
     static func adaptive(reduceMotion: Bool, _ preferred: Animation = spring) -> Animation {
-        reduceMotion ? .easeOut(duration: 0.20) : preferred
+        reduceMotion ? .easeOut(duration: 0.16) : preferred
     }
 }
 
 enum LabShadow {
     static func card() -> Color { Color.black.opacity(0.06) }
     static func lift() -> Color { Color.black.opacity(0.10) }
+    static func ground() -> Color { Color.black.opacity(0.14) }
 }
 
 enum LabSelect {
@@ -154,17 +155,35 @@ struct LabCardButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
             .opacity(configuration.isPressed ? 0.92 : 1)
             .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.snappy), value: configuration.isPressed)
     }
 }
 
+private struct LabHeroModifier: ViewModifier {
+    let id: String
+    @Environment(\.labHero) private var hero
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        if let hero, !reduceMotion {
+            content.matchedGeometryEffect(id: id, in: hero)
+        } else {
+            content
+        }
+    }
+}
+
 extension View {
+    func labHero(_ id: String) -> some View {
+        modifier(LabHeroModifier(id: id))
+    }
+
     @ViewBuilder
     func labHero(_ id: String, in namespace: Namespace.ID?) -> some View {
-        if let namespace {
-            self.matchedGeometryEffect(id: id, in: namespace)
+        if namespace != nil {
+            modifier(LabHeroModifier(id: id))
         } else {
             self
         }

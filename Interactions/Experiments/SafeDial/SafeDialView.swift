@@ -102,7 +102,15 @@ private enum SafeDialRenderer {
         let radius: CGFloat = min(size.width, size.height) * 0.34
 
         let door = CGRect(x: center.x - radius - 40, y: center.y - radius - 52, width: (radius + 40) * 2, height: (radius + 52) * 2 + 24)
+        context.fill(
+            Path(roundedRect: door.offsetBy(dx: 0, dy: 10), cornerRadius: 22),
+            with: .color(LabShadow.ground())
+        )
         context.fill(Path(roundedRect: door, cornerRadius: 22), with: .color(Color(white: 0.16)))
+        context.fill(
+            Path(roundedRect: CGRect(x: door.minX + 18, y: door.minY + 12, width: door.width * 0.34, height: 16), cornerRadius: 6),
+            with: .color(.white.opacity(0.04))
+        )
         context.stroke(Path(roundedRect: door, cornerRadius: 22), with: .color(Color.white.opacity(0.06)), lineWidth: 1)
 
         let lamp = CGRect(x: center.x - 7, y: door.minY + 16, width: 14, height: 14)
@@ -118,8 +126,15 @@ private enum SafeDialRenderer {
         )
 
         var dial = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
+        context.fill(
+            Path(ellipseIn: CGRect(x: center.x - radius + 8, y: center.y - radius + 14, width: radius * 2, height: radius * 2)),
+            with: .color(.black.opacity(0.28))
+        )
         context.fill(dial, with: .color(Color(white: 0.11)))
         context.stroke(dial, with: .color(Color(white: 0.58)), lineWidth: 11)
+        var rim = Path()
+        rim.addArc(center: center, radius: radius - 4, startAngle: .degrees(210), endAngle: .degrees(260), clockwise: false)
+        context.stroke(rim, with: .color(.white.opacity(0.10)), style: StrokeStyle(lineWidth: 3, lineCap: .round))
         context.stroke(
             Path(ellipseIn: CGRect(x: center.x - radius + 10, y: center.y - radius + 10, width: (radius - 10) * 2, height: (radius - 10) * 2)),
             with: .color(Color.white.opacity(0.06)),

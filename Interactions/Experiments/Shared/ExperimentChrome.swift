@@ -6,7 +6,6 @@ struct ExperimentWorkspace: View {
     @EnvironmentObject private var session: LabSession
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.labHero) private var hero
 
     @State private var currentID: String
     @State private var showSwitcher = false
@@ -31,6 +30,7 @@ struct ExperimentWorkspace: View {
                     .id(currentID)
                     .transition(contentTransition)
             }
+            .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.page), value: currentID)
 
             VStack(spacing: 0) {
                 topBar
@@ -53,8 +53,9 @@ struct ExperimentWorkspace: View {
                 showSwitcher = false
             }
             .environmentObject(session)
-            .presentationDetents([.medium, .large])
+            .presentationDetents([.height(328), .large])
             .presentationDragIndicator(.visible)
+            .presentationContentInteraction(.scrolls)
             .presentationCornerRadius(LabRadius.sheet)
         }
         .onAppear {
@@ -86,12 +87,13 @@ struct ExperimentWorkspace: View {
                 Text(experiment.code)
                     .font(LabType.mono())
                     .foregroundStyle(LabPalette.track(experiment.section))
-                    .labHero("code-\(experiment.id)", in: hero)
+                    .labHero("code-\(experiment.id)")
                 Text(experiment.title)
                     .font(LabType.caption())
                     .foregroundStyle(LabPalette.ink.opacity(0.78))
                     .lineLimit(1)
-                    .contentTransition(.opacity)
+                    .contentTransition(reduceMotion ? .opacity : .interpolate)
+                    .labHero("title-\(experiment.id)")
             }
             .padding(.horizontal, 12)
             .frame(height: LabSpace.chrome)
@@ -108,6 +110,7 @@ struct ExperimentWorkspace: View {
                 systemName: session.isFavorite(experiment.id) ? "star.fill" : "star",
                 accessibility: session.isFavorite(experiment.id) ? "Remove from favorites" : "Add to favorites"
             ) {
+                LabSelect.fire()
                 session.toggleFavorite(experiment.id)
             }
         }
@@ -127,6 +130,7 @@ struct ExperimentWorkspace: View {
                     Text(experiment.section.track)
                         .font(LabType.mono())
                         .foregroundStyle(LabPalette.track(experiment.section))
+                        .labHero("track-\(experiment.section.rawValue)")
                     HStack(spacing: 5) {
                         ForEach(ExperimentCatalog.experiments(in: experiment.section)) { item in
                             Capsule()
@@ -173,9 +177,7 @@ struct ExperimentWorkspace: View {
         guard id != currentID else { return }
         slideForward = ExperimentCatalog.isForward(from: currentID, to: id, in: experiment.section)
         LabSelect.fire()
-        withAnimation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.page)) {
-            currentID = id
-        }
+        currentID = id
     }
 }
 
@@ -196,41 +198,51 @@ struct ExperimentSwitcherSheet: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if query.isEmpty, track == nil {
-                    if !session.favoriteExperiments.isEmpty {
-                        Section("Favorites") {
-                            ForEach(session.favoriteExperiments) { item in
+            ScrollViewReader { proxy in
+                List {
+                    if query.isEmpty, track == nil {
+                        if !session.favoriteExperiments.isEmpty {
+                            Section("Favorites") {
+                                ForEach(session.favoriteExperiments) { item in
+                                    switcherRow(item)
+                                }
+                            }
+                        }
+                        let recents = Array(session.recentExperiments.filter { $0.id != currentID }.prefix(4))
+                        if !recents.isEmpty {
+                            Section("Recents") {
+                                ForEach(recents) { item in
+                                    switcherRow(item)
+                                }
+                            }
+                        }
+                    }
+                    ForEach(visibleSections) { section in
+                        Section(section.track) {
+                            ForEach(filtered(in: section)) { item in
                                 switcherRow(item)
                             }
                         }
                     }
-                    let recents = Array(session.recentExperiments.filter { $0.id != currentID }.prefix(4))
-                    if !recents.isEmpty {
-                        Section("Recents") {
-                            ForEach(recents) { item in
-                                switcherRow(item)
-                            }
-                        }
+                    if !query.isEmpty, visibleSections.allSatisfy({ filtered(in: $0).isEmpty }) {
+                        Text("Nothing matches.")
+                            .font(LabType.hint())
+                            .foregroundStyle(LabPalette.caption)
+                            .listRowBackground(Color.clear)
                     }
                 }
-                ForEach(visibleSections) { section in
-                    Section(section.heading) {
-                        ForEach(filtered(in: section)) { item in
-                            switcherRow(item)
-                        }
-                    }
+                .listStyle(.insetGrouped)
+                .environment(\.defaultMinListRowHeight, 38)
+                .onAppear {
+                    proxy.scrollTo(currentID, anchor: .center)
                 }
             }
-            .listStyle(.insetGrouped)
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search")
+            .searchable(text: $query, placement: .automatic, prompt: "Search")
             .safeAreaInset(edge: .top, spacing: 0) {
                 trackChips
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(.bar)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
             }
-            .navigationTitle("Lab")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -266,12 +278,15 @@ struct ExperimentSwitcherSheet: View {
     }
 
     private func chip(title: String, selected: Bool, color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button {
+            LabSelect.fire()
+            action()
+        } label: {
             Text(title)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(selected ? Color.white : LabPalette.ink.opacity(0.78))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
                 .background(selected ? color : LabPalette.paperDeep.opacity(0.7), in: Capsule())
         }
         .buttonStyle(.plain)
@@ -306,6 +321,8 @@ struct ExperimentSwitcherSheet: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .id(item.id)
+        .listRowInsets(EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16))
         .accessibilityLabel("\(item.code) \(item.title)")
         .accessibilityHint(item.id == currentID ? "Current" : "Open")
     }
