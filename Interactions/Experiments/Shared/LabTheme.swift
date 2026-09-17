@@ -16,6 +16,7 @@ enum LabPalette {
     static let tungsten = Color(red: 1.0, green: 0.86, blue: 0.62)
     static let brass = Color(red: 0.76, green: 0.62, blue: 0.34)
     static let sepia = Color(red: 0.42, green: 0.34, blue: 0.24)
+    static let studio = Color(red: 0.09, green: 0.09, blue: 0.105)
 
     static func track(_ section: ExperimentSection) -> Color {
         switch section {
@@ -81,6 +82,13 @@ enum LabMotion {
     static func adaptive(reduceMotion: Bool, _ preferred: Animation = spring) -> Animation {
         reduceMotion ? .easeOut(duration: 0.16) : preferred
     }
+}
+
+/// Explicit Double trig so Canvas draw sites stay unambiguous under Swift 6 / Xcode 26.
+enum LabMath {
+    static func sin(_ x: CGFloat) -> CGFloat { CGFloat(Foundation.sin(Double(x))) }
+    static func cos(_ x: CGFloat) -> CGFloat { CGFloat(Foundation.cos(Double(x))) }
+    static func abs(_ x: CGFloat) -> CGFloat { x < 0 ? -x : x }
 }
 
 enum LabShadow {

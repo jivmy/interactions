@@ -8,7 +8,7 @@ struct SoapFilmView: View {
         GeometryReader { _ in
             ZStack {
                 Color(red: 0.05, green: 0.055, blue: 0.07).ignoresSafeArea()
-                MetalLabView(fragmentName: "soapFragment", uniforms: model.uniforms, fallback: Color(red: 0.05, green: 0.055, blue: 0.07))
+                MetalLabView(fragmentName: "soapFragment", uniforms: model.uniforms, fallback: Color(red: 0.05, green: 0.055, blue: 0.07), isActive: scenePhase == .active)
                     .ignoresSafeArea()
                     .onTapGesture {
                         model.pop()

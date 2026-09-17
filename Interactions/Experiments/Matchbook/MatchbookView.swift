@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MatchbookView: View {
     @StateObject private var model = MatchbookModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         GeometryReader { geo in
@@ -37,6 +38,9 @@ struct MatchbookView: View {
                 LabHintOverlay(text: model.lit ? "Burning." : "Strike.")
             }
             .onAppear { model.start() }
+            .onChange(of: scenePhase) { _, phase in
+                phase == .active ? model.start() : model.stop()
+            }
             .onDisappear { model.stop() }
         }
         .ignoresSafeArea()

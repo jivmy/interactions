@@ -64,9 +64,12 @@ final class BalloonSimulation: ObservableObject {
 
     private let altimeter = AltimeterSource()
     private let ticker = FrameTicker()
+    private let haptics = HapticPlayer()
     private var viewport: CGSize = .zero
     private var displayed: CGFloat = 0
     private var restY: CGFloat = 0
+    private var phase: CGFloat = 0
+    private var didLift = false
 
     func updateViewport(size: CGSize) {
         viewport = size
@@ -78,7 +81,7 @@ final class BalloonSimulation: ObservableObject {
 
     func start() {
         altimeter.start()
-        ticker.onTick = { [weak self] _ in self?.step() }
+        ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
     }
 
@@ -87,7 +90,7 @@ final class BalloonSimulation: ObservableObject {
         altimeter.stop()
     }
 
-    private func step() {
+    private func step(dt: CGFloat) {
         isHardware = altimeter.isHardware
         let minY = ViewSpaceMotion.windowSafeAreaTop() + 96
         let maxY = restY + 40
@@ -96,10 +99,15 @@ final class BalloonSimulation: ObservableObject {
             let meters = CGFloat(altimeter.relativeMeters)
             let t = min(max(meters / 0.45, -0.3), 1.15)
             target = maxY - t * (maxY - minY)
+            if meters > 0.28 && !didLift {
+                didLift = true
+                haptics.tick()
+            }
         } else if let dragY {
             target = min(max(dragY, minY), maxY)
         } else {
-            target = restY
+            phase += dt
+            target = restY + LabMath.sin(phase * 1.35) * 5
         }
         displayed += (target - displayed) * 0.11
         balloonY = displayed
@@ -149,7 +157,7 @@ private enum BalloonRenderer {
         hills.closeSubpath()
         context.fill(hills, with: .color(Color(red: 0.46, green: 0.62, blue: 0.38)))
 
-        let sway: CGFloat = sin(y * 0.035) * (4 + lift * 6)
+        let sway: CGFloat = LabMath.sin(y * 0.035) * (4 + lift * 6)
         let x = size.width * 0.5 + sway
         let shadowW = 26 + (1 - lift) * 26
         context.fill(

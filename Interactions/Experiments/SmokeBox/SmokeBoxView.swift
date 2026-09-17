@@ -53,6 +53,8 @@ final class SmokeSimulation: ObservableObject {
     private let ticker = FrameTicker()
     private let motion = DeviceMotionSource()
     private var lastSplat: CGPoint?
+    private var publishAccum: CGFloat = 0
+    private var seeded = false
 
     init() {
         let count = 48 * 48
@@ -66,6 +68,13 @@ final class SmokeSimulation: ObservableObject {
     }
 
     func start() {
+        if !seeded {
+            let c = n / 2
+            d[c * n + c] = 0.42
+            d[c * n + c + 1] = 0.22
+            d[(c + 1) * n + c] = 0.18
+            seeded = true
+        }
         motion.start()
         ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
@@ -117,7 +126,11 @@ final class SmokeSimulation: ObservableObject {
         }
         velStep(dt: Float(dt))
         densStep(dt: Float(dt))
-        density = d
+        publishAccum += dt
+        if publishAccum >= 1.0 / 60.0 {
+            publishAccum = 0
+            density = d
+        }
     }
 
     private func setBound(_ b: Int, _ x: inout [Float]) {

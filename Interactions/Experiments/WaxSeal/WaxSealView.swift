@@ -2,12 +2,13 @@ import SwiftUI
 
 struct WaxSealView: View {
     @StateObject private var model = WaxSealModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         GeometryReader { geo in
             let drawState = WaxSealDrawState(model)
             ZStack {
-                Color(red: 0.90, green: 0.86, blue: 0.78).ignoresSafeArea()
+                LabPalette.paperDeep.ignoresSafeArea()
                 Canvas { context, size in
                     WaxSealRenderer.draw(in: &context, size: size, state: drawState)
                 }
@@ -26,6 +27,9 @@ struct WaxSealView: View {
                 LabHintOverlay(text: model.stamped ? "Again." : "Hold.")
             }
             .onAppear { model.start() }
+            .onChange(of: scenePhase) { _, phase in
+                phase == .active ? model.start() : model.stop()
+            }
             .onDisappear { model.stop() }
         }
         .ignoresSafeArea()

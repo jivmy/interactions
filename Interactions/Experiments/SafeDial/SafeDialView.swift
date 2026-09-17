@@ -12,7 +12,7 @@ struct SafeDialView: View {
             let isOpen = model.isOpen
             let notches = SafeDialModel.notches
             ZStack {
-                Color(red: 0.10, green: 0.10, blue: 0.11).ignoresSafeArea()
+                LabPalette.studio.ignoresSafeArea()
                 RadialGradient(
                     colors: [Color.white.opacity(0.05), .clear],
                     center: .center,

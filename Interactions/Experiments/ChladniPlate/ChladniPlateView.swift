@@ -8,7 +8,7 @@ struct ChladniPlateView: View {
         GeometryReader { geo in
             let grains = model.grains
             ZStack {
-                Color(red: 0.10, green: 0.10, blue: 0.11).ignoresSafeArea()
+                LabPalette.studio.ignoresSafeArea()
                 Canvas { context, size in
                     ChladniRenderer.draw(in: &context, size: size, grains: grains)
                 }
@@ -158,7 +158,7 @@ private enum ChladniRenderer {
             inner.clip(to: Path(roundedRect: plate.insetBy(dx: 8, dy: 8), cornerRadius: 6))
             var sand = Path()
             for g in grains {
-                let s: CGFloat = 0.95 + 0.65 * abs(sin(g.x * 0.17 + g.y * 0.11))
+                let s: CGFloat = 0.95 + 0.65 * LabMath.abs(LabMath.sin(g.x * 0.17 + g.y * 0.11))
                 sand.addEllipse(in: CGRect(x: g.x - s, y: g.y - s, width: s * 2, height: s * 2))
             }
             inner.fill(sand, with: .color(Color(red: 0.86, green: 0.78, blue: 0.54)))

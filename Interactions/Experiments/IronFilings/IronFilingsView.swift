@@ -2,6 +2,7 @@ import SwiftUI
 
 struct IronFilingsView: View {
     @StateObject private var model = FilingsModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         GeometryReader { geo in
@@ -9,7 +10,7 @@ struct IronFilingsView: View {
             let pole = model.pole
             let poleActive = model.poleActive
             ZStack {
-                Color(red: 0.09, green: 0.09, blue: 0.10).ignoresSafeArea()
+                LabPalette.studio.ignoresSafeArea()
                 Canvas { context, size in
                     FilingsRenderer.draw(in: &context, size: size, filings: filings, pole: pole, active: poleActive)
                 }
@@ -33,6 +34,9 @@ struct IronFilingsView: View {
                 model.start()
             }
             .onChange(of: geo.size) { _, size in model.seed(size: size) }
+            .onChange(of: scenePhase) { _, phase in
+                phase == .active ? model.start() : model.stop()
+            }
             .onDisappear { model.stop() }
         }
         .ignoresSafeArea()
@@ -133,12 +137,12 @@ private enum FilingsRenderer {
                 )
             }
             for f in filings {
-                let len: CGFloat = 6.4 + 1.8 * abs(sin(f.p.x * 0.13 + f.p.y * 0.09))
-                let weight: CGFloat = 1.05 + 0.55 * abs(cos(f.p.x * 0.07))
+                let len: CGFloat = 6.4 + 1.8 * LabMath.abs(LabMath.sin(f.p.x * 0.13 + f.p.y * 0.09))
+                let weight: CGFloat = 1.05 + 0.55 * LabMath.abs(LabMath.cos(f.p.x * 0.07))
                 var path = Path()
-                path.move(to: CGPoint(x: f.p.x - cos(f.angle) * len, y: f.p.y - sin(f.angle) * len))
-                path.addLine(to: CGPoint(x: f.p.x + cos(f.angle) * len, y: f.p.y + sin(f.angle) * len))
-                let shade = 0.72 + 0.08 * abs(Foundation.sin(Double(f.p.y) * 0.05))
+                path.move(to: CGPoint(x: f.p.x - LabMath.cos(f.angle) * len, y: f.p.y - LabMath.sin(f.angle) * len))
+                path.addLine(to: CGPoint(x: f.p.x + LabMath.cos(f.angle) * len, y: f.p.y + LabMath.sin(f.angle) * len))
+                let shade = 0.72 + 0.08 * LabMath.abs(LabMath.sin(f.p.y * 0.05))
                 inner.stroke(path, with: .color(Color(white: shade)), style: StrokeStyle(lineWidth: weight, lineCap: .round))
             }
         }

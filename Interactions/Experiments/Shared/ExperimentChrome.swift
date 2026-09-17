@@ -28,6 +28,7 @@ struct ExperimentWorkspace: View {
             ZStack {
                 experiment.makeView()
                     .id(currentID)
+                    .compositingGroup()
                     .transition(contentTransition)
             }
             .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.page), value: currentID)
@@ -69,8 +70,8 @@ struct ExperimentWorkspace: View {
 
     private var contentTransition: AnyTransition {
         if reduceMotion { return .opacity }
-        let incoming: CGFloat = slideForward ? 44 : -44
-        let outgoing: CGFloat = slideForward ? -28 : 28
+        let incoming: CGFloat = slideForward ? 36 : -36
+        let outgoing: CGFloat = slideForward ? -22 : 22
         return .asymmetric(
             insertion: .offset(x: incoming).combined(with: .opacity),
             removal: .offset(x: outgoing).combined(with: .opacity)

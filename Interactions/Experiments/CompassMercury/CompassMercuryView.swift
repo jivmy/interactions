@@ -102,8 +102,8 @@ private enum CompassMercuryRenderer {
 
         let screws: [CGFloat] = [0.28, 0.72, 1.28, 1.72]
         for a in screws {
-            let sx = center.x + cos(a * .pi) * (radius - 4)
-            let sy = center.y + sin(a * .pi) * (radius - 4)
+            let sx = center.x + LabMath.cos(a * .pi) * (radius - 4)
+            let sy = center.y + LabMath.sin(a * .pi) * (radius - 4)
             context.fill(Path(ellipseIn: CGRect(x: sx - 2.4, y: sy - 2.4, width: 4.8, height: 4.8)), with: .color(Color(red: 0.42, green: 0.32, blue: 0.16)))
             context.fill(Path(ellipseIn: CGRect(x: sx - 0.8, y: sy - 0.8, width: 1.6, height: 1.6)), with: .color(Color(red: 0.22, green: 0.16, blue: 0.08)))
         }
