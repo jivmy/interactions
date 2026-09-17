@@ -81,6 +81,35 @@ You should get the same blank white screen as in Simulator.
 
 A free Personal Team install expires after a week; reopen the project in Xcode and Run again to refresh it. A paid Developer Program membership is only required for TestFlight / App Store, not for this local install.
 
+## Ship to TestFlight (no Mac)
+
+You do **not** need a local Mac. GitHub Actions on `macos-14` archives the app and uploads it to TestFlight with Fastlane + an App Store Connect API key.
+
+Full walkthrough (create the ASC app, API key, secrets, run the workflow, install): **[docs/TESTFLIGHT.md](docs/TESTFLIGHT.md)**.
+
+### One-time setup
+
+1. Register App ID `com.jimmy.interactions` and create the App Store Connect app **Interactions**.
+2. Generate an App Store Connect API key (**Admin**) and download the `.p8`.
+3. Add these repository secrets (**Settings → Secrets and variables → Actions**):
+
+   | Secret | Value |
+   | --- | --- |
+   | `APP_STORE_CONNECT_API_KEY_ID` | Key ID |
+   | `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID (UUID) |
+   | `APP_STORE_CONNECT_API_KEY` | Full `.p8` contents (PEM) |
+   | `DEVELOPMENT_TEAM` | 10-character Team ID |
+
+   Never commit the `.p8`, certificates, or profiles.
+
+4. Signing stays **Automatic**. CI passes `-allowProvisioningUpdates` plus the API key so Xcode can use Apple’s cloud-managed distribution certificate and App Store profile. No match repo and no `.p12` secret.
+
+### Ship a build
+
+1. **Actions → TestFlight → Run workflow** (optional: push a `v*` tag).
+2. Marketing version is **1.0**. The build number is `github.run_number`.
+3. When App Store Connect finishes processing, add the build to an Internal Testing group and install from the **TestFlight** iOS app.
+
 ## Project layout
 
 ```
@@ -88,5 +117,8 @@ Interactions.xcodeproj    Open this in Xcode
 Interactions/
   InteractionsApp.swift   App entry (@main)
   ContentView.swift       Empty root screen
-  Assets.xcassets         App icon + accent color placeholders
+  Assets.xcassets         App icon + accent color
+fastlane/                 TestFlight lanes (API key auth)
+.github/workflows/testflight.yml
+docs/TESTFLIGHT.md        ASC app + secrets + workflow checklist
 ```

@@ -1,0 +1,86 @@
+name: TestFlight
+
+# Ship Interactions to TestFlight from GitHub-hosted macOS runners.
+# Does not use a local Mac or a Cursor Mac pool.
+#
+# Secrets (repo Settings → Secrets and variables → Actions):
+#   APP_STORE_CONNECT_API_KEY_ID
+#   APP_STORE_CONNECT_ISSUER_ID
+#   APP_STORE_CONNECT_API_KEY
+#   DEVELOPMENT_TEAM
+# See docs/TESTFLIGHT.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      changelog:
+        description: "What to Test (TestFlight notes)"
+        required: false
+        type: string
+        default: ""
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: testflight-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  testflight:
+    name: Archive and upload to TestFlight
+    runs-on: macos-14
+    timeout-minutes: 75
+    env:
+      APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+      DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+      BUILD_NUMBER: ${{ github.run_number }}
+      MARKETING_VERSION: "1.0"
+      CHANGELOG: ${{ github.event.inputs.changelog || github.ref_name }}
+      FASTLANE_SKIP_UPDATE_CHECK: "1"
+      FASTLANE_HIDE_CHANGELOG: "1"
+      FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: "120"
+      LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required secrets
+        run: |
+          missing=0
+          for name in APP_STORE_CONNECT_API_KEY_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_API_KEY DEVELOPMENT_TEAM; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub secret: ${name}"
+              missing=1
+            fi
+          done
+          if [ "${missing}" -ne 0 ]; then
+            echo "Add the secrets listed in docs/TESTFLIGHT.md, then re-run this workflow."
+            echo "Do not put API keys, .p8 files, or certificates in the repository."
+            exit 1
+          fi
+          echo "All required secrets are set."
+
+      - name: Show Xcode version
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks
+          xcodebuild -list -project Interactions.xcodeproj
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Fastlane doctor
+        run: bundle exec fastlane ios doctor
+
+      - name: Archive and upload to TestFlight
+        run: bundle exec fastlane ios beta

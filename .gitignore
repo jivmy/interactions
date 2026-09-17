@@ -17,7 +17,11 @@ build/
 *.certSigningRequest
 *.mobileprovision
 *.provisionprofile
+*.p8
 AuthKey_*.p8
+.env
+.env.*
+!.env.example
 
 # Playgrounds
 timeline.xctimeline
@@ -28,13 +32,17 @@ playground.xcworkspace
 .swiftpm/xcode/package.xcworkspace/xcuserdata/
 .swiftpm/xcode/xcuserdata/
 
-# CocoaPods / Carthage / fastlane (unused, but keep the tree clean)
+# CocoaPods / Carthage / fastlane artifacts (commit Fastfile/Appfile/Gemfile only)
 Pods/
 Carthage/Build/
 fastlane/report.xml
 fastlane/Preview.html
+fastlane/README.md
 fastlane/screenshots/**/*.png
 fastlane/test_output
+fastlane/logs
+vendor/bundle/
+.bundle/
 
 # macOS
 .DS_Store
