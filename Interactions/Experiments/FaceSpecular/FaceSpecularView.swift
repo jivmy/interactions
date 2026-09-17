@@ -98,7 +98,7 @@ private enum FaceSpecularRenderer {
                 let y = center.y + i
                 streak.move(to: CGPoint(x: center.x - radius * 0.94, y: y))
                 streak.addLine(to: CGPoint(x: center.x + radius * 0.94, y: y + i * 0.016))
-                inner.stroke(streak, with: .color(Color.white.opacity(0.038 + abs(i / radius) * 0.012)), lineWidth: 0.9)
+                inner.stroke(streak, with: .color(Color.white.opacity(0.038 + abs(Double(i / radius)) * 0.012)), lineWidth: 0.9)
             }
             let hx = center.x + offset.width * radius * 0.55
             let hy = center.y + offset.height * radius * 0.55
