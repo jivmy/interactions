@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 /// Full-screen experiment with floating chrome that stays out of the prototype.
 /// Prev / next and a switcher live in the thumb zone for a tray-table phone.
@@ -7,9 +6,11 @@ struct ExperimentWorkspace: View {
     @EnvironmentObject private var session: LabSession
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.labHero) private var hero
 
     @State private var currentID: String
     @State private var showSwitcher = false
+    @State private var slideForward = true
 
     init(experimentID: String) {
         _currentID = State(initialValue: experimentID)
@@ -25,21 +26,23 @@ struct ExperimentWorkspace: View {
 
     var body: some View {
         ZStack {
-            experiment.makeView()
-                .id(currentID)
-                .transition(contentTransition)
+            ZStack {
+                experiment.makeView()
+                    .id(currentID)
+                    .transition(contentTransition)
+            }
 
             VStack(spacing: 0) {
                 topBar
                     .padding(.horizontal, 14)
-                    .padding(.top, 6)
+                    .padding(.top, 4)
                 Spacer(minLength: 0)
                 bottomBar
                     .padding(.horizontal, 14)
-                    .padding(.bottom, 6)
+                    .padding(.bottom, 4)
             }
             .padding(.top, ViewSpaceMotion.windowSafeAreaTop())
-            .padding(.bottom, 8)
+            .padding(.bottom, 6)
         }
         .ignoresSafeArea()
         .navigationBarBackButtonHidden(true)
@@ -64,28 +67,37 @@ struct ExperimentWorkspace: View {
     }
 
     private var contentTransition: AnyTransition {
-        reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.985))
+        if reduceMotion { return .opacity }
+        let incoming: CGFloat = slideForward ? 44 : -44
+        let outgoing: CGFloat = slideForward ? -28 : 28
+        return .asymmetric(
+            insertion: .offset(x: incoming).combined(with: .opacity),
+            removal: .offset(x: outgoing).combined(with: .opacity)
+        )
     }
 
     private var topBar: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             LabCircleButton(systemName: "chevron.left", accessibility: "Back to catalog") {
                 dismiss()
             }
 
-            HStack(spacing: 8) {
+            HStack(spacing: 7) {
                 Text(experiment.code)
                     .font(LabType.mono())
                     .foregroundStyle(LabPalette.track(experiment.section))
+                    .labHero("code-\(experiment.id)", in: hero)
                 Text(experiment.title)
                     .font(LabType.caption())
                     .foregroundStyle(LabPalette.ink.opacity(0.78))
                     .lineLimit(1)
+                    .contentTransition(.opacity)
             }
             .padding(.horizontal, 12)
             .frame(height: LabSpace.chrome)
             .background(.ultraThinMaterial, in: Capsule())
             .overlay(Capsule().strokeBorder(LabPalette.ink.opacity(0.06), lineWidth: 0.5))
+            .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.page), value: currentID)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             .accessibilityLabel("\(experiment.code), \(experiment.title)")
@@ -103,71 +115,65 @@ struct ExperimentWorkspace: View {
 
     private var bottomBar: some View {
         let neighbors = trackNeighbors
-        return HStack(spacing: 10) {
-            LabCircleButton(systemName: "chevron.left", accessibility: previousLabel(neighbors.prev)) {
+        return HStack(spacing: 8) {
+            LabCircleButton(systemName: "chevron.left", accessibility: neighborLabel("Previous", neighbors.prev)) {
                 if let prev = neighbors.prev { switchTo(prev.id) }
             }
-            .opacity(neighbors.prev == nil ? 0.35 : 1)
-            .disabled(neighbors.prev == nil)
-            .accessibilityHint("Loops within this track")
 
             Button {
                 showSwitcher = true
             } label: {
-                VStack(spacing: 6) {
+                HStack(spacing: 8) {
+                    Text(experiment.section.track)
+                        .font(LabType.mono())
+                        .foregroundStyle(LabPalette.track(experiment.section))
                     HStack(spacing: 5) {
                         ForEach(ExperimentCatalog.experiments(in: experiment.section)) { item in
-                            Circle()
-                                .fill(item.id == experiment.id ? LabPalette.track(experiment.section) : LabPalette.ink.opacity(0.18))
-                                .frame(width: item.id == experiment.id ? 7 : 5, height: item.id == experiment.id ? 7 : 5)
+                            Capsule()
+                                .fill(item.id == experiment.id ? LabPalette.track(experiment.section) : LabPalette.ink.opacity(0.16))
+                                .frame(width: item.id == experiment.id ? 14 : 5, height: 5)
                         }
                     }
-                    Text("\(experiment.section.track)  ·  \(experiment.section.title)")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(LabPalette.ink.opacity(0.62))
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: LabSpace.chrome)
                 .background(.ultraThinMaterial, in: Capsule())
                 .overlay(Capsule().strokeBorder(LabPalette.ink.opacity(0.06), lineWidth: 0.5))
+                .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.snappy), value: currentID)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Switch experiment")
-            .accessibilityHint("Opens the lab switcher")
+            .accessibilityLabel("\(experiment.code) \(experiment.title)")
+            .accessibilityHint("Opens the lab. Swipe for neighbors.")
             .highPriorityGesture(
-                DragGesture(minimumDistance: 24)
+                DragGesture(minimumDistance: 12)
                     .onEnded { value in
-                        if value.translation.width < -40, let next = neighbors.next {
+                        let dx = value.translation.width
+                        let predicted = value.predictedEndTranslation.width
+                        if dx < -24 || predicted < -48, let next = neighbors.next {
                             switchTo(next.id)
-                        } else if value.translation.width > 40, let prev = neighbors.prev {
+                        } else if dx > 24 || predicted > 48, let prev = neighbors.prev {
                             switchTo(prev.id)
                         }
                     }
             )
 
-            LabCircleButton(systemName: "chevron.right", accessibility: nextLabel(neighbors.next)) {
+            LabCircleButton(systemName: "chevron.right", accessibility: neighborLabel("Next", neighbors.next)) {
                 if let next = neighbors.next { switchTo(next.id) }
             }
-            .opacity(neighbors.next == nil ? 0.35 : 1)
-            .disabled(neighbors.next == nil)
         }
         .accessibilityElement(children: .contain)
     }
 
-    private func previousLabel(_ prev: ExperimentDescriptor?) -> String {
-        if let prev { return "Previous, \(prev.code) \(prev.title)" }
-        return "Previous experiment unavailable"
-    }
-
-    private func nextLabel(_ next: ExperimentDescriptor?) -> String {
-        if let next { return "Next, \(next.code) \(next.title)" }
-        return "Next experiment unavailable"
+    private func neighborLabel(_ prefix: String, _ item: ExperimentDescriptor?) -> String {
+        if let item { return "\(prefix), \(item.code) \(item.title)" }
+        return "\(prefix) experiment unavailable"
     }
 
     private func switchTo(_ id: String) {
         guard id != currentID else { return }
-        UISelectionFeedbackGenerator().selectionChanged()
-        withAnimation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.soft)) {
+        slideForward = ExperimentCatalog.isForward(from: currentID, to: id, in: experiment.section)
+        LabSelect.fire()
+        withAnimation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.page)) {
             currentID = id
         }
     }
@@ -182,13 +188,29 @@ struct ExperimentSwitcherSheet: View {
     @State private var query = ""
     @State private var track: ExperimentSection?
 
+    init(currentID: String, onSelect: @escaping (String) -> Void) {
+        self.currentID = currentID
+        self.onSelect = onSelect
+        _track = State(initialValue: ExperimentCatalog.experiment(id: currentID)?.section)
+    }
+
     var body: some View {
         NavigationStack {
             List {
-                if query.isEmpty, !session.favoriteExperiments.isEmpty {
-                    Section("Favorites") {
-                        ForEach(session.favoriteExperiments) { item in
-                            switcherRow(item)
+                if query.isEmpty, track == nil {
+                    if !session.favoriteExperiments.isEmpty {
+                        Section("Favorites") {
+                            ForEach(session.favoriteExperiments) { item in
+                                switcherRow(item)
+                            }
+                        }
+                    }
+                    let recents = Array(session.recentExperiments.filter { $0.id != currentID }.prefix(4))
+                    if !recents.isEmpty {
+                        Section("Recents") {
+                            ForEach(recents) { item in
+                                switcherRow(item)
+                            }
                         }
                     }
                 }
@@ -201,14 +223,14 @@ struct ExperimentSwitcherSheet: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search the lab")
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search")
             .safeAreaInset(edge: .top, spacing: 0) {
                 trackChips
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .background(.bar)
             }
-            .navigationTitle("Switch")
+            .navigationTitle("Lab")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -261,32 +283,20 @@ struct ExperimentSwitcherSheet: View {
             onSelect(item.id)
         } label: {
             HStack(spacing: 12) {
-                Image(systemName: item.symbol)
-                    .font(.body.weight(.medium))
+                Text(item.code)
+                    .font(LabType.mono())
                     .foregroundStyle(LabPalette.track(item.section))
-                    .frame(width: 28)
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(item.code)
-                            .font(LabType.mono())
-                            .foregroundStyle(LabPalette.track(item.section))
-                        Text(item.title)
-                            .font(LabType.callout())
-                            .foregroundStyle(LabPalette.ink)
-                    }
-                    Text(item.summary)
-                        .font(LabType.hint())
-                        .foregroundStyle(LabPalette.caption)
-                        .lineLimit(2)
-                }
+                    .frame(width: 32, alignment: .leading)
+                Text(item.title)
+                    .font(LabType.callout())
+                    .foregroundStyle(LabPalette.ink)
                 Spacer(minLength: 0)
                 if item.id == currentID {
                     Image(systemName: "checkmark")
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(LabPalette.track(item.section))
                         .accessibilityLabel("Current")
-                }
-                if session.isFavorite(item.id) {
+                } else if session.isFavorite(item.id) {
                     Image(systemName: "star.fill")
                         .font(.caption)
                         .foregroundStyle(LabPalette.brass)
@@ -297,14 +307,14 @@ struct ExperimentSwitcherSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(item.code) \(item.title)")
-        .accessibilityHint(item.id == currentID ? "Currently open" : "Switch to this experiment")
+        .accessibilityHint(item.id == currentID ? "Current" : "Open")
     }
 }
 
 /// Short coaching that fades. Re-announces when the copy changes.
 struct LabHintOverlay: View {
     let text: String
-    var duration: TimeInterval = 3.6
+    var duration: TimeInterval = 2.4
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var visible = true
@@ -317,13 +327,13 @@ struct LabHintOverlay: View {
                 Text(text)
                     .font(LabType.hint())
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(LabPalette.ink.opacity(0.78))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 9)
+                    .foregroundStyle(LabPalette.ink.opacity(0.72))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
                     .background(.ultraThinMaterial, in: Capsule())
                     .overlay(Capsule().strokeBorder(LabPalette.ink.opacity(0.05), lineWidth: 0.5))
                     .padding(.horizontal, 28)
-                    .padding(.bottom, 86)
+                    .padding(.bottom, 78)
                     .transition(.opacity)
                     .accessibilityAddTraits(.isStaticText)
             }
@@ -343,34 +353,39 @@ struct LabHintOverlay: View {
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(duration))
             guard token == id else { return }
-            withAnimation(reduceMotion ? LabMotion.fade : .easeOut(duration: 0.7)) {
+            withAnimation(reduceMotion ? LabMotion.fade : .easeOut(duration: 0.55)) {
                 visible = false
             }
         }
     }
 }
 
-/// Quiet, persistent fallback / permission chip. Does not fade.
+/// Quiet status chip. Fades so it does not sit on the prototype.
 struct LabFallbackChip: View {
     let text: String
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var visible = true
 
     var body: some View {
-        Text(text)
-            .font(.caption2.weight(.medium))
-            .foregroundStyle(LabPalette.ink.opacity(0.7))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(.ultraThinMaterial, in: Capsule())
-            .overlay(Capsule().strokeBorder(LabPalette.ink.opacity(0.05), lineWidth: 0.5))
-            .accessibilityAddTraits(.isStaticText)
-    }
-}
-
-/// Back-compat wrapper used by older destinations.
-struct ExperimentDestination: View {
-    let experiment: ExperimentDescriptor
-
-    var body: some View {
-        ExperimentWorkspace(experimentID: experiment.id)
+        Group {
+            if visible {
+                Text(text)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(LabPalette.ink.opacity(0.62))
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .transition(.opacity)
+                    .accessibilityAddTraits(.isStaticText)
+            }
+        }
+        .onAppear {
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(3.8))
+                withAnimation(reduceMotion ? LabMotion.fade : .easeOut(duration: 0.5)) {
+                    visible = false
+                }
+            }
+        }
     }
 }

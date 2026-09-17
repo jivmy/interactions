@@ -14,9 +14,14 @@ struct SoapFilmView: View {
                         model.pop()
                     }
                     .accessibilityLabel(model.popped ? "Soap film, popped" : "Soap film")
-                    .accessibilityHint("Tilt for iridescence. Tap to pop.")
+                    .accessibilityHint("Tilt the film. Tap to pop.")
 
-                LabHintOverlay(text: model.popped ? "Tap to blow another film" : "Tilt for iridescence. Tap to pop.")
+                Canvas { context, size in
+                    SoapHoopRenderer.draw(in: &context, size: size)
+                }
+                .allowsHitTesting(false)
+
+                LabHintOverlay(text: model.popped ? "Again." : "Tilt.")
             }
             .onAppear { model.start() }
             .onChange(of: scenePhase) { _, phase in
@@ -79,6 +84,22 @@ final class SoapFilmModel: ObservableObject {
         u.pop = hole
         u.p0 = Float(sin(Double(t) * 0.7)) * 0.3
         uniforms = u
+    }
+}
+
+private enum SoapHoopRenderer {
+    static func draw(in context: inout GraphicsContext, size: CGSize) {
+        let center = CGPoint(x: size.width / 2, y: size.height / 2)
+        let radius = size.height * 0.38
+        let ring = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2))
+        context.stroke(ring, with: .color(Color(red: 0.72, green: 0.62, blue: 0.38).opacity(0.72)), lineWidth: 5)
+        context.stroke(ring, with: .color(Color.white.opacity(0.14)), lineWidth: 1.2)
+        let handle = CGRect(x: center.x - 7, y: center.y + radius - 2, width: 14, height: 36)
+        context.fill(Path(roundedRect: handle, cornerRadius: 3), with: .color(Color(red: 0.62, green: 0.52, blue: 0.30)))
+        context.fill(
+            Path(roundedRect: CGRect(x: center.x - 3, y: center.y + radius + 6, width: 3, height: 18), cornerRadius: 1),
+            with: .color(.white.opacity(0.16))
+        )
     }
 }
 

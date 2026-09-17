@@ -23,7 +23,7 @@ struct MetaballMercuryView: View {
                     .accessibilityLabel("Metaball mercury")
                     .accessibilityHint("Drag a blob. Tilt merges them.")
 
-                LabHintOverlay(text: "Drag a blob. Tilt merges them like mercury.")
+                LabHintOverlay(text: "Drag.")
             }
             .onAppear {
                 model.size = geo.size

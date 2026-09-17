@@ -24,20 +24,9 @@ struct SmokeBoxView: View {
                         }
                 )
                 .accessibilityLabel("Smoke box")
-                .accessibilityHint(sim.usingMotion ? "Tilt for gravity. Drag to stir." : "Drag to stir smoke")
+                .accessibilityHint(sim.usingMotion ? "Tilt and drag" : "Drag to stir")
 
-                VStack {
-                    HStack {
-                        Spacer()
-                        LabFallbackChip(text: sim.usingMotion ? "Tilt live" : "Drag only")
-                    }
-                    .padding(.top, 58)
-                    .padding(.trailing, 16)
-                    Spacer()
-                }
-                .allowsHitTesting(false)
-
-                LabHintOverlay(text: sim.usingMotion ? "Tilt for gravity. Drag to stir smoke." : "Drag to stir — tilt needs a real iPhone")
+                LabHintOverlay(text: sim.usingMotion ? "Stir." : "Drag.")
             }
             .onAppear { sim.start() }
             .onChange(of: scenePhase) { _, phase in
@@ -234,26 +223,36 @@ private enum SmokeRenderer {
         guard density.count == n * n else { return }
         let inset: CGFloat = 16
         let box = CGRect(x: inset, y: 80, width: size.width - inset * 2, height: size.height - 150)
-        context.stroke(Path(roundedRect: box, cornerRadius: 10), with: .color(Color.white.opacity(0.08)), lineWidth: 2)
+        context.fill(Path(roundedRect: box, cornerRadius: 12), with: .color(Color(red: 0.04, green: 0.045, blue: 0.05)))
+        context.stroke(Path(roundedRect: box, cornerRadius: 12), with: .color(Color.white.opacity(0.10)), lineWidth: 2.5)
+        context.stroke(Path(roundedRect: box.insetBy(dx: 3, dy: 3), cornerRadius: 10), with: .color(Color.white.opacity(0.05)), lineWidth: 1)
+        context.fill(
+            Path(roundedRect: CGRect(x: box.minX + 14, y: box.minY + 10, width: box.width * 0.36, height: 12), cornerRadius: 3),
+            with: .color(.white.opacity(0.04))
+        )
 
-        let cw = size.width / CGFloat(n)
-        let ch = size.height / CGFloat(n)
-        for j in 0..<n {
-            var i = 0
-            while i < n {
-                let v = density[j * n + i]
-                if v < 0.02 {
+        let cw = box.width / CGFloat(n)
+        let ch = box.height / CGFloat(n)
+        context.drawLayer { inner in
+            inner.clip(to: Path(roundedRect: box.insetBy(dx: 2, dy: 2), cornerRadius: 10))
+            for j in 0..<n {
+                var i = 0
+                while i < n {
+                    let v = density[j * n + i]
+                    if v < 0.02 {
+                        i += 1
+                        continue
+                    }
+                    let start = i
                     i += 1
-                    continue
+                    while i < n && density[j * n + i] >= 0.02 { i += 1 }
+                    let dens = Double(min(1, density[j * n + start] * 1.45))
+                    let warm = dens * 0.28
+                    inner.fill(
+                        Path(CGRect(x: box.minX + CGFloat(start) * cw, y: box.minY + CGFloat(j) * ch, width: CGFloat(i - start) * cw + 0.5, height: ch + 0.5)),
+                        with: .color(Color(red: 0.86 + warm * 0.12, green: 0.80, blue: 0.74 - warm * 0.18).opacity(dens))
+                    )
                 }
-                let start = i
-                i += 1
-                while i < n && density[j * n + i] >= 0.02 { i += 1 }
-                let a = Double(min(1, density[j * n + start] * 1.45))
-                context.fill(
-                    Path(CGRect(x: CGFloat(start) * cw, y: CGFloat(j) * ch, width: CGFloat(i - start) * cw + 0.5, height: ch + 0.5)),
-                    with: .color(Color(red: 0.86, green: 0.87, blue: 0.90).opacity(a))
-                )
             }
         }
     }

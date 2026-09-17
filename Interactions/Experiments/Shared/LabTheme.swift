@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Shared materials for the lab. Paper, metal, ink — calm enough that every
 /// experiment can sit on the same desk without fighting the chrome.
@@ -67,13 +68,14 @@ enum LabRadius {
 enum LabSpace {
     static let gutter: CGFloat = 20
     static let stack: CGFloat = 14
-    static let chrome: CGFloat = 44
+    static let chrome: CGFloat = 40
 }
 
 enum LabMotion {
     static let spring = Animation.spring(response: 0.42, dampingFraction: 0.86)
     static let soft = Animation.spring(response: 0.56, dampingFraction: 0.90)
     static let snappy = Animation.spring(response: 0.30, dampingFraction: 0.82)
+    static let page = Animation.spring(response: 0.48, dampingFraction: 0.92)
     static let fade = Animation.easeOut(duration: 0.28)
 
     static func adaptive(reduceMotion: Bool, _ preferred: Animation = spring) -> Animation {
@@ -84,6 +86,26 @@ enum LabMotion {
 enum LabShadow {
     static func card() -> Color { Color.black.opacity(0.06) }
     static func lift() -> Color { Color.black.opacity(0.10) }
+}
+
+enum LabSelect {
+    private static let generator = UISelectionFeedbackGenerator()
+
+    static func fire() {
+        generator.selectionChanged()
+        generator.prepare()
+    }
+}
+
+private struct LabHeroKey: EnvironmentKey {
+    static let defaultValue: Namespace.ID? = nil
+}
+
+extension EnvironmentValues {
+    var labHero: Namespace.ID? {
+        get { self[LabHeroKey.self] }
+        set { self[LabHeroKey.self] = newValue }
+    }
 }
 
 struct LabPaperBackground: View {
@@ -122,7 +144,7 @@ struct LabCircleButton: View {
                         .strokeBorder(LabPalette.ink.opacity(0.06), lineWidth: 0.5)
                 )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LabCardButtonStyle())
         .accessibilityLabel(accessibility)
     }
 }
@@ -139,6 +161,15 @@ struct LabCardButtonStyle: ButtonStyle {
 }
 
 extension View {
+    @ViewBuilder
+    func labHero(_ id: String, in namespace: Namespace.ID?) -> some View {
+        if let namespace {
+            self.matchedGeometryEffect(id: id, in: namespace)
+        } else {
+            self
+        }
+    }
+
     func labCardSurface() -> some View {
         self
             .background(

@@ -38,7 +38,7 @@ struct SafeDialView: View {
                 .accessibilityHint("Turn the dial. Last notch clunks open.")
                 .accessibilityValue("Notch \(notch)")
 
-                LabHintOverlay(text: isOpen ? "Open. Spin off the drop to close." : "Turn the dial. The drop clunks.")
+                LabHintOverlay(text: isOpen ? "Open." : "Turn.")
             }
         }
         .ignoresSafeArea()
