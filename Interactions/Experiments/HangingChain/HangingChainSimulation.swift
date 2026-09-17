@@ -29,6 +29,7 @@ final class HangingChainSimulation: NSObject, ObservableObject {
         iterations: HangingChainTuning.iterations
     )
     private let motion = DeviceMotionSource()
+    private let haptics = HapticPlayer()
     private var displayLink: CADisplayLink?
     private var lastTimestamp: CFTimeInterval = 0
     private var filteredGravity = CGVector(dx: 0, dy: HangingChainTuning.pixelsPerG)
@@ -63,6 +64,7 @@ final class HangingChainSimulation: NSObject, ObservableObject {
     }
 
     func start() {
+        haptics.startEngine()
         motion.start()
         guard displayLink == nil else { return }
         lastTimestamp = 0
@@ -84,6 +86,7 @@ final class HangingChainSimulation: NSObject, ObservableObject {
         displayLink = nil
         lastTimestamp = 0
         motion.stop()
+        haptics.shutdown()
     }
 
     @objc private func powerChanged() {
@@ -92,6 +95,7 @@ final class HangingChainSimulation: NSObject, ObservableObject {
 
     func beginDrag(at point: CGPoint) {
         rope.beginDrag(at: point)
+        if rope.draggedIndex != nil { haptics.tick() }
     }
 
     func moveDrag(to point: CGPoint) {
@@ -144,6 +148,17 @@ final class HangingChainSimulation: NSObject, ObservableObject {
             rope.integrate(gravity: filteredGravity, dt: subdt)
             rope.solveConstraints(anchor: pin)
         }
-        positions = rope.positions
+        let next = rope.positions
+        if isDragging || positions.isEmpty || Self.moved(from: positions, to: next) {
+            positions = next
+        }
+    }
+
+    private static func moved(from a: [CGPoint], to b: [CGPoint]) -> Bool {
+        guard a.count == b.count else { return true }
+        for i in a.indices {
+            if hypot(a[i].x - b[i].x, a[i].y - b[i].y) > 0.18 { return true }
+        }
+        return false
     }
 }

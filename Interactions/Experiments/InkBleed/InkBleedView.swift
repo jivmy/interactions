@@ -53,6 +53,7 @@ final class InkBleedModel: ObservableObject {
     private var publishAccum: CGFloat = 0
     private let haptics = HapticPlayer()
     private var lastStampHaptic: CFTimeInterval = 0
+    private var didBlot = false
 
     func ensure(size: CGSize) {
         self.size = size
@@ -61,7 +62,27 @@ final class InkBleedModel: ObservableObject {
             field = cells
             wet = Array(repeating: 0, count: cols * rows)
             grain = (0..<(cols * rows)).map { _ in Float.random(in: 0.65...1.35) }
+            seedBlot()
         }
+    }
+
+    private func seedBlot() {
+        guard !didBlot, cells.count == cols * rows else { return }
+        didBlot = true
+        let cx = cols * 2 / 3
+        let cy = rows / 3
+        for dy in -3...3 {
+            for dx in -5...5 {
+                let xx = cx + dx
+                let yy = cy + dy
+                guard xx >= 0, xx < cols, yy >= 0, yy < rows else { continue }
+                let falloff = 1 - Float(dx * dx + dy * dy) / 34
+                if falloff > 0 {
+                    cells[yy * cols + xx] = min(0.26, falloff * 0.22)
+                }
+            }
+        }
+        field = cells
     }
 
     func start() {
@@ -100,6 +121,7 @@ final class InkBleedModel: ObservableObject {
 
     private func step(dt: CGFloat) {
         guard cells.count == cols * rows else { return }
+        if wet.allSatisfy({ $0 <= 0.003 }) { return }
         var next = cells
         var nextWet = wet
         let k = Float(dt) * 3.2
@@ -116,7 +138,7 @@ final class InkBleedModel: ObservableObject {
         cells = next
         wet = nextWet
         publishAccum += dt
-        if publishAccum >= 1.0 / 60.0 {
+        if publishAccum >= LabCadence.publishInterval {
             publishAccum = 0
             field = cells
         }
