@@ -93,22 +93,38 @@ Confirm the names match exactly. The workflow fails fast with a missing-secret e
 
 ## 6. Certificates and profiles
 
-Prefer **automatic signing**. The Xcode project already has `CODE_SIGN_STYLE = Automatic`. CI does **not** store a `.p12` or a match repo.
+The Xcode project stays on **automatic signing** for local Macs. CI does **not** store a `.p12` or a match repo.
 
-On GitHub-hosted macOS runners Fastlane:
+GitHub-hosted `macos-14` runners are ephemeral (empty keychain every job). Automatic **archive** signing always wants an **Apple Development** certificate for “this machine” plus an **iOS App Development** profile. The first CI archive can create that Development cert; the next runner does not have the private key and fails with:
+
+> Revoke certificate: Your account already has an Apple Development signing certificate for this machine, but its private key is not installed in your keychain.
+
+So the TestFlight lane splits archive and export:
 
 1. Writes the API key to a temp `.p8` (never committed).
-2. Calls `xcodebuild` with `-allowProvisioningUpdates` and Apple’s `-authenticationKeyPath` / `-authenticationKeyID` / `-authenticationKeyIssuerID`.
-3. Lets Xcode create or refresh the **cloud-managed Apple Distribution certificate** and the **App Store** provisioning profile for `com.jimmy.interactions`.
+2. **Archives unsigned** (`CODE_SIGNING_ALLOWED=NO`). No Development cert, no development profile, no registered device required.
+3. **Exports** the archive with `signingStyle: automatic`, `method: app-store`, `-allowProvisioningUpdates`, and Apple’s `-authenticationKeyPath` / `-authenticationKeyID` / `-authenticationKeyIssuerID`.
+4. Xcode creates or refreshes the **cloud-managed Apple Distribution certificate** and the **App Store** provisioning profile for `com.jimmy.interactions`.
+5. Fastlane uploads the IPA with `upload_to_testflight`.
 
-Why not generate a new Distribution certificate every run (`fastlane cert` / a local CSR)? GitHub runners are ephemeral. A new private key each job would burn through Apple’s **three Distribution certificates** limit. Cloud-managed signing keeps the private key at Apple and downloads it for that job.
+Why not generate a new Distribution certificate every run (`fastlane cert` / a local CSR)? GitHub runners are ephemeral. A new private key each job would burn through Apple’s **three Distribution certificates** limit. Cloud-managed signing keeps the private key at Apple and downloads it for that export.
+
+Do **not** set `CODE_SIGN_IDENTITY` to `Apple Distribution` while `CODE_SIGN_STYLE` is Automatic. That is a different failure (`conflicting provisioning settings`). Identity stays unset in the project; distribution signing happens only at export.
+
+### Optional one-time portal cleanup
+
+Not required for the next workflow run, but useful if earlier CI jobs created leftover certs:
+
+1. Open [Certificates, Identifiers & Profiles → Certificates](https://developer.apple.com/account/resources/certificates/list).
+2. You may revoke **Apple Development** certificates that were created by GitHub Actions (runner hostnames / “Created via API”). Keep any Development cert you use on a real Mac.
+3. Do **not** revoke the **cloud-managed Apple Distribution** certificate Xcode created for App Store / TestFlight.
+4. If export fails because the team already has three **Apple Distribution** certificates, revoke unused *CSR / local Mac* Distribution certs and keep the cloud-managed one, then re-run.
 
 Notes:
 
-- The first run may take longer while Apple issues the certificate and profile.
+- The first successful export may take longer while Apple issues the Distribution certificate and App Store profile.
 - You should **not** need to download profiles or export a `.p12` from a Mac.
-- If automatic signing fails with a certificate error, in the Apple Developer portal revoke unused **Apple Distribution** certificates (keep at most the cloud-managed one), then re-run.
-- Manual fallback (only if automatic signing is blocked on the team): create an Apple Distribution certificate on a trusted machine, export a `.p12`, and add extra secrets. That path is not wired up in this workflow on purpose.
+- Manual fallback (only if automatic export is blocked on the team): create an Apple Distribution certificate on a trusted machine, export a `.p12`, and add extra secrets. That path is not wired up in this workflow on purpose.
 
 ## 7. Run the workflow
 
@@ -149,7 +165,7 @@ External testers need Beta App Review the first time, plus compliance details. T
 | Bundle ID | `com.jimmy.interactions` |
 | Marketing version | `1.0` (in the project; CI also passes `MARKETING_VERSION=1.0`) |
 | Build number | `github.run_number` (CI only; not committed) |
-| Signing | Automatic |
+| Signing | Archive unsigned; export automatic App Store (cloud-managed Distribution) |
 | Team | `DEVELOPMENT_TEAM` secret (CI only; not committed) |
 
 The SwiftUI UI is unchanged. CI injects the team id and build number through `xcodebuild` / Fastlane and does not commit those edits.
@@ -169,9 +185,10 @@ bundle exec fastlane ios beta     # archive + TestFlight (needs the same env var
 | Symptom | What to check |
 | --- | --- |
 | Workflow fails “Missing GitHub secret” | The four names in [§5](#5-github-secrets) |
-| `option '-authenticationKeyPath' may only be provided once` (exit 64) | gym forwards both `xcargs` and `export_xcargs` to `-exportArchive`. Pass ASC API key flags (`-authenticationKeyPath` / `-authenticationKeyID` / `-authenticationKeyIssuerID`) and `-allowProvisioningUpdates` in `xcargs` only — not also in `export_xcargs` |
-| `conflicting provisioning settings` / `Apple Distribution has been manually specified` | Automatic signing must not set `CODE_SIGN_IDENTITY` to Apple Distribution. Leave identity unset; Fastlane archives with automatic signing, then gym exports with `signingStyle: automatic` |
-| `No signing certificate` / `No profiles for 'com.jimmy.interactions'` | API key Access is **Admin**; App ID exists; Team ID is the ADP team |
+| `option '-authenticationKeyPath' may only be provided once` (exit 64) | gym forwards both `xcargs` and `export_xcargs` to `-exportArchive`. Pass ASC API key flags (`-authenticationKeyPath` / `-authenticationKeyID` / `-authenticationKeyIssuerID`) and `-allowProvisioningUpdates` in the **export** `xcargs` only — not also in `export_xcargs`, and not on the unsigned archive step |
+| `Revoke certificate` / `No profiles for 'com.jimmy.interactions'` (iOS **App Development**) | Archive tried to use a machine Apple Development cert. CI must archive unsigned (`skip_codesigning`) and sign only at App Store export. Optional: revoke leftover CI **Apple Development** certs ([§6](#6-certificates-and-profiles)) |
+| `conflicting provisioning settings` / `Apple Distribution has been manually specified` | Do not set `CODE_SIGN_IDENTITY` to Apple Distribution while automatic signing is on. Leave identity unset in the project; gym exports with `signingStyle: automatic` |
+| `No signing certificate` / `No profiles` on **export** (App Store) | API key Access is **Admin**; App ID exists; Team ID is the ADP team; unused extra Apple Distribution certs may need revoking ([§6](#6-certificates-and-profiles)) |
 | `Authentication credentials are missing or invalid` | Issuer ID, Key ID, and `.p8` belong to the same key; PEM includes BEGIN/END |
 | Duplicate `CFBundleVersion` | Re-run the workflow (new `run_number`) |
 | Build stuck on export compliance | Confirm `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO` in the target |

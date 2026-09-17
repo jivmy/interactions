@@ -102,7 +102,7 @@ Full walkthrough (create the ASC app, API key, secrets, run the workflow, instal
 
    Never commit the `.p8`, certificates, or profiles.
 
-4. Signing stays **Automatic**. CI passes `-allowProvisioningUpdates` plus the API key so Xcode can use Apple’s cloud-managed distribution certificate and App Store profile. No match repo and no `.p12` secret.
+4. The Xcode project stays on **automatic signing** for local Macs. CI **archives unsigned** (GitHub runners have no persistent Development cert), then **exports** with `-allowProvisioningUpdates` plus the API key so Xcode can use Apple’s cloud-managed Distribution certificate and App Store profile. No match repo and no `.p12` secret.
 
 ### Ship a build
 
