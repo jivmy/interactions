@@ -1,30 +1,51 @@
 # Interactions
 
-Jimmy’s lab for native iOS interaction experiments. SwiftUI, bundle ID `com.jimmy.interactions`.
-
-Shipping today: **A1 Hanging chain** — a Verlet rope pinned at the top of the screen, swung by real device motion.
+Jimmy’s lab for native iOS interaction experiments. SwiftUI, plus Metal, ARKit, AVFoundation, Core Haptics, and CoreMotion where an experiment needs them.
 
 - Display name: **Interactions**
 - Bundle ID: `com.jimmy.interactions`
-- Language / UI: Swift + SwiftUI (Canvas + CoreMotion)
+- Language / UI: Swift + SwiftUI
 - Minimum iOS: 17.0
-- iPhone orientation: portrait (so tilting the phone swings the chain instead of rotating the UI)
+- iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
 
-## A1 Hanging chain — what to feel
+Open the app and you get a catalog of **18 feel prototypes**. A1 Hanging chain is still the Verlet + CoreMotion rope; it now lives in the list with everything else.
 
-Open the app. A metal-ish chain hangs from a pin under the status bar.
+These are feel sketches, not game polish.
 
-On a **real iPhone** (TestFlight or Xcode):
+## Experiments
 
-1. Hold the phone upright — the chain hangs down.
-2. Tilt left / right — it should swing and then hang toward the floor.
-3. Flick or shake the phone — inertia travels down the links.
-4. Lay the phone flat on a table — gravity leaves the screen plane and the chain goes slack.
-5. Drag a link (or the pendant) with a finger and toss it.
+| Code | Title | What to feel | Best hardware | Simulator / fallback |
+| --- | --- | --- | --- | --- |
+| **A1** | Hanging chain | Metal-ish Verlet rope, gravity + flicks | CoreMotion | Drag a link; no tilt |
+| **A2** | Pull-cord light | Limp tug fails; a yank toggles the bulb | Touch velocity | Same — drag the handle |
+| **A3** | Compass mercury | Blob sits on true north | Magnetometer + location (true north) | Blob rests in the dish |
+| **A4** | Barometric balloon | Lift the phone, balloon climbs | `CMAltimeter` | Drag the balloon |
+| **B5** | Safe dial | Click per notch, heavy clunk on the drop | Core Haptics | Visual detents only |
+| **B6** | Zipper | Per-tooth ticks while you pull | Core Haptics | Visual teeth only |
+| **B7** | Matchbook strike | Fast strike lights; slow scrape is a fun fail | Touch velocity + haptics | Same gesture, no haptics |
+| **B8** | Wax seal | Hold to melt, release to stamp | Press duration + haptics | Same gesture, no haptics |
+| **C9** | Face-tracked specular | Highlight follows your eyes | TrueDepth / ARKit | Tilt via CoreMotion |
+| **C10** | Parallax diorama | Off-axis room as you move your head | TrueDepth / ARKit | Tilt via CoreMotion |
+| **C11** | Chladni plate | Sand gathers on standing-wave nodes | Microphone (FFT) | Drag vertically to pick a tone |
+| **D12** | Metaball mercury | SDF blobs, smooth-minimum merge | Metal + tilt | Touch still works |
+| **D13** | Soap film | Thin-film iridescence, then a pop | Metal + tilt | Tap to pop; colors still animate |
+| **D14** | Ink bleed | Touch wicks into paper grain | Touch | Same |
+| **D15** | Frost | Dendritic ice from a fingertip | Touch | Same |
+| **E16** | Smoke box | Stable fluids; tilt = gravity, finger = force | CoreMotion + touch | Drag to stir |
+| **E17** | Cloth panel | Mass-spring sheet | CoreMotion + touch | Drag the cloth |
+| **E18** | Iron filings | Finger is a magnetic pole | Touch | Same |
 
-On the **Simulator** there is no CoreMotion hardware. The chain hangs under a default downward gravity; drag a link to play. The caption will say tilt needs a real iPhone.
+### Hardware notes (real iPhone)
 
-This is a feel prototype, not game polish. Physics is classic Verlet integration (Jakobsen-style distance constraints) so later rope / tail / cloth experiments can reuse it.
+- **CoreMotion (A1, A4, E16, E17, tilt fallbacks):** works on any modern iPhone. Simulator has no gravity hardware.
+- **Barometer (A4):** iPhone 6 and later. Relative altitude is zeroed when you open the experiment — lift the phone ~30–40 cm.
+- **Compass (A3):** magnetometer. Allow location if you want **true** north; otherwise magnetic north. Indoor metal will pull the blob.
+- **Haptics (B5–B8):** Core Haptics on device; silent on Simulator.
+- **TrueDepth (C9, C10):** Face ID phones. The front camera usage prompt is for ARKit face tracking, not Face ID unlock. Older devices / Simulator fall back to tilt.
+- **Microphone (C11):** grant mic access, then hum or play a tone. Denied / Simulator: drag to change the mode.
+- **Metal (D12, D13):** any iPhone; if a GPU is missing the view stays on paper.
+
+First launch may ask for **Motion**, **Microphone**, **Camera**, and (A3) **Location**. Usage strings live in `Interactions/Info.plist`.
 
 ## Requirements
 
@@ -48,15 +69,13 @@ This is a feel prototype, not game polish. Physics is classic Verlet integration
 1. In the Xcode toolbar, click the destination control (to the right of the Run ▶ button).
 2. Under **iOS Simulator**, pick an iPhone (any iOS 17+ simulator is fine).
 3. Press **Run** (▶) or **Command-R**.
-4. Simulator launches the app. You should see the hanging chain on a warm paper background. Drag a link — it will not respond to simulated Device → Shake as CoreMotion gravity.
+4. You should see the catalog. A1 hangs under default gravity — drag a link. Touch experiments (zipper, ink, frost, filings, pull-cord) still play. Tilt / compass / barometer / TrueDepth / haptics will not.
 
 If no simulators are listed: **Xcode → Settings → Platforms** (or **Components**) and download an iOS simulator runtime.
 
 ## Run on a physical iPhone
 
-This is the real experiment. Xcode signs the app with your Apple ID / developer team. Automatic signing is already enabled; you only need to choose your team.
-
-The first launch may show a motion-usage prompt (`NSMotionUsageDescription`). Allow it so the chain can read the accelerometer / device motion.
+This is the real lab. Xcode signs the app with your Apple ID / developer team. Automatic signing is already enabled; you only need to choose your team.
 
 ### 1. Add your Apple ID in Xcode
 
@@ -128,27 +147,29 @@ Full walkthrough (create the ASC app, API key, secrets, run the workflow, instal
 1. **Actions → TestFlight → Run workflow** (optional: push a `v*` tag).
 2. Marketing version is **1.0**. The build number is `github.run_number`.
 3. When App Store Connect finishes processing, add the build to an Internal Testing group and install from the **TestFlight** iOS app.
-4. On device, tilt the phone — the hanging chain should swing with gravity.
+4. On device, open the catalog — A1 should still swing with gravity; the rest of the list should launch without crashing.
 
 ## Project layout
 
 ```
-Interactions.xcodeproj    Open this in Xcode
+Interactions.xcodeproj
 Interactions/
-  InteractionsApp.swift   App entry (@main)
-  ContentView.swift       Root: featured experiment (A1)
-  Info.plist              NSMotionUsageDescription (merged with generated keys)
+  InteractionsApp.swift
+  ContentView.swift              Catalog (NavigationStack)
+  Info.plist                     Motion / mic / camera / location usage strings
   Experiments/
-    ExperimentCatalog.swift   Registry — add future experiments here
+    ExperimentCatalog.swift      All 18 entries
+    Shared/                      Motion, Verlet rope, haptics, Metal, FFT, AR face
     HangingChain/
-      HangingChainView.swift
-      HangingChainSimulation.swift
-      VerletRope.swift
-      DeviceMotionSource.swift
-  Assets.xcassets         App icon + accent color
-fastlane/                 TestFlight lanes (API key auth)
+    PullCord/ CompassMercury/ BarometricBalloon/
+    SafeDial/ Zipper/ Matchbook/ WaxSeal/
+    FaceSpecular/ ParallaxDiorama/ ChladniPlate/
+    MetaballMercury/ SoapFilm/ InkBleed/ Frost/
+    SmokeBox/ ClothPanel/ IronFilings/
+  Assets.xcassets
+fastlane/
 .github/workflows/testflight.yml
-docs/TESTFLIGHT.md        ASC app + secrets + workflow checklist
+docs/TESTFLIGHT.md
 ```
 
-Adding the next experiment: append to `ExperimentCatalog.all`. Until there is a second one, A1 stays the home screen.
+Adding another experiment: append a descriptor to `ExperimentCatalog.all` and put the screen under `Experiments/`.

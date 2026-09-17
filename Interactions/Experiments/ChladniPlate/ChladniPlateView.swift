@@ -1,0 +1,139 @@
+import SwiftUI
+
+struct ChladniPlateView: View {
+    @StateObject private var model = ChladniModel()
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                Color(red: 0.12, green: 0.12, blue: 0.13).ignoresSafeArea()
+                Canvas { context, size in
+                    ChladniRenderer.draw(in: &context, size: size, grains: model.grains)
+                }
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            if !model.isListening {
+                                let t = min(max(value.location.y / max(geo.size.height, 1), 0), 1)
+                                model.manualHz = 80 + t * 520
+                            }
+                        }
+                )
+                LabHintOverlay(text: hint)
+            }
+            .onAppear {
+                model.update(size: geo.size)
+                model.start()
+            }
+            .onChange(of: geo.size) { _, size in model.update(size: size) }
+            .onChange(of: scenePhase) { _, phase in
+                phase == .active ? model.start() : model.stop()
+            }
+            .onDisappear { model.stop() }
+        }
+        .ignoresSafeArea()
+    }
+
+    private var hint: String {
+        if model.denied {
+            "Mic denied — drag vertically to change the mode"
+        } else if model.isListening {
+            "Hum or play a tone — sand finds the nodes"
+        } else {
+            "Drag to pick a frequency — mic needs a real device + permission"
+        }
+    }
+}
+
+private struct Grain {
+    var p: CGPoint
+}
+
+@MainActor
+final class ChladniModel: ObservableObject {
+    @Published var grains: [CGPoint] = []
+    @Published var n = 2
+    @Published var m = 3
+    @Published var isListening = false
+    @Published var denied = false
+    var manualHz: Double = 180
+
+    private var particles: [Grain] = []
+    private let mic = MicrophoneFFT()
+    private let ticker = FrameTicker()
+    private var size: CGSize = .zero
+
+    func update(size: CGSize) {
+        self.size = size
+        if particles.isEmpty {
+            let inset = min(size.width, size.height) * 0.12
+            particles = (0..<720).map { _ in
+                Grain(p: CGPoint(
+                    x: inset + CGFloat.random(in: 0...(size.width - inset * 2)),
+                    y: inset + CGFloat.random(in: 0...(size.height - inset * 2))
+                ))
+            }
+            grains = particles.map(\.p)
+        }
+    }
+
+    func start() {
+        mic.start()
+        ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
+        ticker.start()
+    }
+
+    func stop() {
+        ticker.stop()
+        mic.stop()
+    }
+
+    private func step(dt: CGFloat) {
+        mic.publish()
+        isListening = mic.isListening
+        denied = mic.denied
+        let hz = mic.isListening && mic.amplitude > 0.002 ? mic.dominantHz : manualHz
+        let mode = max(1, Int(hz / 70))
+        n = 1 + mode % 5
+        m = 1 + (mode / 2) % 5
+        let amp = mic.isListening ? min(mic.amplitude * 18, 1.4) : 0.8
+        let inset: CGFloat = 40
+        let w = max(size.width - inset * 2, 1)
+        let h = max(size.height - inset * 2, 1)
+        let nn = CGFloat(n)
+        let mm = CGFloat(m)
+        for i in particles.indices {
+            var p = particles[i].p
+            let nx = (p.x - inset) / w
+            let ny = (p.y - inset) / h
+            let psi = cos(nn * .pi * nx) * cos(mm * .pi * ny)
+            let gx = -sin(nn * .pi * nx) * nn * .pi / w * cos(mm * .pi * ny)
+            let gy = -cos(nn * .pi * nx) * sin(mm * .pi * ny) * mm * .pi / h
+            // Move away from antinodes (high |ψ|) toward nodal lines.
+            let kick = CGFloat(psi * psi) * 420 * CGFloat(amp) * dt
+            p.x += gx * kick + CGFloat.random(in: -0.4...0.4)
+            p.y += gy * kick + CGFloat.random(in: -0.4...0.4)
+            p.x = min(max(p.x, inset), size.width - inset)
+            p.y = min(max(p.y, inset), size.height - inset)
+            particles[i].p = p
+        }
+        grains = particles.map(\.p)
+    }
+}
+
+private enum ChladniRenderer {
+    static func draw(in context: inout GraphicsContext, size: CGSize, grains: [CGPoint]) {
+        let plate = CGRect(x: 24, y: 96, width: size.width - 48, height: size.height - 160)
+        context.fill(Path(roundedRect: plate, cornerRadius: 8), with: .color(Color(red: 0.22, green: 0.20, blue: 0.16)))
+        context.stroke(Path(roundedRect: plate, cornerRadius: 8), with: .color(Color(white: 0.45)), lineWidth: 6)
+
+        var sand = Path()
+        for g in grains {
+            sand.addEllipse(in: CGRect(x: g.x - 1.1, y: g.y - 1.1, width: 2.2, height: 2.2))
+        }
+        context.fill(sand, with: .color(Color(red: 0.82, green: 0.74, blue: 0.52)))
+    }
+}
+
+#Preview { ChladniPlateView() }
