@@ -169,6 +169,7 @@ bundle exec fastlane ios beta     # archive + TestFlight (needs the same env var
 | Symptom | What to check |
 | --- | --- |
 | Workflow fails “Missing GitHub secret” | The four names in [§5](#5-github-secrets) |
+| `conflicting provisioning settings` / `Apple Distribution has been manually specified` | Automatic signing must not set `CODE_SIGN_IDENTITY` to Apple Distribution. Leave identity unset; Fastlane archives with automatic signing, then gym exports with `signingStyle: automatic` |
 | `No signing certificate` / `No profiles for 'com.jimmy.interactions'` | API key Access is **Admin**; App ID exists; Team ID is the ADP team |
 | `Authentication credentials are missing or invalid` | Issuer ID, Key ID, and `.p8` belong to the same key; PEM includes BEGIN/END |
 | Duplicate `CFBundleVersion` | Re-run the workflow (new `run_number`) |

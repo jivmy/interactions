@@ -100,13 +100,15 @@ platform :ios do
 
     UI.message("Shipping #{APP_IDENTIFIER} #{marketing_version} (#{build_number}) with automatic signing")
 
-    # Keep CODE_SIGN_STYLE=Automatic in the project; inject team + versions for this CI run only.
+    # Keep CODE_SIGN_STYLE=Automatic. Inject team + bundle id for this CI run only.
+    # Do NOT set CODE_SIGN_IDENTITY to "Apple Distribution" while automatic signing
+    # is on — Xcode archives with Apple Development, then gym re-signs for App Store
+    # during export (-allowProvisioningUpdates + ASC API key).
     update_code_signing_settings(
       use_automatic_signing: true,
       path: XCODEPROJ,
       team_id: ENV.fetch("DEVELOPMENT_TEAM"),
-      bundle_identifier: APP_IDENTIFIER,
-      code_sign_identity: "Apple Distribution"
+      bundle_identifier: APP_IDENTIFIER
     )
 
     build_app(
@@ -119,6 +121,7 @@ platform :ios do
       output_name: "Interactions",
       include_symbols: true,
       export_method: "app-store",
+      skip_profile_detection: true,
       export_options: {
         method: "app-store",
         signingStyle: "automatic",
