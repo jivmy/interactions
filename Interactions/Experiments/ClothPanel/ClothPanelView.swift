@@ -24,20 +24,9 @@ struct ClothPanelView: View {
                         }
                 )
                 .accessibilityLabel("Cloth panel")
-                .accessibilityHint(sim.usingMotion ? "Tilt or drag the cloth" : "Drag the cloth")
+                .accessibilityHint(sim.usingMotion ? "Tilt or drag" : "Drag the cloth")
 
-                VStack {
-                    HStack {
-                        Spacer()
-                        LabFallbackChip(text: sim.usingMotion ? "Tilt live" : "Drag only")
-                    }
-                    .padding(.top, 58)
-                    .padding(.trailing, 16)
-                    Spacer()
-                }
-                .allowsHitTesting(false)
-
-                LabHintOverlay(text: sim.usingMotion ? "Tilt or drag the cloth" : "Drag the cloth — tilt needs a real iPhone")
+                LabHintOverlay(text: "Drag.")
             }
             .onAppear {
                 sim.layout(size: geo.size)
@@ -224,9 +213,26 @@ private enum ClothRenderer {
                 }
             }
         }
+        if cols > 1 && rows > 1 {
+            let first = positions[0]
+            let last = positions[cols - 1]
+            let hem = positions[(rows - 1) * cols]
+            let hemLast = positions[rows * cols - 1]
+            var shadow = Path()
+            shadow.move(to: CGPoint(x: hem.x + 6, y: hem.y + 10))
+            shadow.addLine(to: CGPoint(x: hemLast.x + 8, y: hemLast.y + 10))
+            context.stroke(shadow, with: .color(.black.opacity(0.16)), style: StrokeStyle(lineWidth: 10, lineCap: .round))
+            let rail = CGRect(x: first.x - 10, y: first.y - 7, width: last.x - first.x + 20, height: 8)
+            context.fill(Path(roundedRect: rail, cornerRadius: 2), with: .color(LabPalette.metal))
+            context.fill(
+                Path(roundedRect: CGRect(x: rail.minX + 6, y: rail.minY + 1.5, width: 22, height: 2), cornerRadius: 1),
+                with: .color(.white.opacity(0.16))
+            )
+        }
         for c in 0..<cols {
             let p = positions[c]
-            context.fill(Path(ellipseIn: CGRect(x: p.x - 3.2, y: p.y - 3.2, width: 6.4, height: 6.4)), with: .color(LabPalette.metal))
+            context.fill(Path(ellipseIn: CGRect(x: p.x - 3.4, y: p.y - 3.4, width: 6.8, height: 6.8)), with: .color(LabPalette.metalSoft))
+            context.fill(Path(ellipseIn: CGRect(x: p.x - 1.2, y: p.y - 1.8, width: 2.2, height: 1.8)), with: .color(.white.opacity(0.28)))
         }
     }
 }

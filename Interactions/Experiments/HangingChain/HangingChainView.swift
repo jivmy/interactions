@@ -62,11 +62,7 @@ struct HangingChainView: View {
     }
 
     private var hintText: String {
-        if simulation.isUsingDeviceMotion {
-            "Tilt or flick the phone"
-        } else {
-            "Drag a link — tilt needs a real iPhone"
-        }
+        simulation.isUsingDeviceMotion ? "Tilt." : "Drag."
     }
 }
 

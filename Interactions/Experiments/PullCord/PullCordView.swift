@@ -12,17 +12,51 @@ struct PullCordView: View {
             let isOn = sim.isOn
             ZStack {
                 (isOn
-                    ? Color(red: 0.99, green: 0.93, blue: 0.78)
-                    : Color(red: 0.075, green: 0.074, blue: 0.086))
+                    ? Color(red: 0.99, green: 0.93, blue: 0.76)
+                    : Color(red: 0.048, green: 0.046, blue: 0.056))
                     .ignoresSafeArea()
-                    .animation(.easeInOut(duration: 0.22), value: isOn)
+                    .animation(.easeInOut(duration: 0.32), value: isOn)
+
+                if !isOn {
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.22, green: 0.26, blue: 0.34).opacity(0.55),
+                                    Color(red: 0.10, green: 0.12, blue: 0.16).opacity(0.22)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(width: 78, height: 112)
+                        .overlay(
+                            Rectangle()
+                                .fill(Color.white.opacity(0.04))
+                                .frame(width: 1, height: 112)
+                        )
+                        .offset(x: geo.size.width * 0.28, y: -geo.size.height * 0.18)
+                        .allowsHitTesting(false)
+                }
 
                 if isOn {
                     RadialGradient(
-                        colors: [Color(red: 1, green: 0.92, blue: 0.62).opacity(0.55), .clear],
-                        center: .top,
-                        startRadius: 10,
-                        endRadius: 340
+                        colors: [
+                            Color(red: 1, green: 0.94, blue: 0.68).opacity(0.70),
+                            Color(red: 1, green: 0.84, blue: 0.46).opacity(0.20),
+                            .clear
+                        ],
+                        center: UnitPoint(x: 0.5, y: 0.16),
+                        startRadius: 6,
+                        endRadius: 420
+                    )
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+
+                    LinearGradient(
+                        colors: [.clear, Color(red: 0.86, green: 0.62, blue: 0.28).opacity(0.16)],
+                        startPoint: .center,
+                        endPoint: .bottom
                     )
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
@@ -43,7 +77,7 @@ struct PullCordView: View {
                 .accessibilityLabel(isOn ? "Pull-cord light, on" : "Pull-cord light, off")
                 .accessibilityHint("Yank the handle to toggle")
 
-                LabHintOverlay(text: isOn ? "Yank again to kill the light" : "Yank the handle — a limp tug fails")
+                LabHintOverlay(text: isOn ? "Again." : "Yank.")
             }
             .onAppear {
                 sim.updateViewport(size: geo.size)
@@ -80,7 +114,7 @@ final class PullCordSimulation: ObservableObject {
     private var restHandleY: CGFloat = 0
 
     private var canopy: CGPoint {
-        CGPoint(x: viewport.width * 0.5, y: ViewSpaceMotion.windowSafeAreaTop() + 74)
+        CGPoint(x: viewport.width * 0.5, y: ViewSpaceMotion.windowSafeAreaTop() + 78)
     }
 
     func updateViewport(size: CGSize) {
@@ -115,6 +149,7 @@ final class PullCordSimulation: ObservableObject {
             lastDrag = point
             lastDragTime = CACurrentMediaTime()
             rope.beginDrag(at: last)
+            haptics.tick()
         }
         let now = CACurrentMediaTime()
         let dt = max(now - lastDragTime, 1.0 / 120.0)
@@ -159,30 +194,53 @@ private enum PullCordRenderer {
         guard nodes.count >= 2 else { return }
 
         let canopy = nodes[0]
-        let fixture = CGRect(x: canopy.x - 40, y: canopy.y - 20, width: 80, height: 18)
-        context.fill(Path(roundedRect: fixture, cornerRadius: 4), with: .color(LabPalette.metal))
+        let rose = Path(ellipseIn: CGRect(x: canopy.x - 22, y: canopy.y - 36, width: 44, height: 18))
+        context.fill(rose, with: .color(on ? Color(white: 0.38) : Color(white: 0.16)))
+        let plate = CGRect(x: canopy.x - 58, y: canopy.y - 26, width: 116, height: 9)
+        context.fill(Path(roundedRect: plate, cornerRadius: 2), with: .color(on ? Color(white: 0.44) : Color(white: 0.18)))
         context.fill(
-            Path(roundedRect: CGRect(x: canopy.x - 28, y: canopy.y - 17, width: 24, height: 4), cornerRadius: 1),
-            with: .color(.white.opacity(0.16))
+            Path(roundedRect: CGRect(x: canopy.x - 20, y: canopy.y - 25, width: 14, height: 3), cornerRadius: 1),
+            with: .color(.white.opacity(on ? 0.22 : 0.10))
         )
 
-        let glow = on ? Color(red: 1, green: 0.9, blue: 0.55).opacity(0.42) : Color.clear
-        let bulbRect = CGRect(x: canopy.x - 18, y: canopy.y - 62, width: 36, height: 50)
-        context.fill(Path(ellipseIn: bulbRect.insetBy(dx: -26, dy: -26)), with: .color(glow))
+        let fixture = CGRect(x: canopy.x - 36, y: canopy.y - 20, width: 72, height: 15)
+        context.fill(Path(roundedRect: fixture, cornerRadius: 3), with: .color(LabPalette.metal))
+        context.fill(
+            Path(roundedRect: CGRect(x: canopy.x - 24, y: canopy.y - 17, width: 20, height: 3.5), cornerRadius: 1),
+            with: .color(.white.opacity(0.20))
+        )
+
+        let bulbRect = CGRect(x: canopy.x - 17, y: canopy.y - 64, width: 34, height: 48)
+        if on {
+            context.fill(Path(ellipseIn: bulbRect.insetBy(dx: -34, dy: -30)), with: .color(Color(red: 1, green: 0.9, blue: 0.55).opacity(0.22)))
+            context.fill(Path(ellipseIn: bulbRect.insetBy(dx: -10, dy: -8)), with: .color(Color(red: 1, green: 0.92, blue: 0.62).opacity(0.4)))
+        }
         context.fill(
             Path(ellipseIn: bulbRect),
-            with: .color(on ? Color(red: 1, green: 0.93, blue: 0.72) : Color(white: 0.22))
+            with: .color(on ? Color(red: 1, green: 0.94, blue: 0.74) : Color(white: 0.20))
         )
+        let neck = CGRect(x: canopy.x - 8, y: canopy.y - 22, width: 16, height: 10)
+        context.fill(Path(roundedRect: neck, cornerRadius: 2), with: .color(LabPalette.metalSoft))
+
         if on {
             context.fill(
-                Path(ellipseIn: CGRect(x: canopy.x - 8, y: canopy.y - 52, width: 12, height: 16)),
-                with: .color(.white.opacity(0.45))
+                Path(ellipseIn: CGRect(x: canopy.x - 7, y: canopy.y - 54, width: 11, height: 14)),
+                with: .color(.white.opacity(0.5))
             )
         } else {
             var filament = Path()
-            filament.move(to: CGPoint(x: canopy.x - 6, y: canopy.y - 40))
-            filament.addQuadCurve(to: CGPoint(x: canopy.x + 6, y: canopy.y - 40), control: CGPoint(x: canopy.x, y: canopy.y - 50))
-            context.stroke(filament, with: .color(Color(white: 0.45)), lineWidth: 1)
+            filament.move(to: CGPoint(x: canopy.x - 6, y: canopy.y - 42))
+            filament.addQuadCurve(to: CGPoint(x: canopy.x + 6, y: canopy.y - 42), control: CGPoint(x: canopy.x, y: canopy.y - 52))
+            context.stroke(filament, with: .color(Color(white: 0.42)), lineWidth: 1)
+        }
+
+        if nodes.count > 3 {
+            var shadow = Path()
+            shadow.move(to: CGPoint(x: nodes[1].x + 3, y: nodes[1].y + 4))
+            for p in nodes.dropFirst() {
+                shadow.addLine(to: CGPoint(x: p.x + 3, y: p.y + 4))
+            }
+            context.stroke(shadow, with: .color(.black.opacity(on ? 0.08 : 0.18)), style: StrokeStyle(lineWidth: 2, lineCap: .round))
         }
 
         var cord = Path()
@@ -190,18 +248,26 @@ private enum PullCordRenderer {
         for p in nodes.dropFirst() { cord.addLine(to: p) }
         context.stroke(
             cord,
-            with: .color(on ? Color(white: 0.22) : Color(white: 0.78)),
-            style: StrokeStyle(lineWidth: 2.3, lineCap: .round, lineJoin: .round)
+            with: .color(on ? Color(white: 0.20) : Color(white: 0.80)),
+            style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round)
         )
 
         let handle = nodes[nodes.count - 1]
-        let knob = CGRect(x: handle.x - 12, y: handle.y - 4, width: 24, height: 40)
-        context.fill(Path(roundedRect: knob, cornerRadius: 6), with: .color(Color(red: 0.38, green: 0.20, blue: 0.11)))
+        let knob = CGRect(x: handle.x - 12, y: handle.y - 3, width: 24, height: 42)
+        context.fill(Path(roundedRect: knob, cornerRadius: 7), with: .color(Color(red: 0.40, green: 0.22, blue: 0.12)))
         context.fill(
-            Path(roundedRect: CGRect(x: handle.x - 8, y: handle.y, width: 7, height: 22), cornerRadius: 2),
-            with: .color(Color(red: 0.55, green: 0.32, blue: 0.16).opacity(0.55))
+            Path(roundedRect: CGRect(x: handle.x - 8, y: handle.y + 2, width: 7, height: 24), cornerRadius: 2),
+            with: .color(Color(red: 0.60, green: 0.36, blue: 0.20).opacity(0.58))
         )
-        context.stroke(Path(roundedRect: knob, cornerRadius: 6), with: .color(Color(red: 0.18, green: 0.08, blue: 0.04)), lineWidth: 1)
+        context.fill(
+            Path(roundedRect: CGRect(x: handle.x + 3, y: handle.y + 6, width: 2.2, height: 18), cornerRadius: 1),
+            with: .color(Color.black.opacity(0.16))
+        )
+        context.stroke(Path(roundedRect: knob, cornerRadius: 7), with: .color(Color(red: 0.16, green: 0.07, blue: 0.04)), lineWidth: 1)
+        context.fill(
+            Path(ellipseIn: CGRect(x: handle.x - 3, y: handle.y - 1, width: 6, height: 4)),
+            with: .color(LabPalette.metalSoft)
+        )
     }
 }
 

@@ -29,13 +29,18 @@ struct FrostView: View {
                 .accessibilityLabel("Frosted pane")
                 .accessibilityHint("Touch the pane. Ice ferns out.")
 
-                LabHintOverlay(text: "Touch the pane. Ice ferns out.")
+                LabHintOverlay(text: "Touch.")
             }
             .onAppear { model.start() }
             .onDisappear { model.stop() }
         }
         .ignoresSafeArea()
     }
+}
+
+struct FrostStroke: Sendable {
+    var points: [CGPoint]
+    var width: CGFloat
 }
 
 private struct Crystal {
@@ -47,7 +52,7 @@ private struct Crystal {
 
 @MainActor
 final class FrostModel: ObservableObject {
-    @Published var crystals: [[CGPoint]] = []
+    @Published var crystals: [FrostStroke] = []
 
     private var growing: [Crystal] = []
     private let ticker = FrameTicker()
@@ -96,26 +101,38 @@ final class FrostModel: ObservableObject {
         if growing.count > 180 {
             growing.removeFirst(growing.count - 180)
         }
-        crystals = growing.map(\.points)
+        crystals = growing.map { FrostStroke(points: $0.points, width: $0.width) }
     }
 }
 
 private enum FrostRenderer {
-    static func draw(in context: inout GraphicsContext, size: CGSize, crystals: [[CGPoint]]) {
+    static func draw(in context: inout GraphicsContext, size: CGSize, crystals: [FrostStroke]) {
         let pane = CGRect(x: 18, y: 88, width: size.width - 36, height: size.height - 150)
         context.fill(Path(roundedRect: pane, cornerRadius: 8), with: .color(Color(red: 0.16, green: 0.22, blue: 0.30).opacity(0.55)))
-        context.stroke(Path(roundedRect: pane, cornerRadius: 8), with: .color(Color.white.opacity(0.14)), lineWidth: 3)
+        context.stroke(Path(roundedRect: pane, cornerRadius: 8), with: .color(Color.white.opacity(0.16)), lineWidth: 3)
+        var muntin = Path()
+        muntin.move(to: CGPoint(x: pane.midX, y: pane.minY))
+        muntin.addLine(to: CGPoint(x: pane.midX, y: pane.maxY))
+        context.stroke(muntin, with: .color(Color.white.opacity(0.08)), lineWidth: 2)
 
-        for (index, points) in crystals.enumerated() where points.count >= 2 {
-            var path = Path()
-            path.move(to: points[0])
-            for p in points.dropFirst() { path.addLine(to: p) }
-            let fade = 0.42 + Double((index % 7)) * 0.06
-            context.stroke(
-                path,
-                with: .color(Color(red: 0.84, green: 0.92, blue: 1.0).opacity(fade)),
-                style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round)
-            )
+        context.fill(
+            Path(ellipseIn: CGRect(x: pane.minX + 10, y: pane.minY + 8, width: pane.width * 0.38, height: 16)),
+            with: .color(.white.opacity(0.06))
+        )
+
+        context.drawLayer { inner in
+            inner.clip(to: Path(roundedRect: pane.insetBy(dx: 2, dy: 2), cornerRadius: 6))
+            for (index, stroke) in crystals.enumerated() where stroke.points.count >= 2 {
+                var path = Path()
+                path.move(to: stroke.points[0])
+                for p in stroke.points.dropFirst() { path.addLine(to: p) }
+                let fade = 0.40 + Double((index % 7)) * 0.07
+                inner.stroke(
+                    path,
+                    with: .color(Color(red: 0.86, green: 0.93, blue: 1.0).opacity(fade)),
+                    style: StrokeStyle(lineWidth: stroke.width, lineCap: .round, lineJoin: .round)
+                )
+            }
         }
     }
 }

@@ -31,11 +31,11 @@ enum ExperimentSection: String, CaseIterable, Identifiable, Sendable {
 
     var blurb: String {
         switch self {
-        case .coreMotion: "Gravity, compass, air pressure"
-        case .haptics: "Clicks, ticks, strikes"
-        case .sensors: "Face, head, microphone"
-        case .shaders: "Metal and diffusion"
-        case .simulation: "Fluids, cloth, fields"
+        case .coreMotion: "Gravity and air"
+        case .haptics: "Clicks and strikes"
+        case .sensors: "Face, head, voice"
+        case .shaders: "Metal and dye"
+        case .simulation: "Fluids and cloth"
         }
     }
 
@@ -103,11 +103,11 @@ enum ExperimentCatalog {
         id: "hanging-chain",
         code: "A1",
         title: "Hanging chain",
-        summary: "Verlet rope pinned at the top, swung by real device gravity.",
+        summary: "A rope that answers gravity.",
         section: .coreMotion,
         hardware: "CoreMotion  ·  drag on Simulator",
         symbol: "link",
-        coaching: "Tilt or flick the phone. Drag a link if you’re on Simulator."
+        coaching: "Tilt."
     ) {
         HangingChainView()
     }
@@ -116,11 +116,11 @@ enum ExperimentCatalog {
         id: "pull-cord",
         code: "A2",
         title: "Pull-cord light",
-        summary: "A limp tug does nothing. A proper yank toggles the bulb.",
+        summary: "Limp fails. A yank toggles the bulb.",
         section: .coreMotion,
         hardware: "Touch velocity  ·  optional tilt",
         symbol: "lightbulb",
-        coaching: "Yank the handle. A slow stretch fails on purpose."
+        coaching: "Yank."
     ) {
         PullCordView()
     }
@@ -129,11 +129,11 @@ enum ExperimentCatalog {
         id: "compass-mercury",
         code: "A3",
         title: "Compass mercury",
-        summary: "A magnetometer blob that sits on true north.",
+        summary: "A blob that sits on north.",
         section: .coreMotion,
         hardware: "Magnetometer  ·  location for true north",
         symbol: "location.north.line",
-        coaching: "Turn the phone. The blob rests on north."
+        coaching: "Turn."
     ) {
         CompassMercuryView()
     }
@@ -142,11 +142,11 @@ enum ExperimentCatalog {
         id: "barometric-balloon",
         code: "A4",
         title: "Barometric balloon",
-        summary: "Lift the phone; the balloon rises with air pressure.",
+        summary: "Lift. The balloon climbs with the air.",
         section: .coreMotion,
         hardware: "CMAltimeter  ·  drag fallback",
         symbol: "balloon",
-        coaching: "Lift the phone about a foot. Drag if there’s no barometer."
+        coaching: "Lift."
     ) {
         BarometricBalloonView()
     }
@@ -155,11 +155,11 @@ enum ExperimentCatalog {
         id: "safe-dial",
         code: "B5",
         title: "Safe dial",
-        summary: "Rotational detents. A click per notch, a heavy clunk at the drop.",
+        summary: "A click per notch. A clunk at the drop.",
         section: .haptics,
         hardware: "Core Haptics",
         symbol: "lock.rotation",
-        coaching: "Turn the dial. The drop clunks open."
+        coaching: "Turn."
     ) {
         SafeDialView()
     }
@@ -168,11 +168,11 @@ enum ExperimentCatalog {
         id: "zipper",
         code: "B6",
         title: "Zipper",
-        summary: "Pull the slider. Each tooth ticks.",
+        summary: "Each tooth ticks.",
         section: .haptics,
         hardware: "Core Haptics",
         symbol: "slider.vertical.3",
-        coaching: "Pull the tab. Every tooth ticks."
+        coaching: "Pull."
     ) {
         ZipperView()
     }
@@ -181,11 +181,11 @@ enum ExperimentCatalog {
         id: "matchbook",
         code: "B7",
         title: "Matchbook strike",
-        summary: "Velocity-gated ignition. Slow scrapes are supposed to fail.",
+        summary: "Fast lights. Slow scrapes fail.",
         section: .haptics,
         hardware: "Touch velocity  ·  haptics",
         symbol: "flame",
-        coaching: "Strike fast along the grit. Slow is just a scrape."
+        coaching: "Strike."
     ) {
         MatchbookView()
     }
@@ -194,11 +194,11 @@ enum ExperimentCatalog {
         id: "wax-seal",
         code: "B8",
         title: "Wax seal",
-        summary: "Hold to melt. Release to stamp.",
+        summary: "Hold to melt. Lift to stamp.",
         section: .haptics,
         hardware: "Press duration  ·  haptics",
         symbol: "checkmark.seal",
-        coaching: "Press and hold until the pool is ready. Release to stamp."
+        coaching: "Hold."
     ) {
         WaxSealView()
     }
@@ -207,11 +207,11 @@ enum ExperimentCatalog {
         id: "face-specular",
         code: "C9",
         title: "Face-tracked specular",
-        summary: "TrueDepth eye position drives a metal highlight.",
+        summary: "The highlight follows your eyes.",
         section: .sensors,
         hardware: "TrueDepth / ARKit  ·  tilt fallback",
         symbol: "sparkle",
-        coaching: "Move your head. The highlight follows your eyes."
+        coaching: "Look."
     ) {
         FaceSpecularView()
     }
@@ -220,11 +220,11 @@ enum ExperimentCatalog {
         id: "parallax-diorama",
         code: "C10",
         title: "Parallax diorama",
-        summary: "Head-tracked off-axis projection through a little room.",
+        summary: "A little room that moves with you.",
         section: .sensors,
         hardware: "TrueDepth / ARKit  ·  tilt fallback",
         symbol: "cube.transparent",
-        coaching: "Lean left or right. The room is off-axis."
+        coaching: "Lean."
     ) {
         ParallaxDioramaView()
     }
@@ -233,11 +233,11 @@ enum ExperimentCatalog {
         id: "chladni-plate",
         code: "C11",
         title: "Chladni plate",
-        summary: "Mic FFT settles sand on standing-wave nodes.",
+        summary: "Sand finds the nodes.",
         section: .sensors,
         hardware: "Microphone  ·  drag-to-tone fallback",
         symbol: "waveform",
-        coaching: "Hum a tone. Sand finds the nodes."
+        coaching: "Hum."
     ) {
         ChladniPlateView()
     }
@@ -246,11 +246,11 @@ enum ExperimentCatalog {
         id: "metaball-mercury",
         code: "D12",
         title: "Metaball mercury",
-        summary: "SDF blobs merged with a smooth minimum.",
+        summary: "Blobs that merge.",
         section: .shaders,
         hardware: "Metal  ·  touch + tilt",
         symbol: "drop",
-        coaching: "Drag a blob. Tilt to let them merge."
+        coaching: "Drag."
     ) {
         MetaballMercuryView()
     }
@@ -259,11 +259,11 @@ enum ExperimentCatalog {
         id: "soap-film",
         code: "D13",
         title: "Soap film",
-        summary: "Thin-film iridescence from tilt, then a pop.",
+        summary: "Color from thickness. Then a pop.",
         section: .shaders,
         hardware: "Metal  ·  CoreMotion",
         symbol: "circle.dotted",
-        coaching: "Tilt for color. Tap to pop."
+        coaching: "Tilt."
     ) {
         SoapFilmView()
     }
@@ -272,11 +272,11 @@ enum ExperimentCatalog {
         id: "ink-bleed",
         code: "D14",
         title: "Ink bleed",
-        summary: "Touch diffusion into paper grain.",
+        summary: "Ink wicks into the grain.",
         section: .shaders,
         hardware: "Touch",
         symbol: "paintbrush.pointed",
-        coaching: "Touch the paper. Ink follows the grain."
+        coaching: "Touch."
     ) {
         InkBleedView()
     }
@@ -285,11 +285,11 @@ enum ExperimentCatalog {
         id: "frost",
         code: "D15",
         title: "Frost",
-        summary: "Dendritic ice growing from a fingertip.",
+        summary: "Ice ferns from a fingertip.",
         section: .shaders,
         hardware: "Touch",
         symbol: "snowflake",
-        coaching: "Touch the pane. Ice ferns out."
+        coaching: "Touch."
     ) {
         FrostView()
     }
@@ -298,11 +298,11 @@ enum ExperimentCatalog {
         id: "smoke-box",
         code: "E16",
         title: "Smoke box",
-        summary: "Stable fluids. Tilt is gravity; a finger is force.",
+        summary: "Tilt is gravity. A finger is force.",
         section: .simulation,
         hardware: "CoreMotion  ·  touch",
         symbol: "smoke",
-        coaching: "Drag to stir. Tilt is gravity."
+        coaching: "Stir."
     ) {
         SmokeBoxView()
     }
@@ -311,11 +311,11 @@ enum ExperimentCatalog {
         id: "cloth-panel",
         code: "E17",
         title: "Cloth panel",
-        summary: "Mass-spring sheet. Motion plus drag.",
+        summary: "A sheet you can pull.",
         section: .simulation,
         hardware: "CoreMotion  ·  touch",
         symbol: "square.grid.3x3",
-        coaching: "Drag the cloth. Tilt the phone."
+        coaching: "Drag."
     ) {
         ClothPanelView()
     }
@@ -324,11 +324,11 @@ enum ExperimentCatalog {
         id: "iron-filings",
         code: "E18",
         title: "Iron filings",
-        summary: "A vector field. Your finger is a magnetic pole.",
+        summary: "Your finger is a pole.",
         section: .simulation,
         hardware: "Touch",
         symbol: "location.north",
-        coaching: "Hold a pole. Filings align to the field."
+        coaching: "Hold."
     ) {
         IronFilingsView()
     }
@@ -376,6 +376,15 @@ enum ExperimentCatalog {
             list[(i + list.count - 1) % list.count],
             list[(i + 1) % list.count]
         )
+    }
+
+    static func isForward(from: String, to: String, in section: ExperimentSection) -> Bool {
+        let list = experiments(in: section)
+        guard let i = list.firstIndex(where: { $0.id == from }),
+              let j = list.firstIndex(where: { $0.id == to }) else { return true }
+        if i == list.count - 1 && j == 0 { return true }
+        if i == 0 && j == list.count - 1 { return false }
+        return j > i
     }
 
     static func resolve(url: URL) -> String? {

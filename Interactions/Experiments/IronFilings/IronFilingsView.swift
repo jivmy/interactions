@@ -26,7 +26,7 @@ struct IronFilingsView: View {
                 .accessibilityLabel("Iron filings")
                 .accessibilityHint("Hold a pole. Filings align to the field.")
 
-                LabHintOverlay(text: "Hold a pole. Filings align to the field.")
+                LabHintOverlay(text: "Hold.")
             }
             .onAppear {
                 model.seed(size: geo.size)
@@ -107,28 +107,39 @@ private enum FilingsRenderer {
         let tray = CGRect(x: 16, y: 84, width: size.width - 32, height: size.height - 148)
         context.fill(Path(roundedRect: tray, cornerRadius: 10), with: .color(Color(red: 0.13, green: 0.12, blue: 0.11)))
         context.stroke(Path(roundedRect: tray, cornerRadius: 10), with: .color(Color.white.opacity(0.06)), lineWidth: 1)
-
-        if active {
-            context.fill(
-                Path(ellipseIn: CGRect(x: pole.x - 18, y: pole.y - 18, width: 36, height: 36)),
-                with: .color(LabPalette.rust.opacity(0.22))
-            )
-            context.fill(
-                Path(ellipseIn: CGRect(x: pole.x - 9, y: pole.y - 9, width: 18, height: 18)),
-                with: .color(LabPalette.rust)
-            )
-            context.stroke(
-                Path(ellipseIn: CGRect(x: pole.x - 15, y: pole.y - 15, width: 30, height: 30)),
-                with: .color(LabPalette.rust.opacity(0.45)),
-                lineWidth: 1.5
-            )
+        for i in 0..<12 {
+            var grain = Path()
+            let y = tray.minY + 8 + CGFloat(i) * (tray.height - 16) / 11
+            grain.move(to: CGPoint(x: tray.minX + 8, y: y))
+            grain.addLine(to: CGPoint(x: tray.maxX - 8, y: y))
+            context.stroke(grain, with: .color(Color.white.opacity(0.025)), lineWidth: 0.6)
         }
-        for f in filings {
-            let len: CGFloat = 7.2
-            var path = Path()
-            path.move(to: CGPoint(x: f.p.x - cos(f.angle) * len, y: f.p.y - sin(f.angle) * len))
-            path.addLine(to: CGPoint(x: f.p.x + cos(f.angle) * len, y: f.p.y + sin(f.angle) * len))
-            context.stroke(path, with: .color(Color(white: 0.74)), style: StrokeStyle(lineWidth: 1.35, lineCap: .round))
+
+        context.drawLayer { inner in
+            inner.clip(to: Path(roundedRect: tray.insetBy(dx: 4, dy: 4), cornerRadius: 8))
+            if active {
+                inner.fill(
+                    Path(ellipseIn: CGRect(x: pole.x - 18, y: pole.y - 18, width: 36, height: 36)),
+                    with: .color(LabPalette.rust.opacity(0.22))
+                )
+                inner.fill(
+                    Path(ellipseIn: CGRect(x: pole.x - 9, y: pole.y - 9, width: 18, height: 18)),
+                    with: .color(LabPalette.rust)
+                )
+                inner.stroke(
+                    Path(ellipseIn: CGRect(x: pole.x - 15, y: pole.y - 15, width: 30, height: 30)),
+                    with: .color(LabPalette.rust.opacity(0.45)),
+                    lineWidth: 1.5
+                )
+            }
+            for f in filings {
+                let len: CGFloat = 6.4 + 1.8 * abs(sin(f.p.x * 0.13 + f.p.y * 0.09))
+                let weight: CGFloat = 1.05 + 0.55 * abs(cos(f.p.x * 0.07))
+                var path = Path()
+                path.move(to: CGPoint(x: f.p.x - cos(f.angle) * len, y: f.p.y - sin(f.angle) * len))
+                path.addLine(to: CGPoint(x: f.p.x + cos(f.angle) * len, y: f.p.y + sin(f.angle) * len))
+                inner.stroke(path, with: .color(Color(white: 0.72 + 0.08 * abs(sin(f.p.y * 0.05)))), style: StrokeStyle(lineWidth: weight, lineCap: .round))
+            }
         }
     }
 }

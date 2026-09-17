@@ -23,7 +23,7 @@ struct WaxSealView: View {
                 .accessibilityLabel(drawState.stamped ? "Wax seal, stamped" : "Wax seal")
                 .accessibilityHint("Press and hold to melt, release to stamp")
 
-                LabHintOverlay(text: model.stamped ? "Sealed. Press again to melt a new pool." : "Press and hold. Release to stamp.")
+                LabHintOverlay(text: model.stamped ? "Again." : "Hold.")
             }
             .onAppear { model.start() }
             .onDisappear { model.stop() }

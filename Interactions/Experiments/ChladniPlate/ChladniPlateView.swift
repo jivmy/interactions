@@ -24,17 +24,6 @@ struct ChladniPlateView: View {
                 .accessibilityLabel("Chladni plate")
                 .accessibilityHint(hint)
 
-                VStack {
-                    HStack {
-                        Spacer()
-                        LabFallbackChip(text: status)
-                    }
-                    .padding(.top, 58)
-                    .padding(.trailing, 16)
-                    Spacer()
-                }
-                .allowsHitTesting(false)
-
                 LabHintOverlay(text: hint)
             }
             .onAppear {
@@ -51,19 +40,9 @@ struct ChladniPlateView: View {
     }
 
     private var hint: String {
-        if model.denied {
-            "Mic denied — drag vertically to change the mode"
-        } else if model.isListening {
-            "Hum or play a tone — sand finds the nodes"
-        } else {
-            "Drag to pick a frequency — mic needs a real device"
-        }
-    }
-
-    private var status: String {
-        if model.denied { return "Mic denied" }
-        if model.isListening { return "Listening" }
-        return "Drag for tone"
+        if model.denied { "Drag." }
+        else if model.isListening { "Hum." }
+        else { "Drag." }
     }
 }
 
@@ -145,15 +124,45 @@ final class ChladniModel: ObservableObject {
 private enum ChladniRenderer {
     static func draw(in context: inout GraphicsContext, size: CGSize, grains: [CGPoint]) {
         let plate = CGRect(x: 22, y: 92, width: size.width - 44, height: size.height - 156)
-        context.fill(Path(roundedRect: plate, cornerRadius: 10), with: .color(Color(red: 0.20, green: 0.18, blue: 0.14)))
-        context.stroke(Path(roundedRect: plate, cornerRadius: 10), with: .color(LabPalette.brass.opacity(0.7)), lineWidth: 7)
+        context.fill(
+            Path(ellipseIn: CGRect(x: plate.midX - 40, y: plate.maxY - 8, width: 80, height: 16)),
+            with: .color(.black.opacity(0.22))
+        )
+        context.fill(Path(roundedRect: plate, cornerRadius: 10), with: .color(Color(red: 0.19, green: 0.17, blue: 0.13)))
+        context.fill(
+            Path(roundedRect: CGRect(x: plate.minX + 16, y: plate.minY + 10, width: plate.width * 0.42, height: 18), cornerRadius: 4),
+            with: .color(Color.white.opacity(0.04))
+        )
+        context.stroke(Path(roundedRect: plate, cornerRadius: 10), with: .color(LabPalette.brass.opacity(0.78)), lineWidth: 7)
         context.stroke(Path(roundedRect: plate.insetBy(dx: 5, dy: 5), cornerRadius: 7), with: .color(Color.white.opacity(0.06)), lineWidth: 1)
-
-        var sand = Path()
-        for g in grains {
-            sand.addEllipse(in: CGRect(x: g.x - 1.15, y: g.y - 1.15, width: 2.3, height: 2.3))
+        context.fill(
+            Path(ellipseIn: CGRect(x: plate.midX - 7, y: plate.midY - 7, width: 14, height: 14)),
+            with: .color(LabPalette.brass.opacity(0.55))
+        )
+        context.fill(
+            Path(ellipseIn: CGRect(x: plate.midX - 3, y: plate.midY - 3, width: 6, height: 6)),
+            with: .color(LabPalette.metal)
+        )
+        let bolts = [
+            CGPoint(x: plate.minX + 10, y: plate.minY + 10),
+            CGPoint(x: plate.maxX - 10, y: plate.minY + 10),
+            CGPoint(x: plate.minX + 10, y: plate.maxY - 10),
+            CGPoint(x: plate.maxX - 10, y: plate.maxY - 10)
+        ]
+        for b in bolts {
+            context.fill(Path(ellipseIn: CGRect(x: b.x - 3.5, y: b.y - 3.5, width: 7, height: 7)), with: .color(LabPalette.brass))
+            context.fill(Path(ellipseIn: CGRect(x: b.x - 1.2, y: b.y - 1.2, width: 2.4, height: 2.4)), with: .color(LabPalette.metal))
         }
-        context.fill(sand, with: .color(Color(red: 0.84, green: 0.76, blue: 0.52)))
+
+        context.drawLayer { inner in
+            inner.clip(to: Path(roundedRect: plate.insetBy(dx: 8, dy: 8), cornerRadius: 6))
+            var sand = Path()
+            for g in grains {
+                let s = 0.95 + 0.65 * abs(sin(g.x * 0.17 + g.y * 0.11))
+                sand.addEllipse(in: CGRect(x: g.x - s, y: g.y - s, width: s * 2, height: s * 2))
+            }
+            inner.fill(sand, with: .color(Color(red: 0.86, green: 0.78, blue: 0.54)))
+        }
     }
 }
 

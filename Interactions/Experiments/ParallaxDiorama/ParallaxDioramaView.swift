@@ -15,17 +15,6 @@ struct ParallaxDioramaView: View {
                 .accessibilityLabel("Parallax diorama")
                 .accessibilityHint(hint)
 
-                VStack {
-                    HStack {
-                        Spacer()
-                        LabFallbackChip(text: model.faceTracking ? "Head tracking" : "Tilt fallback")
-                    }
-                    .padding(.top, 58)
-                    .padding(.trailing, 16)
-                    Spacer()
-                }
-                .allowsHitTesting(false)
-
                 LabHintOverlay(text: hint)
             }
             .onAppear { model.start() }
@@ -38,11 +27,7 @@ struct ParallaxDioramaView: View {
     }
 
     private var hint: String {
-        if model.faceTracking {
-            "Move your head — the room is an off-axis projection"
-        } else {
-            "Tilt — Face ID head tracking unavailable"
-        }
+        model.faceTracking ? "Lean." : "Tilt."
     }
 }
 
@@ -92,64 +77,97 @@ private enum DioramaRenderer {
             CGSize(width: offset.width * depth * 28, height: offset.height * depth * 22)
         }
 
-        let far = layer(0.12)
+        let far = layer(0.10)
         context.fill(
-            Path(CGRect(x: 8 + far.width, y: 90 + far.height, width: size.width - 16, height: size.height - 170)),
-            with: .color(Color(red: 0.22, green: 0.28, blue: 0.36))
+            Path(CGRect(x: 4 + far.width, y: 86 + far.height, width: size.width - 8, height: size.height - 164)),
+            with: .color(Color(red: 0.17, green: 0.22, blue: 0.30))
         )
 
-        let back = layer(0.28)
+        let back = layer(0.30)
+        let backRect = CGRect(x: 36 + back.width, y: 124 + back.height, width: size.width - 72, height: size.height - 228)
+        context.fill(Path(backRect), with: .color(Color(red: 0.40, green: 0.54, blue: 0.66)))
         context.fill(
-            Path(CGRect(x: 28 + back.width, y: 118 + back.height, width: size.width - 56, height: size.height - 214)),
-            with: .color(Color(red: 0.36, green: 0.50, blue: 0.64))
+            Path(CGRect(x: backRect.minX, y: backRect.minY, width: backRect.width, height: 22)),
+            with: .color(Color(red: 0.30, green: 0.40, blue: 0.50))
         )
-        let win = CGRect(x: cx - 72 + back.width, y: cy - 118 + back.height, width: 144, height: 94)
-        context.fill(Path(roundedRect: win, cornerRadius: 5), with: .color(Color(red: 0.78, green: 0.90, blue: 0.96)))
+        let win = CGRect(x: cx - 68 + back.width, y: cy - 126 + back.height, width: 136, height: 90)
+        context.fill(Path(roundedRect: win, cornerRadius: 4), with: .linearGradient(
+            Gradient(colors: [Color(red: 0.90, green: 0.95, blue: 0.99), Color(red: 0.68, green: 0.82, blue: 0.93)]),
+            startPoint: CGPoint(x: win.minX, y: win.minY),
+            endPoint: CGPoint(x: win.maxX, y: win.maxY)
+        ))
         var muntin = Path()
         muntin.move(to: CGPoint(x: win.midX, y: win.minY))
         muntin.addLine(to: CGPoint(x: win.midX, y: win.maxY))
         muntin.move(to: CGPoint(x: win.minX, y: win.midY))
         muntin.addLine(to: CGPoint(x: win.maxX, y: win.midY))
-        context.stroke(muntin, with: .color(Color.white.opacity(0.7)), lineWidth: 2)
-        context.stroke(Path(roundedRect: win, cornerRadius: 5), with: .color(Color.white.opacity(0.55)), lineWidth: 3)
+        context.stroke(muntin, with: .color(Color.white.opacity(0.74)), lineWidth: 2)
+        context.stroke(Path(roundedRect: win, cornerRadius: 4), with: .color(Color.white.opacity(0.52)), lineWidth: 3)
+        let frame = CGRect(x: backRect.minX + 18 + back.width * 0.02, y: cy - 40 + back.height, width: 36, height: 28)
+        context.fill(Path(roundedRect: frame, cornerRadius: 1), with: .color(Color(red: 0.72, green: 0.58, blue: 0.36)))
+        context.fill(Path(roundedRect: frame.insetBy(dx: 3, dy: 3), cornerRadius: 1), with: .color(Color(red: 0.55, green: 0.62, blue: 0.48)))
 
-        let mid = layer(0.72)
+        let mid = layer(0.74)
+        var shaft = Path()
+        shaft.move(to: CGPoint(x: win.minX + 8, y: win.maxY))
+        shaft.addLine(to: CGPoint(x: win.maxX - 8, y: win.maxY))
+        shaft.addLine(to: CGPoint(x: cx + 70 + mid.width, y: cy + 78 + mid.height))
+        shaft.addLine(to: CGPoint(x: cx - 40 + mid.width, y: cy + 78 + mid.height))
+        shaft.closeSubpath()
+        context.fill(shaft, with: .color(Color.white.opacity(0.07)))
+
+        var floor = Path()
+        floor.move(to: CGPoint(x: 48 + mid.width, y: cy + 78 + mid.height))
+        floor.addLine(to: CGPoint(x: size.width - 48 + mid.width, y: cy + 78 + mid.height))
+        floor.addLine(to: CGPoint(x: size.width - 28 + mid.width, y: cy + 118 + mid.height))
+        floor.addLine(to: CGPoint(x: 28 + mid.width, y: cy + 118 + mid.height))
+        floor.closeSubpath()
+        context.fill(floor, with: .color(Color(red: 0.36, green: 0.28, blue: 0.22)))
+        for i in 0..<5 {
+            let t = CGFloat(i) / 4
+            var plank = Path()
+            plank.move(to: CGPoint(x: 48 + t * (size.width - 96) + mid.width, y: cy + 78 + mid.height))
+            plank.addLine(to: CGPoint(x: 28 + t * (size.width - 56) + mid.width, y: cy + 118 + mid.height))
+            context.stroke(plank, with: .color(Color.black.opacity(0.12)), lineWidth: 1)
+        }
         context.fill(
-            Path(CGRect(x: 40 + mid.width, y: cy + 70 + mid.height, width: size.width - 80, height: 10)),
-            with: .color(Color(red: 0.38, green: 0.30, blue: 0.24))
+            Path(ellipseIn: CGRect(x: cx - 52 + mid.width, y: cy + 92 + mid.height, width: 104, height: 16)),
+            with: .color(Color(red: 0.42, green: 0.18, blue: 0.16).opacity(0.55))
+        )
+        let table = CGRect(x: cx - 94 + mid.width, y: cy + 36 + mid.height, width: 188, height: 15)
+        context.fill(Path(table), with: .color(Color(red: 0.50, green: 0.32, blue: 0.18)))
+        context.fill(Path(CGRect(x: table.minX + 16, y: table.maxY, width: 6, height: 28)), with: .color(Color(red: 0.38, green: 0.24, blue: 0.14)))
+        context.fill(Path(CGRect(x: table.maxX - 22, y: table.maxY, width: 6, height: 28)), with: .color(Color(red: 0.38, green: 0.24, blue: 0.14)))
+        context.fill(
+            Path(ellipseIn: CGRect(x: cx - 15 + mid.width, y: cy - 16 + mid.height, width: 30, height: 50)),
+            with: .color(Color(red: 0.72, green: 0.18, blue: 0.22))
         )
         context.fill(
-            Path(CGRect(x: cx - 96 + mid.width, y: cy + 38 + mid.height, width: 192, height: 16)),
-            with: .color(Color(red: 0.48, green: 0.30, blue: 0.17))
+            Path(ellipseIn: CGRect(x: cx - 8 + mid.width, y: cy - 20 + mid.height, width: 8, height: 10)),
+            with: .color(.white.opacity(0.14))
         )
         context.fill(
-            Path(ellipseIn: CGRect(x: cx - 16 + mid.width, y: cy - 12 + mid.height, width: 32, height: 52)),
-            with: .color(Color(red: 0.72, green: 0.20, blue: 0.24))
-        )
-        context.fill(
-            Path(ellipseIn: CGRect(x: cx + 42 + mid.width, y: cy + 6 + mid.height, width: 38, height: 38)),
+            Path(ellipseIn: CGRect(x: cx + 44 + mid.width, y: cy + 4 + mid.height, width: 36, height: 36)),
             with: .color(Color(red: 0.90, green: 0.78, blue: 0.34))
         )
         context.fill(
-            Path(ellipseIn: CGRect(x: cx - 78 + mid.width, y: cy + 18 + mid.height, width: 22, height: 22)),
-            with: .color(Color(red: 0.28, green: 0.42, blue: 0.36))
+            Path(ellipseIn: CGRect(x: cx + 52 + mid.width, y: cy + 8 + mid.height, width: 10, height: 8)),
+            with: .color(.white.opacity(0.22))
+        )
+        context.fill(
+            Path(ellipseIn: CGRect(x: cx - 80 + mid.width, y: cy + 16 + mid.height, width: 20, height: 20)),
+            with: .color(Color(red: 0.26, green: 0.42, blue: 0.36))
         )
 
-        let front = layer(1.28)
-        var frame = Path(roundedRect: CGRect(x: 16 + front.width, y: 104 + front.height, width: size.width - 32, height: size.height - 196), cornerRadius: 12)
-        context.stroke(frame, with: .color(Color(red: 0.14, green: 0.09, blue: 0.07)), lineWidth: 24)
-        context.fill(
-            Path(CGRect(x: 6 + front.width, y: 96 + front.height, width: 30, height: size.height - 184)),
-            with: .color(Color(red: 0.46, green: 0.08, blue: 0.12))
+        let front = layer(1.30)
+        context.stroke(
+            Path(roundedRect: CGRect(x: 14 + front.width, y: 102 + front.height, width: size.width - 28, height: size.height - 192), cornerRadius: 12),
+            with: .color(Color(red: 0.13, green: 0.08, blue: 0.06)),
+            lineWidth: 22
         )
-        context.fill(
-            Path(CGRect(x: size.width - 36 + front.width, y: 96 + front.height, width: 30, height: size.height - 184)),
-            with: .color(Color(red: 0.46, green: 0.08, blue: 0.12))
-        )
-        context.fill(
-            Path(CGRect(x: 6 + front.width, y: 96 + front.height, width: size.width - 12, height: 18)),
-            with: .color(Color(red: 0.40, green: 0.07, blue: 0.10))
-        )
+        context.fill(Path(CGRect(x: 4 + front.width, y: 94 + front.height, width: 28, height: size.height - 180)), with: .color(Color(red: 0.46, green: 0.08, blue: 0.12)))
+        context.fill(Path(CGRect(x: size.width - 32 + front.width, y: 94 + front.height, width: 28, height: size.height - 180)), with: .color(Color(red: 0.46, green: 0.08, blue: 0.12)))
+        context.fill(Path(CGRect(x: 4 + front.width, y: 94 + front.height, width: size.width - 8, height: 16)), with: .color(Color(red: 0.40, green: 0.07, blue: 0.10)))
     }
 }
 

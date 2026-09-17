@@ -34,7 +34,7 @@ struct MatchbookView: View {
                 .accessibilityLabel(drawState.lit ? "Matchbook, burning" : "Matchbook")
                 .accessibilityHint("Strike fast along the grit")
 
-                LabHintOverlay(text: model.lit ? "Burning. Strike again after it dies." : "Strike fast along the grit. Slow is a scrape.")
+                LabHintOverlay(text: model.lit ? "Burning." : "Strike.")
             }
             .onAppear { model.start() }
             .onDisappear { model.stop() }

@@ -22,7 +22,7 @@ struct InkBleedView: View {
                 .accessibilityLabel("Ink bleed paper")
                 .accessibilityHint("Touch the paper. Ink wicks along the grain.")
 
-                LabHintOverlay(text: "Touch the paper. Ink wicks along the grain.")
+                LabHintOverlay(text: "Touch.")
             }
             .onAppear {
                 model.ensure(size: geo.size)
@@ -101,12 +101,30 @@ final class InkBleedModel: ObservableObject {
 private enum InkBleedRenderer {
     static func draw(in context: inout GraphicsContext, size: CGSize, field: [Float], cols: Int, rows: Int) {
         guard field.count == cols * rows else { return }
-        let cw = size.width / CGFloat(cols)
-        let rh = size.height / CGFloat(rows)
         let sheet = CGRect(x: size.width * 0.06, y: size.height * 0.14, width: size.width * 0.88, height: size.height * 0.70)
+        context.fill(
+            Path(roundedRect: CGRect(x: sheet.minX + 4, y: sheet.maxY - 2, width: sheet.width, height: 6), cornerRadius: 2),
+            with: .color(.black.opacity(0.06))
+        )
         context.fill(Path(roundedRect: sheet, cornerRadius: 4), with: .color(Color(red: 0.96, green: 0.93, blue: 0.86)))
         context.stroke(Path(roundedRect: sheet, cornerRadius: 4), with: .color(Color(red: 0.78, green: 0.72, blue: 0.62)), lineWidth: 1)
+        for i in 0..<18 {
+            let yy = sheet.minY + 10 + CGFloat(i) * (sheet.height - 20) / 17
+            var fiber = Path()
+            fiber.move(to: CGPoint(x: sheet.minX + 8, y: yy))
+            fiber.addLine(to: CGPoint(x: sheet.maxX - 8, y: yy))
+            context.stroke(fiber, with: .color(Color(red: 0.78, green: 0.70, blue: 0.56).opacity(0.10)), lineWidth: 0.6)
+        }
 
+        context.drawLayer { inner in
+            inner.clip(to: Path(roundedRect: sheet.insetBy(dx: 3, dy: 3), cornerRadius: 3))
+            drawInk(in: &inner, size: size, field: field, cols: cols, rows: rows)
+        }
+    }
+
+    private static func drawInk(in context: inout GraphicsContext, size: CGSize, field: [Float], cols: Int, rows: Int) {
+        let cw = size.width / CGFloat(cols)
+        let rh = size.height / CGFloat(rows)
         for y in 0..<rows {
             var x = 0
             while x < cols {

@@ -23,7 +23,7 @@ struct ZipperView: View {
                 .accessibilityValue("\(Int(progress * 100)) percent closed")
                 .accessibilityHint("Pull the slider. Each tooth ticks.")
 
-                LabHintOverlay(text: "Pull the slider. Each tooth ticks.")
+                LabHintOverlay(text: "Pull.")
             }
         }
         .ignoresSafeArea()
