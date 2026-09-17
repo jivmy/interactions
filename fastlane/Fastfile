@@ -13,7 +13,18 @@
 #   BUILD_NUMBER                (defaults to GITHUB_RUN_NUMBER)
 #   MARKETING_VERSION           (defaults to 1.0)
 #   CHANGELOG                   (TestFlight "What to Test")
+#
+# Signing on ephemeral macos runners:
+#   Archive is unsigned (CODE_SIGNING_ALLOWED=NO). Automatic archive signing
+#   always wants an Apple Development cert + iOS App Development profile for
+#   "this machine". GitHub-hosted runners have no persistent keychain, so the
+#   first run creates a Development cert and later runs fail with
+#   "Revoke certificate… private key is not installed".
+#   Export then uses automatic App Store signing + ASC API key +
+#   -allowProvisioningUpdates so Xcode uses Apple's cloud-managed
+#   Apple Distribution certificate. No match repo, no .p12 secret.
 
+require "fileutils"
 require "shellwords"
 
 opt_out_usage
@@ -50,15 +61,25 @@ def authentication_key_path
   path
 end
 
-def xcode_auth_args
+# Flags for `xcodebuild -exportArchive` only. gym 2.233+ also appends `xcargs`
+# to export, so put ASC API key auth here and do NOT also set export_xcargs —
+# duplicating -authenticationKeyPath / -authenticationKeyID /
+# -authenticationKeyIssuerID / -allowProvisioningUpdates makes xcodebuild exit 64.
+def export_authentication_xcargs
   key_path = authentication_key_path
   [
     "-allowProvisioningUpdates",
     "-authenticationKeyPath #{Shellwords.escape(key_path)}",
     "-authenticationKeyID #{ENV.fetch('APP_STORE_CONNECT_API_KEY_ID')}",
-    "-authenticationKeyIssuerID #{ENV.fetch('APP_STORE_CONNECT_ISSUER_ID')}",
+    "-authenticationKeyIssuerID #{ENV.fetch('APP_STORE_CONNECT_ISSUER_ID')}"
+  ].join(" ")
+end
+
+def archive_version_xcargs(build_number, marketing_version)
+  [
     "DEVELOPMENT_TEAM=#{ENV.fetch('DEVELOPMENT_TEAM')}",
-    "CODE_SIGN_STYLE=Automatic"
+    "CURRENT_PROJECT_VERSION=#{build_number}",
+    "MARKETING_VERSION=#{marketing_version}"
   ].join(" ")
 end
 
@@ -70,6 +91,18 @@ def changelog_text(build_number)
   parts = ["CI build #{build_number}"]
   parts << "commit #{sha}" unless sha.empty?
   parts.join(" · ")
+end
+
+def app_store_export_options
+  {
+    method: "app-store",
+    signingStyle: "automatic",
+    teamID: ENV.fetch("DEVELOPMENT_TEAM"),
+    uploadSymbols: true,
+    compileBitcode: false,
+    destination: "export",
+    manageAppVersionAndBuildNumber: false
+  }
 end
 
 platform :ios do
@@ -94,16 +127,17 @@ platform :ios do
       in_house: false
     )
 
-    auth_args = xcode_auth_args
     build_number = ENV["BUILD_NUMBER"] || ENV["GITHUB_RUN_NUMBER"] || Time.now.strftime("%Y%m%d%H%M")
     marketing_version = ENV["MARKETING_VERSION"] || "1.0"
+    archive_path = File.absolute_path(File.join("build", "Interactions.xcarchive"))
+    FileUtils.mkdir_p(File.dirname(archive_path))
 
-    UI.message("Shipping #{APP_IDENTIFIER} #{marketing_version} (#{build_number}) with automatic signing")
+    UI.message("Shipping #{APP_IDENTIFIER} #{marketing_version} (#{build_number})")
+    UI.message("Archive unsigned, then export with automatic App Store / cloud-managed Distribution signing")
 
-    # Keep CODE_SIGN_STYLE=Automatic. Inject team + bundle id for this CI run only.
-    # Do NOT set CODE_SIGN_IDENTITY to "Apple Distribution" while automatic signing
-    # is on — Xcode archives with Apple Development, then gym re-signs for App Store
-    # during export (-allowProvisioningUpdates + ASC API key).
+    # Team + bundle id for this CI run only. Leave CODE_SIGN_IDENTITY unset in
+    # the project (do not set "Apple Distribution" while CODE_SIGN_STYLE is
+    # Automatic — that is the "conflicting provisioning settings" error).
     update_code_signing_settings(
       use_automatic_signing: true,
       path: XCODEPROJ,
@@ -111,12 +145,11 @@ platform :ios do
       bundle_identifier: APP_IDENTIFIER
     )
 
-    # gym 2.233+ appends both export_xcargs and xcargs to `xcodebuild -exportArchive`.
-    # Put ASC API key auth and -allowProvisioningUpdates in xcargs only so they
-    # reach archive + export once. Do not also set export_xcargs — that duplicates
-    # -authenticationKeyPath / -authenticationKeyID / -authenticationKeyIssuerID /
-    # -allowProvisioningUpdates and xcodebuild exits 64.
-    # app_store_connect_api_key above is for Spaceship / upload_to_testflight only.
+    # 1) Archive without Apple Development. skip_codesigning injects
+    # CODE_SIGNING_ALLOWED=NO so Xcode never looks up a machine Development
+    # cert or an iOS App Development profile.
+    # Do not pass ASC API key flags here — those make Xcode contact ASC and
+    # recreate the Development-cert conflict even with skip_codesigning.
     build_app(
       project: XCODEPROJ,
       scheme: SCHEME,
@@ -125,21 +158,28 @@ platform :ios do
       destination: "generic/platform=iOS",
       output_directory: "build",
       output_name: "Interactions",
+      skip_package_ipa: true,
+      skip_codesigning: true,
+      skip_profile_detection: true,
+      archive_path: archive_path,
+      xcargs: archive_version_xcargs(build_number, marketing_version)
+    )
+
+    # 2) Re-sign the unsigned archive for App Store / TestFlight. Cloud-managed
+    # Apple Distribution cert + App Store profile are created/refreshed by
+    # Xcode using the Admin ASC API key.
+    build_app(
+      project: XCODEPROJ,
+      scheme: SCHEME,
+      skip_build_archive: true,
+      archive_path: archive_path,
+      output_directory: "build",
+      output_name: "Interactions",
       include_symbols: true,
       export_method: "app-store",
       skip_profile_detection: true,
-      export_options: {
-        method: "app-store",
-        signingStyle: "automatic",
-        teamID: ENV.fetch("DEVELOPMENT_TEAM"),
-        uploadSymbols: true,
-        compileBitcode: false
-      },
-      xcargs: [
-        auth_args,
-        "CURRENT_PROJECT_VERSION=#{build_number}",
-        "MARKETING_VERSION=#{marketing_version}"
-      ].join(" ")
+      export_options: app_store_export_options,
+      xcargs: export_authentication_xcargs
     )
 
     upload_to_testflight(
@@ -160,7 +200,8 @@ platform :ios do
     UI.message("Scheme:            #{SCHEME}")
     UI.message("Marketing version: #{ENV['MARKETING_VERSION'] || '1.0'}")
     UI.message("Build number:      #{ENV['BUILD_NUMBER'] || ENV['GITHUB_RUN_NUMBER'] || '(unset)'}")
-    UI.message("Signing:           Automatic + ASC API key + -allowProvisioningUpdates")
+    UI.message("Archive signing:   skipped (no Apple Development cert on GHA runners)")
+    UI.message("IPA export:        Automatic App Store + ASC API key + cloud-managed Distribution")
     missing = missing_secrets
     if missing.empty?
       UI.success("All required secrets are present in the environment.")

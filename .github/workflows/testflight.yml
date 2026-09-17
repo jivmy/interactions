@@ -2,6 +2,8 @@ name: TestFlight
 
 # Ship Interactions to TestFlight from GitHub-hosted macOS runners.
 # Does not use a local Mac or a Cursor Mac pool.
+# Archive is unsigned; IPA export uses automatic App Store signing + ASC API key
+# (cloud-managed Apple Distribution). See docs/TESTFLIGHT.md.
 #
 # Secrets (repo Settings → Secrets and variables → Actions):
 #   APP_STORE_CONNECT_API_KEY_ID
