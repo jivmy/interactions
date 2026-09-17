@@ -10,7 +10,7 @@ struct ClothPanelView: View {
             let cols = sim.cols
             let rows = sim.rows
             ZStack {
-                Color(red: 0.14, green: 0.15, blue: 0.16).ignoresSafeArea()
+                Color(red: 0.12, green: 0.13, blue: 0.14).ignoresSafeArea()
                 Canvas { context, size in
                     ClothRenderer.draw(in: &context, positions: positions, cols: cols, rows: rows)
                 }
@@ -23,6 +23,20 @@ struct ClothPanelView: View {
                             sim.endDrag()
                         }
                 )
+                .accessibilityLabel("Cloth panel")
+                .accessibilityHint(sim.usingMotion ? "Tilt or drag the cloth" : "Drag the cloth")
+
+                VStack {
+                    HStack {
+                        Spacer()
+                        LabFallbackChip(text: sim.usingMotion ? "Tilt live" : "Drag only")
+                    }
+                    .padding(.top, 58)
+                    .padding(.trailing, 16)
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+
                 LabHintOverlay(text: sim.usingMotion ? "Tilt or drag the cloth" : "Drag the cloth — tilt needs a real iPhone")
             }
             .onAppear {
@@ -168,6 +182,30 @@ final class ClothSimulation: ObservableObject {
 private enum ClothRenderer {
     static func draw(in context: inout GraphicsContext, positions: [CGPoint], cols: Int, rows: Int) {
         guard positions.count == cols * rows else { return }
+
+        for r in 0..<(rows - 1) {
+            for c in 0..<(cols - 1) {
+                let i = r * cols + c
+                let a = positions[i]
+                let b = positions[i + 1]
+                let d = positions[i + cols]
+                let e = positions[i + cols + 1]
+                let ux = b.x - a.x
+                let uy = b.y - a.y
+                let vx = d.x - a.x
+                let vy = d.y - a.y
+                let cross = ux * vy - uy * vx
+                let shade = min(max(0.38 + cross / 900, 0.22), 0.78)
+                var quad = Path()
+                quad.move(to: a)
+                quad.addLine(to: b)
+                quad.addLine(to: e)
+                quad.addLine(to: d)
+                quad.closeSubpath()
+                context.fill(quad, with: .color(Color(red: 0.72 * shade + 0.08, green: 0.48 * shade + 0.06, blue: 0.28 * shade + 0.04)))
+            }
+        }
+
         for r in 0..<rows {
             for c in 0..<cols {
                 let i = r * cols + c
@@ -176,19 +214,19 @@ private enum ClothRenderer {
                     var path = Path()
                     path.move(to: p)
                     path.addLine(to: positions[i + 1])
-                    context.stroke(path, with: .color(Color(red: 0.72, green: 0.55, blue: 0.32)), lineWidth: 1.4)
+                    context.stroke(path, with: .color(Color(red: 0.78, green: 0.58, blue: 0.34).opacity(0.35)), lineWidth: 0.7)
                 }
                 if r + 1 < rows {
                     var path = Path()
                     path.move(to: p)
                     path.addLine(to: positions[i + cols])
-                    context.stroke(path, with: .color(Color(red: 0.62, green: 0.46, blue: 0.28)), lineWidth: 1.4)
+                    context.stroke(path, with: .color(Color(red: 0.62, green: 0.44, blue: 0.26).opacity(0.28)), lineWidth: 0.7)
                 }
             }
         }
         for c in 0..<cols {
             let p = positions[c]
-            context.fill(Path(ellipseIn: CGRect(x: p.x - 3, y: p.y - 3, width: 6, height: 6)), with: .color(LabPalette.metal))
+            context.fill(Path(ellipseIn: CGRect(x: p.x - 3.2, y: p.y - 3.2, width: 6.4, height: 6.4)), with: .color(LabPalette.metal))
         }
     }
 }

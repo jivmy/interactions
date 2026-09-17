@@ -70,7 +70,7 @@ struct MetalLabView: UIViewRepresentable {
             guard let device = MTLCreateSystemDefaultDevice() else {
                 failed = true
                 view.device = nil
-                view.clearColor = MTLClearColor(red: 0.925, green: 0.914, blue: 0.890, alpha: 1)
+                view.clearColor = MTLClearColor(red: 0.957, green: 0.949, blue: 0.929, alpha: 1)
                 view.isPaused = true
                 view.backgroundColor = fallback
                 return
@@ -82,9 +82,9 @@ struct MetalLabView: UIViewRepresentable {
             view.isOpaque = true
             view.enableSetNeedsDisplay = false
             view.isPaused = false
-            view.preferredFramesPerSecond = 60
+            view.preferredFramesPerSecond = 120
             view.colorPixelFormat = .bgra8Unorm
-            view.clearColor = MTLClearColorMake(0.925, 0.914, 0.890, 1)
+            view.clearColor = MTLClearColorMake(0.957, 0.949, 0.929, 1)
             queue = device.makeCommandQueue()
             buildPipeline(view: view)
         }

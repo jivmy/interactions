@@ -9,7 +9,7 @@ struct ZipperView: View {
             let teeth = ZipperModel.teeth
             let safeAreaTop = ViewSpaceMotion.windowSafeAreaTop()
             ZStack {
-                Color(red: 0.78, green: 0.74, blue: 0.68).ignoresSafeArea()
+                Color(red: 0.74, green: 0.70, blue: 0.64).ignoresSafeArea()
                 Canvas { context, size in
                     ZipperRenderer.draw(in: &context, size: size, progress: progress, teeth: teeth, safeAreaTop: safeAreaTop)
                 }
@@ -19,6 +19,10 @@ struct ZipperView: View {
                             model.drag(y: value.location.y, height: geo.size.height)
                         }
                 )
+                .accessibilityLabel("Zipper")
+                .accessibilityValue("\(Int(progress * 100)) percent closed")
+                .accessibilityHint("Pull the slider. Each tooth ticks.")
+
                 LabHintOverlay(text: "Pull the slider. Each tooth ticks.")
             }
         }
@@ -41,11 +45,7 @@ final class ZipperModel: ObservableObject {
         let tooth = Int(progress * CGFloat(Self.teeth - 1))
         if tooth != lastTooth {
             lastTooth = tooth
-            if tooth == Self.teeth - 1 || tooth == 0 {
-                haptics.thud()
-            } else {
-                haptics.tick()
-            }
+            haptics.zipperTick(at: tooth, of: Self.teeth)
         }
     }
 }
@@ -57,36 +57,59 @@ private enum ZipperRenderer {
         let x = size.width * 0.5
         let sliderY = top + progress * (bottom - top)
 
-        // Fabric panels
         context.fill(
             Path(CGRect(x: 0, y: 0, width: x - 6, height: size.height)),
-            with: .color(Color(red: 0.22, green: 0.28, blue: 0.42))
+            with: .color(Color(red: 0.20, green: 0.27, blue: 0.40))
         )
         context.fill(
             Path(CGRect(x: x + 6, y: 0, width: size.width - x - 6, height: size.height)),
-            with: .color(Color(red: 0.20, green: 0.26, blue: 0.40))
+            with: .color(Color(red: 0.17, green: 0.24, blue: 0.37))
         )
+
+        for i in stride(from: 0, through: Int(size.height), by: 10) {
+            var stitch = Path()
+            stitch.move(to: CGPoint(x: x - 22, y: CGFloat(i)))
+            stitch.addLine(to: CGPoint(x: x - 16, y: CGFloat(i) + 4))
+            context.stroke(stitch, with: .color(Color.white.opacity(0.06)), lineWidth: 1)
+            var stitchR = Path()
+            stitchR.move(to: CGPoint(x: x + 16, y: CGFloat(i)))
+            stitchR.addLine(to: CGPoint(x: x + 22, y: CGFloat(i) + 4))
+            context.stroke(stitchR, with: .color(Color.white.opacity(0.06)), lineWidth: 1)
+        }
 
         for i in 0..<teeth {
             let ty = top + CGFloat(i) / CGFloat(teeth - 1) * (bottom - top)
             let open = ty > sliderY + 6
-            let gap: CGFloat = open ? 16 : 0
-            let left = CGRect(x: x - 18 - gap, y: ty - 6, width: 18, height: 11)
-            let right = CGRect(x: x + gap, y: ty - 6, width: 18, height: 11)
-            context.fill(Path(roundedRect: left, cornerRadius: 2), with: .color(Color(white: 0.72)))
-            context.fill(Path(roundedRect: right, cornerRadius: 2), with: .color(Color(white: 0.66)))
+            let gap: CGFloat = open ? 15 : 0
+            let left = CGRect(x: x - 17 - gap, y: ty - 5.5, width: 17, height: 10)
+            let right = CGRect(x: x + gap, y: ty - 5.5, width: 17, height: 10)
+            context.fill(Path(roundedRect: left, cornerRadius: 1.5), with: .color(Color(white: 0.78)))
+            context.fill(Path(roundedRect: right, cornerRadius: 1.5), with: .color(Color(white: 0.70)))
+            if !open {
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x - 2, y: ty - 2, width: 4, height: 4)),
+                    with: .color(Color(white: 0.55))
+                )
+            }
         }
 
         var tape = Path()
-        tape.move(to: CGPoint(x: x, y: top - 12))
+        tape.move(to: CGPoint(x: x, y: top - 14))
         tape.addLine(to: CGPoint(x: x, y: sliderY))
-        context.stroke(tape, with: .color(Color(white: 0.15)), lineWidth: 3)
+        context.stroke(tape, with: .color(Color(white: 0.12)), lineWidth: 3.2)
 
-        let pull = CGRect(x: x - 16, y: sliderY - 10, width: 32, height: 46)
-        context.fill(Path(roundedRect: pull, cornerRadius: 6), with: .color(Color(red: 0.85, green: 0.72, blue: 0.25)))
-        context.stroke(Path(roundedRect: pull, cornerRadius: 6), with: .color(Color(red: 0.45, green: 0.35, blue: 0.1)), lineWidth: 1.2)
-        var hole = Path(ellipseIn: CGRect(x: x - 5, y: sliderY + 14, width: 10, height: 14))
-        context.stroke(hole, with: .color(Color(red: 0.45, green: 0.35, blue: 0.1)), lineWidth: 2)
+        let pull = CGRect(x: x - 15, y: sliderY - 8, width: 30, height: 48)
+        context.fill(Path(roundedRect: pull, cornerRadius: 7), with: .color(LabPalette.brass))
+        context.fill(
+            Path(roundedRect: CGRect(x: x - 10, y: sliderY - 4, width: 8, height: 20), cornerRadius: 2),
+            with: .color(Color.white.opacity(0.18))
+        )
+        context.stroke(Path(roundedRect: pull, cornerRadius: 7), with: .color(Color(red: 0.42, green: 0.32, blue: 0.10)), lineWidth: 1.1)
+        context.stroke(
+            Path(ellipseIn: CGRect(x: x - 5, y: sliderY + 16, width: 10, height: 14)),
+            with: .color(Color(red: 0.42, green: 0.32, blue: 0.10)),
+            lineWidth: 2
+        )
     }
 }
 

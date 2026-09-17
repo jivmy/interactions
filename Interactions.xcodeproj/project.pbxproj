@@ -42,6 +42,7 @@
 		B2E000000000000000000408 /* WaxSealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000020 /* WaxSealView.swift */; };
 		B2E000000000000000000409 /* ZipperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000021 /* ZipperView.swift */; };
 		B2E00000000000000000040A /* InteractionsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000022 /* InteractionsApp.swift */; };
+		B2E00000000000000000040B /* LabSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000023 /* LabSession.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -79,6 +80,7 @@
 		B2E000000000000000000020 /* WaxSealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaxSealView.swift; sourceTree = "<group>"; };
 		B2E000000000000000000021 /* ZipperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipperView.swift; sourceTree = "<group>"; };
 		B2E000000000000000000022 /* InteractionsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionsApp.swift; sourceTree = "<group>"; };
+		B2E000000000000000000023 /* LabSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabSession.swift; sourceTree = "<group>"; };
 		AA11BB220000000000000003 /* Interactions.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Interactions.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA11BB22000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1E0000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -265,6 +267,7 @@
 				B2E000000000000000000016 /* FrameTicker.swift */,
 				B2E000000000000000000017 /* HapticPlayer.swift */,
 				B2E000000000000000000018 /* HeadingSource.swift */,
+				B2E000000000000000000023 /* LabSession.swift */,
 				B2E000000000000000000019 /* LabShaders.metal */,
 				B2E00000000000000000001A /* LabTheme.swift */,
 				B2E00000000000000000001B /* MetalLabView.swift */,
@@ -417,6 +420,7 @@
 				B2E000000000000000000408 /* WaxSealView.swift in Sources */,
 				B2E000000000000000000409 /* ZipperView.swift in Sources */,
 				B2E00000000000000000040A /* InteractionsApp.swift in Sources */,
+				B2E00000000000000000040B /* LabSession.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

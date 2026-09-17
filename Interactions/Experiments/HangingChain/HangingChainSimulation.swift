@@ -36,7 +36,7 @@ final class HangingChainSimulation: NSObject, ObservableObject {
     private var didLayout = false
 
     var anchor: CGPoint {
-        CGPoint(x: viewport.width / 2, y: ViewSpaceMotion.windowSafeAreaTop() + 10)
+        CGPoint(x: viewport.width / 2, y: ViewSpaceMotion.windowSafeAreaTop() + 62)
     }
 
     func updateViewport(size: CGSize) {
@@ -67,7 +67,7 @@ final class HangingChainSimulation: NSObject, ObservableObject {
         guard displayLink == nil else { return }
         lastTimestamp = 0
         let link = CADisplayLink(target: self, selector: #selector(handleDisplayLink(_:)))
-        link.preferredFrameRateRange = CAFrameRateRange(minimum: 30, maximum: 120, preferred: 60)
+        link.preferredFrameRateRange = CAFrameRateRange(minimum: 48, maximum: 120, preferred: 120)
         link.add(to: .main, forMode: .common)
         displayLink = link
     }

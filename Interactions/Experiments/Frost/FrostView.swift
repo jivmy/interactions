@@ -4,12 +4,21 @@ struct FrostView: View {
     @StateObject private var model = FrostModel()
 
     var body: some View {
-        GeometryReader { geo in
+        GeometryReader { _ in
             let crystals = model.crystals
             ZStack {
-                Color(red: 0.08, green: 0.11, blue: 0.16).ignoresSafeArea()
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.07, green: 0.11, blue: 0.18),
+                        Color(red: 0.10, green: 0.16, blue: 0.24)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+
                 Canvas { context, size in
-                    FrostRenderer.draw(in: &context, crystals: crystals)
+                    FrostRenderer.draw(in: &context, size: size, crystals: crystals)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -17,6 +26,9 @@ struct FrostView: View {
                             model.seed(at: value.location)
                         }
                 )
+                .accessibilityLabel("Frosted pane")
+                .accessibilityHint("Touch the pane. Ice ferns out.")
+
                 LabHintOverlay(text: "Touch the pane. Ice ferns out.")
             }
             .onAppear { model.start() }
@@ -89,15 +101,20 @@ final class FrostModel: ObservableObject {
 }
 
 private enum FrostRenderer {
-    static func draw(in context: inout GraphicsContext, crystals: [[CGPoint]]) {
-        for points in crystals where points.count >= 2 {
+    static func draw(in context: inout GraphicsContext, size: CGSize, crystals: [[CGPoint]]) {
+        let pane = CGRect(x: 18, y: 88, width: size.width - 36, height: size.height - 150)
+        context.fill(Path(roundedRect: pane, cornerRadius: 8), with: .color(Color(red: 0.16, green: 0.22, blue: 0.30).opacity(0.55)))
+        context.stroke(Path(roundedRect: pane, cornerRadius: 8), with: .color(Color.white.opacity(0.14)), lineWidth: 3)
+
+        for (index, points) in crystals.enumerated() where points.count >= 2 {
             var path = Path()
             path.move(to: points[0])
             for p in points.dropFirst() { path.addLine(to: p) }
+            let fade = 0.42 + Double((index % 7)) * 0.06
             context.stroke(
                 path,
-                with: .color(Color(red: 0.82, green: 0.90, blue: 1.0).opacity(0.7)),
-                style: StrokeStyle(lineWidth: 1.15, lineCap: .round, lineJoin: .round)
+                with: .color(Color(red: 0.84, green: 0.92, blue: 1.0).opacity(fade)),
+                style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round)
             )
         }
     }

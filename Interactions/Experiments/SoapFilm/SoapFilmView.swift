@@ -5,14 +5,17 @@ struct SoapFilmView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        GeometryReader { geo in
+        GeometryReader { _ in
             ZStack {
-                Color(red: 0.06, green: 0.07, blue: 0.09).ignoresSafeArea()
-                MetalLabView(fragmentName: "soapFragment", uniforms: model.uniforms, fallback: Color(red: 0.06, green: 0.07, blue: 0.09))
+                Color(red: 0.05, green: 0.055, blue: 0.07).ignoresSafeArea()
+                MetalLabView(fragmentName: "soapFragment", uniforms: model.uniforms, fallback: Color(red: 0.05, green: 0.055, blue: 0.07))
                     .ignoresSafeArea()
                     .onTapGesture {
                         model.pop()
                     }
+                    .accessibilityLabel(model.popped ? "Soap film, popped" : "Soap film")
+                    .accessibilityHint("Tilt for iridescence. Tap to pop.")
+
                 LabHintOverlay(text: model.popped ? "Tap to blow another film" : "Tilt for iridescence. Tap to pop.")
             }
             .onAppear { model.start() }

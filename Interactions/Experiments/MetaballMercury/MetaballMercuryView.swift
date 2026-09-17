@@ -7,7 +7,7 @@ struct MetaballMercuryView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                LabPalette.paper.ignoresSafeArea()
+                LabPaperBackground()
                 MetalLabView(fragmentName: "metaballFragment", uniforms: model.uniforms)
                     .ignoresSafeArea()
                     .gesture(
@@ -20,6 +20,9 @@ struct MetaballMercuryView: View {
                                 model.touching = false
                             }
                     )
+                    .accessibilityLabel("Metaball mercury")
+                    .accessibilityHint("Drag a blob. Tilt merges them.")
+
                 LabHintOverlay(text: "Drag a blob. Tilt merges them like mercury.")
             }
             .onAppear {
