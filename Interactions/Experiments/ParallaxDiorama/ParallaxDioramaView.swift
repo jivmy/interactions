@@ -13,6 +13,7 @@ struct ParallaxDioramaView: View {
                     DioramaRenderer.draw(in: &context, size: size, offset: offset)
                 }
                 .accessibilityLabel("Parallax diorama")
+                .accessibilityValue(model.faceTracking ? "Face tracking" : "Tilt")
                 .accessibilityHint(hint)
 
                 LabHintOverlay(text: hint)

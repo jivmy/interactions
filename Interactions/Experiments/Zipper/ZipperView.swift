@@ -25,6 +25,13 @@ struct ZipperView: View {
                 .accessibilityLabel("Zipper")
                 .accessibilityValue("\(Int(progress * 100)) percent closed")
                 .accessibilityHint("Pull the slider. Each tooth ticks.")
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment: model.nudge(teeth: 1)
+                    case .decrement: model.nudge(teeth: -1)
+                    default: break
+                    }
+                }
 
                 LabHintOverlay(text: "Pull.")
             }
@@ -59,6 +66,15 @@ final class ZipperModel: ObservableObject {
     func endDrag() {
         haptics.stopZipper()
         lastTooth = -1
+    }
+
+    func nudge(teeth delta: Int) {
+        let current = Int((progress * CGFloat(Self.teeth - 1)).rounded())
+        let next = min(max(current + delta, 0), Self.teeth - 1)
+        guard next != current else { return }
+        progress = CGFloat(next) / CGFloat(Self.teeth - 1)
+        lastTooth = next
+        haptics.zipperTick(at: next, of: Self.teeth)
     }
 }
 

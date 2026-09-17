@@ -22,6 +22,7 @@ struct ChladniPlateView: View {
                         }
                 )
                 .accessibilityLabel("Chladni plate")
+                .accessibilityValue(model.isListening ? "Listening" : "Tone")
                 .accessibilityHint(hint)
 
                 LabHintOverlay(text: hint)

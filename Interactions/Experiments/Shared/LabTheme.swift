@@ -197,20 +197,63 @@ extension View {
         }
     }
 
-    func labCardSurface() -> some View {
-        self
+    func labCardSurface(accent: Color? = nil) -> some View {
+        let shape = RoundedRectangle(cornerRadius: LabRadius.card, style: .continuous)
+        return self
             .background(
-                RoundedRectangle(cornerRadius: LabRadius.card, style: .continuous)
+                shape
                     .fill(LabPalette.card)
-                    .background(
-                        RoundedRectangle(cornerRadius: LabRadius.card, style: .continuous)
-                            .fill(.ultraThinMaterial)
-                    )
+                    .background(shape.fill(.ultraThinMaterial))
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: LabRadius.card, style: .continuous)
-                    .strokeBorder(LabPalette.ink.opacity(0.06), lineWidth: 1)
-            )
+            .overlay(shape.strokeBorder(LabPalette.ink.opacity(0.06), lineWidth: 1))
+            .overlay(alignment: .leading) {
+                if let accent {
+                    LabAccentBar(color: accent)
+                }
+            }
+            .clipShape(shape)
             .shadow(color: LabShadow.card(), radius: 10, x: 0, y: 4)
+    }
+}
+
+/// Track-color index mark. Sits on the leading edge of a catalog card.
+struct LabAccentBar: View {
+    var color: Color
+
+    var body: some View {
+        UnevenRoundedRectangle(
+            topLeadingRadius: LabRadius.card,
+            bottomLeadingRadius: LabRadius.card,
+            topTrailingRadius: 1.5,
+            bottomTrailingRadius: 1.5,
+            style: .continuous
+        )
+        .fill(color)
+        .frame(width: 3)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Quiet empty state that still sits on the same desk as the cards.
+struct LabEmptyCard: View {
+    var title: String
+    var detail: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(LabPalette.ink.opacity(0.72))
+            if let detail {
+                Text(detail)
+                    .font(LabType.hint())
+                    .foregroundStyle(LabPalette.caption)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .labCardSurface()
+        .accessibilityElement(children: .combine)
     }
 }

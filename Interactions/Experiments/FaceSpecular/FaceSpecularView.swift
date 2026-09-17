@@ -14,6 +14,7 @@ struct FaceSpecularView: View {
                     FaceSpecularRenderer.draw(in: &context, size: size, offset: offset)
                 }
                 .accessibilityLabel("Brushed metal disc")
+                .accessibilityValue(model.faceTracking ? "Face tracking" : "Tilt")
                 .accessibilityHint(hint)
 
                 LabHintOverlay(text: hint)

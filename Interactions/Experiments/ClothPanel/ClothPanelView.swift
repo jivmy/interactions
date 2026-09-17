@@ -24,6 +24,7 @@ struct ClothPanelView: View {
                         }
                 )
                 .accessibilityLabel("Cloth panel")
+                .accessibilityValue(sim.usingMotion ? "Tilt" : "Drag")
                 .accessibilityHint(sim.usingMotion ? "Tilt or drag" : "Drag the cloth")
 
                 LabHintOverlay(text: "Drag.")

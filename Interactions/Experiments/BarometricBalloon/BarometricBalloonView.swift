@@ -33,6 +33,7 @@ struct BarometricBalloonView: View {
                         }
                 )
                 .accessibilityLabel("Barometric balloon")
+                .accessibilityValue(sim.isHardware ? "Barometer" : "Drag")
                 .accessibilityHint(hint)
 
                 LabHintOverlay(text: hint)
