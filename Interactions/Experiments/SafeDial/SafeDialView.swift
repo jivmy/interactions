@@ -3,6 +3,7 @@ import SwiftUI
 /// Combination dial with a haptic click per notch and a heavy clunk on the drop.
 struct SafeDialView: View {
     @StateObject private var model = SafeDialModel()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         GeometryReader { geo in
@@ -48,6 +49,11 @@ struct SafeDialView: View {
                 LabHintOverlay(text: isOpen ? "Open." : "Turn.")
             }
         }
+        .onAppear { model.wake() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { model.sleep() } else { model.wake() }
+        }
+        .onDisappear { model.sleep() }
         .ignoresSafeArea()
     }
 }
@@ -100,6 +106,13 @@ final class SafeDialModel: ObservableObject {
 
     func endDrag() {
         lastFingerAngle = nil
+    }
+
+    func wake() { haptics.startEngine() }
+
+    func sleep() {
+        endDrag()
+        haptics.shutdown()
     }
 
     func nudge(notches delta: Int) {

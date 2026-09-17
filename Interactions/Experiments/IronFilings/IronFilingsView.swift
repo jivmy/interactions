@@ -17,11 +17,10 @@ struct IronFilingsView: View {
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            model.pole = value.location
-                            model.poleActive = true
+                            model.setPole(value.location)
                         }
                         .onEnded { _ in
-                            model.poleActive = false
+                            model.clearPole()
                         }
                 )
                 .accessibilityLabel("Iron filings")
@@ -55,53 +54,80 @@ final class FilingsModel: ObservableObject {
     @Published var poleActive = false
 
     private let ticker = FrameTicker()
+    private let haptics = HapticPlayer()
+    private var working: [Filing] = []
     private var size: CGSize = .zero
     private var seeded = false
+    private var publishAccum: CGFloat = 0
 
     func seed(size: CGSize) {
         self.size = size
-        if seeded && filings.count > 0 { return }
+        if seeded && working.count > 0 { return }
         seeded = true
         let cols = 22
         let rows = 36
         let inset: CGFloat = 28
-        filings = (0..<rows).flatMap { r -> [Filing] in
+        working = (0..<rows).flatMap { r -> [Filing] in
             (0..<cols).map { c in
                 let x = inset + (size.width - inset * 2) * CGFloat(c) / CGFloat(cols - 1) + CGFloat.random(in: -3...3)
                 let y = inset + (size.height - inset * 2) * CGFloat(r) / CGFloat(rows - 1) + CGFloat.random(in: -3...3)
                 return Filing(p: CGPoint(x: x, y: y), angle: CGFloat.random(in: 0...(.pi)))
             }
         }
+        filings = working
         pole = CGPoint(x: size.width / 2, y: size.height / 2)
     }
 
     func start() {
+        haptics.startEngine()
         ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
     }
 
-    func stop() { ticker.stop() }
+    func stop() {
+        ticker.stop()
+        haptics.shutdown()
+    }
+
+    func setPole(_ point: CGPoint) {
+        pole = point
+        if !poleActive {
+            poleActive = true
+            haptics.startHum(intensity: 0.14, sharpness: 0.18)
+        }
+        haptics.updateHum(intensity: 0.12, sharpness: 0.22)
+    }
+
+    func clearPole() {
+        poleActive = false
+        haptics.stopHum()
+    }
 
     private func step(dt: CGFloat) {
         let pole = poleActive ? self.pole : CGPoint(x: size.width / 2, y: size.height * 0.2)
         let strength: CGFloat = poleActive ? 1 : 0.25
-        for i in filings.indices {
-            let p = filings[i].p
+        for i in working.indices {
+            let p = working[i].p
             let dx = p.x - pole.x
             let dy = p.y - pole.y
             let r2 = max(dx * dx + dy * dy, 80)
             let bx = dx / (r2 * sqrt(r2)) * 90000 * strength
             let by = dy / (r2 * sqrt(r2)) * 90000 * strength
             let target = atan2(by, bx)
-            var delta = target - filings[i].angle
+            var delta = target - working[i].angle
             while delta > .pi { delta -= 2 * .pi }
             while delta < -.pi { delta += 2 * .pi }
-            filings[i].angle += delta * min(1, 10 * dt)
+            working[i].angle += delta * min(1, 10 * dt)
             if poleActive {
                 let pull = 18 * dt * strength / (sqrt(r2) / 40)
-                filings[i].p.x -= dx / max(sqrt(r2), 1) * min(pull, 2.2)
-                filings[i].p.y -= dy / max(sqrt(r2), 1) * min(pull, 2.2)
+                working[i].p.x -= dx / max(sqrt(r2), 1) * min(pull, 2.2)
+                working[i].p.y -= dy / max(sqrt(r2), 1) * min(pull, 2.2)
             }
+        }
+        publishAccum += dt
+        if publishAccum >= LabCadence.publishInterval {
+            publishAccum = 0
+            filings = working
         }
     }
 }

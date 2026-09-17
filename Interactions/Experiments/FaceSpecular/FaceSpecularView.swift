@@ -57,9 +57,10 @@ final class FaceSpecularModel: ObservableObject {
     }
 
     private func step() {
-        faceTracking = face.isTracking
+        let tracking = face.isTracking
+        if tracking != faceTracking { faceTracking = tracking }
         let target: CGSize
-        if face.isTracking {
+        if tracking {
             target = face.offset
         } else {
             let a = ViewSpaceMotion.acceleration(motion.acceleration, interface: ViewSpaceMotion.currentInterfaceOrientation())
@@ -67,7 +68,9 @@ final class FaceSpecularModel: ObservableObject {
         }
         displayed.width += (target.width - displayed.width) * 0.2
         displayed.height += (target.height - displayed.height) * 0.2
-        offset = displayed
+        if hypot(displayed.width - offset.width, displayed.height - offset.height) > 0.0008 {
+            offset = displayed
+        }
     }
 }
 

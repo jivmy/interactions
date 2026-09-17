@@ -48,13 +48,16 @@ final class MetaballModel: ObservableObject {
 
     private let motion = DeviceMotionSource()
     private let ticker = FrameTicker()
+    private let haptics = HapticPlayer()
     private var t: Float = 0
+    private var kissing = false
     private var blobs: [SIMD2<Float>] = [
         SIMD2(0.38, 0.48), SIMD2(0.62, 0.52), SIMD2(0.50, 0.38), SIMD2(0.55, 0.64)
     ]
     private var vel: [SIMD2<Float>] = Array(repeating: .zero, count: 4)
 
     func start() {
+        haptics.startEngine()
         motion.start()
         ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
@@ -63,6 +66,7 @@ final class MetaballModel: ObservableObject {
     func stop() {
         ticker.stop()
         motion.stop()
+        haptics.shutdown()
     }
 
     private func step(dt: CGFloat) {
@@ -85,6 +89,10 @@ final class MetaballModel: ObservableObject {
             if blobs[i].x <= 0.12 || blobs[i].x >= 0.88 { vel[i].x *= -0.4 }
             if blobs[i].y <= 0.18 || blobs[i].y >= 0.86 { vel[i].y *= -0.4 }
         }
+        let d01 = hypot(Double(blobs[0].x - blobs[1].x), Double(blobs[0].y - blobs[1].y))
+        let near = d01 < 0.22
+        if near && !kissing { haptics.click(intensity: 0.32, sharpness: 0.40) }
+        kissing = near
         var u = LabUniforms()
         u.time = t
         u.tiltX = gx

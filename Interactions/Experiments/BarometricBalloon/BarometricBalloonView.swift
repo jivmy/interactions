@@ -81,6 +81,7 @@ final class BalloonSimulation: ObservableObject {
     }
 
     func start() {
+        haptics.startEngine()
         altimeter.start()
         ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
@@ -89,10 +90,11 @@ final class BalloonSimulation: ObservableObject {
     func stop() {
         ticker.stop()
         altimeter.stop()
+        haptics.shutdown()
     }
 
     private func step(dt: CGFloat) {
-        isHardware = altimeter.isHardware
+        if altimeter.isHardware != isHardware { isHardware = altimeter.isHardware }
         let minY = ViewSpaceMotion.windowSafeAreaTop() + 96
         let maxY = restY + 40
         let target: CGFloat
@@ -111,7 +113,9 @@ final class BalloonSimulation: ObservableObject {
             target = restY + LabMath.sin(phase * 1.35) * 5
         }
         displayed += (target - displayed) * 0.11
-        balloonY = displayed
+        if abs(balloonY - displayed) > 0.12 || altimeter.isHardware != isHardware {
+            balloonY = displayed
+        }
     }
 }
 

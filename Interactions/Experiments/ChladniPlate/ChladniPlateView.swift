@@ -64,6 +64,7 @@ final class ChladniModel: ObservableObject {
     private let mic = MicrophoneFFT()
     private let ticker = FrameTicker()
     private var size: CGSize = .zero
+    private var publishAccum: CGFloat = 0
 
     func update(size: CGSize) {
         self.size = size
@@ -92,18 +93,20 @@ final class ChladniModel: ObservableObject {
 
     private func step(dt: CGFloat) {
         mic.publish()
-        isListening = mic.isListening
-        denied = mic.denied
+        if mic.isListening != isListening { isListening = mic.isListening }
+        if mic.denied != denied { denied = mic.denied }
         let hz = mic.isListening && mic.amplitude > 0.002 ? mic.dominantHz : manualHz
         let mode = max(1, Int(hz / 70))
-        n = 1 + mode % 5
-        m = 1 + (mode / 2) % 5
+        let nextN = 1 + mode % 5
+        let nextM = 1 + (mode / 2) % 5
+        if n != nextN { n = nextN }
+        if m != nextM { m = nextM }
         let amp = mic.isListening ? min(mic.amplitude * 18, 1.4) : 0.8
         let inset: CGFloat = 40
         let w = max(size.width - inset * 2, 1)
         let h = max(size.height - inset * 2, 1)
-        let nn = CGFloat(n)
-        let mm = CGFloat(m)
+        let nn = CGFloat(nextN)
+        let mm = CGFloat(nextM)
         for i in particles.indices {
             var p = particles[i].p
             let nx = (p.x - inset) / w
@@ -118,7 +121,11 @@ final class ChladniModel: ObservableObject {
             p.y = min(max(p.y, inset), size.height - inset)
             particles[i].p = p
         }
-        grains = particles.map(\.p)
+        publishAccum += dt
+        if publishAccum >= LabCadence.publishInterval {
+            publishAccum = 0
+            grains = particles.map(\.p)
+        }
     }
 }
 

@@ -49,12 +49,13 @@ final class WaxSealModel: ObservableObject {
     private let ticker = FrameTicker()
 
     func start() {
+        haptics.startEngine()
         ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
     }
 
     func stop() {
-        haptics.stopMelt()
+        haptics.shutdown()
         ticker.stop()
     }
 
