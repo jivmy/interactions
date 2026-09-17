@@ -58,6 +58,7 @@ final class MatchbookModel: ObservableObject {
     private var lastTime: CFTimeInterval = 0
     private var peakSpeed: CGFloat = 0
     private var contacted = false
+    private var scraping = false
     private var burn: CGFloat = 0
 
     func start() {
@@ -65,7 +66,10 @@ final class MatchbookModel: ObservableObject {
         ticker.start()
     }
 
-    func stop() { ticker.stop() }
+    func stop() {
+        haptics.stopScrape()
+        ticker.stop()
+    }
 
     func striker(size: CGSize) -> CGRect {
         CGRect(x: size.width * 0.18, y: size.height * 0.62, width: size.width * 0.64, height: 26)
@@ -87,14 +91,25 @@ final class MatchbookModel: ObservableObject {
         lastPoint = point
         lastTime = now
         matchTip = point
-        if striker(size: size).insetBy(dx: -8, dy: -14).contains(point) {
+        let onStrip = striker(size: size).insetBy(dx: -8, dy: -14).contains(point)
+        if onStrip {
             contacted = true
+            if !scraping {
+                scraping = true
+                haptics.startScrape()
+            }
+            haptics.updateScrape(speed: Float(speed))
+        } else if scraping {
+            scraping = false
+            haptics.stopScrape()
         }
     }
 
     func endDrag() {
         guard dragging else { return }
         dragging = false
+        haptics.stopScrape()
+        scraping = false
         if contacted && peakSpeed > 2100 && !lit {
             lit = true
             flame = 1
@@ -144,7 +159,15 @@ private struct MatchbookDrawState: Sendable {
 private enum MatchbookRenderer {
     static func draw(in context: inout GraphicsContext, size: CGSize, state: MatchbookDrawState) {
         let book = CGRect(x: size.width * 0.16, y: size.height * 0.38, width: size.width * 0.68, height: size.height * 0.32)
+        context.fill(
+            Path(roundedRect: book.offsetBy(dx: 4, dy: 8), cornerRadius: 12),
+            with: .color(LabShadow.ground().opacity(0.55))
+        )
         context.fill(Path(roundedRect: book, cornerRadius: 12), with: .color(Color(red: 0.70, green: 0.16, blue: 0.14)))
+        context.fill(
+            Path(roundedRect: CGRect(x: book.minX + 10, y: book.minY + 8, width: book.width * 0.36, height: 14), cornerRadius: 3),
+            with: .color(.white.opacity(0.08))
+        )
         context.stroke(Path(roundedRect: book, cornerRadius: 12), with: .color(Color(red: 0.42, green: 0.08, blue: 0.08)), lineWidth: 1)
         let cover = CGRect(x: book.minX + 12, y: book.minY + 14, width: book.width * 0.42, height: book.height - 28)
         context.fill(Path(roundedRect: cover, cornerRadius: 5), with: .color(Color(red: 0.58, green: 0.12, blue: 0.11)))

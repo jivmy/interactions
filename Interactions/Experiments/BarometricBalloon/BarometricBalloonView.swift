@@ -149,7 +149,7 @@ private enum BalloonRenderer {
         hills.closeSubpath()
         context.fill(hills, with: .color(Color(red: 0.46, green: 0.62, blue: 0.38)))
 
-        let sway = sin(y * 0.035) * (4 + lift * 6)
+        let sway: CGFloat = sin(y * 0.035) * (4 + lift * 6)
         let x = size.width * 0.5 + sway
         let shadowW = 26 + (1 - lift) * 26
         context.fill(

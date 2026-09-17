@@ -7,6 +7,8 @@ final class HapticPlayer {
     private var engine: CHHapticEngine?
     private var supportsCore = false
     private var meltPlayer: CHHapticAdvancedPatternPlayer?
+    private var zipperPlayer: CHHapticAdvancedPatternPlayer?
+    private var scrapePlayer: CHHapticAdvancedPatternPlayer?
 
     private let light = UIImpactFeedbackGenerator(style: .light)
     private let medium = UIImpactFeedbackGenerator(style: .medium)
@@ -66,13 +68,43 @@ final class HapticPlayer {
         }
     }
 
-    /// Regular safe-dial notch. Decade marks land a hair heavier.
+    /// Regular safe-dial notch. Decades carry weight; the drop is a two-stage clunk.
     func detent(isDecade: Bool = false, isDrop: Bool = false) {
         if isDrop {
             clunk()
             return
         }
-        click(intensity: isDecade ? 0.62 : 0.42, sharpness: isDecade ? 0.72 : 0.92)
+        if isDecade {
+            decade()
+        } else {
+            click(intensity: 0.40, sharpness: 0.94)
+        }
+    }
+
+    func decade() {
+        if supportsCore, let engine {
+            let hit = CHHapticEvent(
+                eventType: .hapticTransient,
+                parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.72),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.48)
+                ],
+                relativeTime: 0
+            )
+            let weight = CHHapticEvent(
+                eventType: .hapticContinuous,
+                parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.26),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.16)
+                ],
+                relativeTime: 0.012,
+                duration: 0.10
+            )
+            play(events: [hit, weight], engine: engine)
+        } else {
+            medium.impactOccurred(intensity: 0.72)
+            medium.prepare()
+        }
     }
 
     func clunk() {
@@ -108,35 +140,75 @@ final class HapticPlayer {
         }
     }
 
+    func startZipper() {
+        stopZipper()
+        guard let player = makeContinuous(intensity: 0.11, sharpness: 0.88, duration: 60) else { return }
+        zipperPlayer = player
+    }
+
     func zipperTick(at tooth: Int, of total: Int) {
         let t = Float(tooth) / Float(max(total - 1, 1))
-        let intensity = 0.30 + t * 0.18
+        if zipperPlayer == nil { startZipper() }
+        send(to: zipperPlayer, intensity: 0.10 + t * 0.20, sharpness: 0.78 + t * 0.18)
         if tooth == 0 || tooth == total - 1 {
             thud()
         } else {
-            click(intensity: intensity, sharpness: 0.94)
+            click(intensity: 0.28 + t * 0.24, sharpness: 0.97)
         }
+    }
+
+    func stopZipper() {
+        try? zipperPlayer?.stop(atTime: CHHapticTimeImmediate)
+        zipperPlayer = nil
+    }
+
+    func startScrape() {
+        stopScrape()
+        guard let player = makeContinuous(intensity: 0.16, sharpness: 0.72, duration: 20) else {
+            light.impactOccurred(intensity: 0.22)
+            return
+        }
+        scrapePlayer = player
+    }
+
+    func updateScrape(speed: Float) {
+        let n = min(max(speed / 2600, 0.08), 0.78)
+        send(to: scrapePlayer, intensity: n, sharpness: 0.45 + n * 0.45)
+    }
+
+    func stopScrape() {
+        try? scrapePlayer?.stop(atTime: CHHapticTimeImmediate)
+        scrapePlayer = nil
     }
 
     func scrape() {
         if supportsCore, let engine {
             var events: [CHHapticEvent] = []
             var t: TimeInterval = 0
-            for i in 0..<7 {
-                let fade = 1 - Float(i) / 8
+            for i in 0..<9 {
+                let fade = 1 - Float(i) / 10
                 events.append(
                     CHHapticEvent(
                         eventType: .hapticTransient,
                         parameters: [
-                            CHHapticEventParameter(parameterID: .hapticIntensity, value: Float.random(in: 0.14...0.32) * fade),
-                            CHHapticEventParameter(parameterID: .hapticSharpness, value: Float.random(in: 0.35...0.85))
+                            CHHapticEventParameter(parameterID: .hapticIntensity, value: Float.random(in: 0.12...0.30) * fade),
+                            CHHapticEventParameter(parameterID: .hapticSharpness, value: Float.random(in: 0.40...0.92))
                         ],
                         relativeTime: t
                     )
                 )
-                t += TimeInterval.random(in: 0.016...0.032)
+                t += TimeInterval.random(in: 0.012...0.026)
             }
-            play(events: events, engine: engine)
+            let tail = CHHapticEvent(
+                eventType: .hapticContinuous,
+                parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.14),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.55)
+                ],
+                relativeTime: t,
+                duration: 0.08
+            )
+            play(events: events + [tail], engine: engine)
         } else {
             light.impactOccurred(intensity: 0.28)
         }
@@ -262,15 +334,42 @@ final class HapticPlayer {
     }
 
     func updateMelt(intensity: Float) {
-        guard let meltPlayer else { return }
-        let value = max(0.06, min(intensity * 0.55, 0.85))
-        let param = CHHapticDynamicParameter(parameterID: .hapticIntensityControl, value: value, relativeTime: 0)
-        try? meltPlayer.sendParameters([param], atTime: CHHapticTimeImmediate)
+        let i = max(0.08, min(intensity * 0.64, 0.90))
+        let s = max(0.06, min(0.08 + intensity * 0.24, 0.36))
+        send(to: meltPlayer, intensity: i, sharpness: s)
     }
 
     func stopMelt() {
         try? meltPlayer?.stop(atTime: CHHapticTimeImmediate)
         meltPlayer = nil
+    }
+
+    private func makeContinuous(intensity: Float, sharpness: Float, duration: TimeInterval) -> CHHapticAdvancedPatternPlayer? {
+        guard supportsCore, let engine else { return nil }
+        do {
+            let event = CHHapticEvent(
+                eventType: .hapticContinuous,
+                parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: min(max(intensity, 0.05), 1)),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: min(max(sharpness, 0), 1))
+                ],
+                relativeTime: 0,
+                duration: duration
+            )
+            let pattern = try CHHapticPattern(events: [event], parameters: [])
+            let player = try engine.makeAdvancedPlayer(with: pattern)
+            try player.start(atTime: CHHapticTimeImmediate)
+            return player
+        } catch {
+            return nil
+        }
+    }
+
+    private func send(to player: CHHapticAdvancedPatternPlayer?, intensity: Float, sharpness: Float) {
+        guard let player else { return }
+        let i = CHHapticDynamicParameter(parameterID: .hapticIntensityControl, value: min(max(intensity, 0.05), 1), relativeTime: 0)
+        let s = CHHapticDynamicParameter(parameterID: .hapticSharpnessControl, value: min(max(sharpness, 0), 1), relativeTime: 0)
+        try? player.sendParameters([i, s], atTime: CHHapticTimeImmediate)
     }
 
     @discardableResult

@@ -8,14 +8,7 @@ struct HangingChainView: View {
         GeometryReader { geo in
             let nodes = simulation.positions
             ZStack {
-                LabPalette.paper.ignoresSafeArea()
-                LinearGradient(
-                    colors: [Color.white.opacity(0.22), Color.clear, LabPalette.paperDeep.opacity(0.55)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
+                LabPaperBackground()
 
                 Canvas { context, size in
                     HangingChainRenderer.draw(in: &context, nodes: nodes, canvasSize: size)

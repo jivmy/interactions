@@ -111,6 +111,10 @@ private struct WaxSealDrawState: Sendable {
 private enum WaxSealRenderer {
     static func draw(in context: inout GraphicsContext, size: CGSize, state: WaxSealDrawState) {
         let sheet = CGRect(x: size.width * 0.12, y: size.height * 0.28, width: size.width * 0.76, height: size.height * 0.44)
+        context.fill(
+            Path(roundedRect: CGRect(x: sheet.minX + 5, y: sheet.maxY - 2, width: sheet.width, height: 8), cornerRadius: 3),
+            with: .color(LabShadow.ground().opacity(0.45))
+        )
         context.fill(Path(roundedRect: sheet, cornerRadius: 5), with: .color(Color(red: 0.965, green: 0.94, blue: 0.87)))
         context.stroke(Path(roundedRect: sheet, cornerRadius: 5), with: .color(Color(red: 0.78, green: 0.72, blue: 0.62)), lineWidth: 1)
         for i in 0..<7 {

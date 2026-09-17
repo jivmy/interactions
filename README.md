@@ -10,7 +10,7 @@ Jimmy’s lab for native iOS interaction experiments. SwiftUI, plus Metal, ARKit
 
 Open the app and you get a catalog of **18 feel prototypes**. Search, filter by track (A–E), favorite, and jump back in from Continue / Recents. Inside an experiment, the bottom chrome switches neighbors in the same track; the sheet jumps anywhere. Deep link with `interactions://experiment/hanging-chain` (or an `A1`-style code).
 
-The chrome is meant to feel like an Apple design prototype: SF Pro, paper/metal materials, springs, and Core Haptics that mean something. In-track switches ease a short distance; the thumb bar is a page control. Coaching is a single word. Physics is unchanged — only the craft around it.
+The chrome is meant to feel like an Apple design prototype: SF Pro, paper/metal materials, interruptible springs, and Core Haptics that mean something. In-track switches ease a short distance; the thumb bar is a page control. Reduce Motion is honored on chrome, not physics. Coaching is a single word.
 
 ## Experiments
 

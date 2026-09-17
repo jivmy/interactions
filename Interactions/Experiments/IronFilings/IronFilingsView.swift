@@ -138,7 +138,8 @@ private enum FilingsRenderer {
                 var path = Path()
                 path.move(to: CGPoint(x: f.p.x - cos(f.angle) * len, y: f.p.y - sin(f.angle) * len))
                 path.addLine(to: CGPoint(x: f.p.x + cos(f.angle) * len, y: f.p.y + sin(f.angle) * len))
-                inner.stroke(path, with: .color(Color(white: 0.72 + 0.08 * abs(sin(f.p.y * 0.05)))), style: StrokeStyle(lineWidth: weight, lineCap: .round))
+                let shade = 0.72 + 0.08 * abs(Foundation.sin(Double(f.p.y) * 0.05))
+                inner.stroke(path, with: .color(Color(white: shade)), style: StrokeStyle(lineWidth: weight, lineCap: .round))
             }
         }
     }
