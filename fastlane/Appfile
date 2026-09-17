@@ -1,0 +1,4 @@
+# frozen_string_literal: true
+
+app_identifier("com.jimmy.interactions")
+team_id(ENV["DEVELOPMENT_TEAM"])
