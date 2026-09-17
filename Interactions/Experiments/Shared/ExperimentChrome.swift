@@ -4,8 +4,6 @@ import UIKit
 /// Full-screen experiment with floating chrome that stays out of the prototype.
 /// Prev / next and a switcher live in the thumb zone for a tray-table phone.
 struct ExperimentWorkspace: View {
-    let experimentID: String
-
     @EnvironmentObject private var session: LabSession
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -14,7 +12,6 @@ struct ExperimentWorkspace: View {
     @State private var showSwitcher = false
 
     init(experimentID: String) {
-        self.experimentID = experimentID
         _currentID = State(initialValue: experimentID)
     }
 

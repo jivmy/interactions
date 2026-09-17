@@ -4,8 +4,6 @@ import SwiftUI
 /// Jimmy can pick up mid-flight without hunting the catalog.
 @MainActor
 final class LabSession: ObservableObject {
-    static let shared = LabSession()
-
     @Published private(set) var favoriteIDs: Set<String>
     @Published private(set) var recentIDs: [String]
     @Published private(set) var lastExperimentID: String?
