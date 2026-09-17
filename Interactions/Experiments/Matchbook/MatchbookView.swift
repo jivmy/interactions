@@ -6,10 +6,11 @@ struct MatchbookView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let drawState = MatchbookDrawState(model)
             ZStack {
                 Color(red: 0.17, green: 0.12, blue: 0.10).ignoresSafeArea()
                 Canvas { context, size in
-                    MatchbookRenderer.draw(in: &context, size: size, model: model)
+                    MatchbookRenderer.draw(in: &context, size: size, state: drawState)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -108,8 +109,27 @@ final class MatchbookModel: ObservableObject {
     }
 }
 
+private struct MatchbookDrawState: Sendable {
+    var matchTip: CGPoint
+    var dragging: Bool
+    var lit: Bool
+    var flame: CGFloat
+    var sparks: [CGPoint]
+    var failFlash: CGFloat
+
+    @MainActor
+    init(_ model: MatchbookModel) {
+        matchTip = model.matchTip
+        dragging = model.dragging
+        lit = model.lit
+        flame = model.flame
+        sparks = model.sparks
+        failFlash = model.failFlash
+    }
+}
+
 private enum MatchbookRenderer {
-    static func draw(in context: inout GraphicsContext, size: CGSize, model: MatchbookModel) {
+    static func draw(in context: inout GraphicsContext, size: CGSize, state: MatchbookDrawState) {
         let book = CGRect(x: size.width * 0.16, y: size.height * 0.38, width: size.width * 0.68, height: size.height * 0.32)
         context.fill(Path(roundedRect: book, cornerRadius: 10), with: .color(Color(red: 0.72, green: 0.18, blue: 0.16)))
         let cover = CGRect(x: book.minX + 10, y: book.minY + 12, width: book.width * 0.42, height: book.height - 24)
@@ -126,24 +146,24 @@ private enum MatchbookRenderer {
         }
 
         let rest = CGPoint(x: book.minX + 28, y: book.midY)
-        let tip = model.dragging || model.lit ? model.matchTip : rest
+        let tip = state.dragging || state.lit ? state.matchTip : rest
         let shaftEnd = CGPoint(x: tip.x - 54, y: tip.y + 8)
         var shaft = Path()
         shaft.move(to: shaftEnd)
         shaft.addLine(to: tip)
         context.stroke(shaft, with: .color(Color(red: 0.85, green: 0.72, blue: 0.45)), style: StrokeStyle(lineWidth: 4, lineCap: .round))
-        context.fill(Path(ellipseIn: CGRect(x: tip.x - 5, y: tip.y - 5, width: 10, height: 10)), with: .color(model.lit ? Color.orange : Color(red: 0.35, green: 0.12, blue: 0.08)))
+        context.fill(Path(ellipseIn: CGRect(x: tip.x - 5, y: tip.y - 5, width: 10, height: 10)), with: .color(state.lit ? Color.orange : Color(red: 0.35, green: 0.12, blue: 0.08)))
 
-        if model.lit && model.flame > 0 {
-            let h = 18 + model.flame * 28
+        if state.lit && state.flame > 0 {
+            let h = 18 + state.flame * 28
             let flame = CGRect(x: tip.x - 8, y: tip.y - h, width: 16, height: h)
             context.fill(Path(ellipseIn: flame), with: .color(Color.orange.opacity(0.9)))
             context.fill(Path(ellipseIn: flame.insetBy(dx: 4, dy: 6)), with: .color(Color.yellow.opacity(0.9)))
         }
 
-        if model.failFlash > 0 {
-            for s in model.sparks {
-                context.fill(Path(ellipseIn: CGRect(x: s.x, y: s.y, width: 3, height: 3)), with: .color(Color.yellow.opacity(Double(model.failFlash))))
+        if state.failFlash > 0 {
+            for s in state.sparks {
+                context.fill(Path(ellipseIn: CGRect(x: s.x, y: s.y, width: 3, height: 3)), with: .color(Color.yellow.opacity(Double(state.failFlash))))
             }
         }
     }

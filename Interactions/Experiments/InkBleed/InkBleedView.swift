@@ -5,10 +5,13 @@ struct InkBleedView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let field = model.field
+            let cols = model.cols
+            let rows = model.rows
             ZStack {
                 Color(red: 0.90, green: 0.86, blue: 0.78).ignoresSafeArea()
                 Canvas { context, size in
-                    InkBleedRenderer.draw(in: &context, size: size, field: model.field, cols: model.cols, rows: model.rows)
+                    InkBleedRenderer.draw(in: &context, size: size, field: field, cols: cols, rows: rows)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)

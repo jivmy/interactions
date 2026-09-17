@@ -6,10 +6,11 @@ struct ParallaxDioramaView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let offset = model.offset
             ZStack {
                 Color(red: 0.07, green: 0.08, blue: 0.10).ignoresSafeArea()
                 Canvas { context, size in
-                    DioramaRenderer.draw(in: &context, size: size, offset: model.offset)
+                    DioramaRenderer.draw(in: &context, size: size, offset: offset)
                 }
                 LabHintOverlay(text: hint)
             }

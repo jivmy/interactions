@@ -5,10 +5,11 @@ struct WaxSealView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let drawState = WaxSealDrawState(model)
             ZStack {
                 Color(red: 0.90, green: 0.86, blue: 0.78).ignoresSafeArea()
                 Canvas { context, size in
-                    WaxSealRenderer.draw(in: &context, size: size, model: model)
+                    WaxSealRenderer.draw(in: &context, size: size, state: drawState)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -89,22 +90,37 @@ final class WaxSealModel: ObservableObject {
     }
 }
 
+private struct WaxSealDrawState: Sendable {
+    var melt: CGFloat
+    var pressing: Bool
+    var stamp: CGPoint?
+    var stamped: Bool
+
+    @MainActor
+    init(_ model: WaxSealModel) {
+        melt = model.melt
+        pressing = model.pressing
+        stamp = model.stamp
+        stamped = model.stamped
+    }
+}
+
 private enum WaxSealRenderer {
-    static func draw(in context: inout GraphicsContext, size: CGSize, model: WaxSealModel) {
+    static func draw(in context: inout GraphicsContext, size: CGSize, state: WaxSealDrawState) {
         // Paper
         let sheet = CGRect(x: size.width * 0.12, y: size.height * 0.28, width: size.width * 0.76, height: size.height * 0.44)
         context.fill(Path(roundedRect: sheet, cornerRadius: 4), with: .color(Color(red: 0.96, green: 0.93, blue: 0.86)))
         context.stroke(Path(roundedRect: sheet, cornerRadius: 4), with: .color(Color(red: 0.78, green: 0.72, blue: 0.62)), lineWidth: 1)
 
-        let center = model.stamp ?? CGPoint(x: size.width * 0.5, y: size.height * 0.52)
-        let radius = 22 + model.melt * 38
+        let center = state.stamp ?? CGPoint(x: size.width * 0.5, y: size.height * 0.52)
+        let radius = 22 + state.melt * 38
         let wax = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius * 0.86, width: radius * 2, height: radius * 1.72))
-        let waxColor = Color(red: 0.70 + model.melt * 0.12, green: 0.12, blue: 0.14)
-        if model.melt > 0.02 || model.stamped {
-            context.fill(wax, with: .color(waxColor.opacity(0.55 + model.melt * 0.4)))
+        let waxColor = Color(red: 0.70 + state.melt * 0.12, green: 0.12, blue: 0.14)
+        if state.melt > 0.02 || state.stamped {
+            context.fill(wax, with: .color(waxColor.opacity(0.55 + state.melt * 0.4)))
         }
 
-        if model.stamped {
+        if state.stamped {
             let r = radius * 0.72
             context.stroke(
                 Path(ellipseIn: CGRect(x: center.x - r, y: center.y - r, width: r * 2, height: r * 2)),
@@ -121,8 +137,8 @@ private enum WaxSealRenderer {
             context.stroke(star, with: .color(Color(red: 0.4, green: 0.08, blue: 0.1)), lineWidth: 2)
         }
 
-        if model.pressing {
-            let stampRect = CGRect(x: center.x - 34, y: center.y - 80 - (1 - model.melt) * 20, width: 68, height: 36)
+        if state.pressing {
+            let stampRect = CGRect(x: center.x - 34, y: center.y - 80 - (1 - state.melt) * 20, width: 68, height: 36)
             context.fill(Path(roundedRect: stampRect, cornerRadius: 4), with: .color(LabPalette.metal))
         }
     }

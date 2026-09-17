@@ -6,10 +6,13 @@ struct ClothPanelView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let positions = sim.positions
+            let cols = sim.cols
+            let rows = sim.rows
             ZStack {
                 Color(red: 0.14, green: 0.15, blue: 0.16).ignoresSafeArea()
                 Canvas { context, size in
-                    ClothRenderer.draw(in: &context, positions: sim.positions, cols: sim.cols, rows: sim.rows)
+                    ClothRenderer.draw(in: &context, positions: positions, cols: cols, rows: rows)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)
