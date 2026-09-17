@@ -26,15 +26,6 @@ final class AltimeterSource: ObservableObject {
             unavailableReason = "No barometer"
             return
         }
-        if #available(iOS 17.4, *) {
-            switch CMAltimeter.authorizationStatus() {
-            case .denied, .restricted:
-                unavailableReason = "Motion permission denied"
-                return
-            default:
-                break
-            }
-        }
         altimeter.startRelativeAltitudeUpdates(to: queue) { [weak self] data, error in
             guard let self else { return }
             if error != nil {

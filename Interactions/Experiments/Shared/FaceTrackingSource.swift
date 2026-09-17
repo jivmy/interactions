@@ -49,6 +49,7 @@ final class FaceTrackingSource: NSObject, ObservableObject, ARSessionDelegate {
 
     func session(_ session: ARSession, didFailWithError error: Error) {
         DispatchQueue.main.async { [weak self] in
+            self?.session.pause()
             self?.isTracking = false
             self?.running = false
         }

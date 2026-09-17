@@ -25,12 +25,16 @@ final class HeadingSource: NSObject, ObservableObject, CLLocationManagerDelegate
         location.delegate = self
         location.headingFilter = 0.5
         location.headingOrientation = .portrait
+        location.desiredAccuracy = kCLLocationAccuracyThreeKilometers
         if CLLocationManager.headingAvailable() {
             switch location.authorizationStatus {
             case .notDetermined:
                 location.requestWhenInUseAuthorization()
             case .authorizedAlways, .authorizedWhenInUse:
-                location.startUpdatingHeading()
+                location.startUpdatingLocation()
+                if CLLocationManager.headingAvailable() {
+                    location.startUpdatingHeading()
+                }
             default:
                 break
             }
@@ -40,6 +44,7 @@ final class HeadingSource: NSObject, ObservableObject, CLLocationManagerDelegate
 
     func stop() {
         location.stopUpdatingHeading()
+        location.stopUpdatingLocation()
         motion.stopDeviceMotionUpdates()
         motion.stopMagnetometerUpdates()
     }
@@ -47,6 +52,7 @@ final class HeadingSource: NSObject, ObservableObject, CLLocationManagerDelegate
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
+            manager.startUpdatingLocation()
             if CLLocationManager.headingAvailable() {
                 manager.startUpdatingHeading()
             }
