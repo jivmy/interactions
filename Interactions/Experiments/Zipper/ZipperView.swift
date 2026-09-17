@@ -5,10 +5,13 @@ struct ZipperView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let progress = model.progress
+            let teeth = ZipperModel.teeth
+            let safeAreaTop = ViewSpaceMotion.windowSafeAreaTop()
             ZStack {
                 Color(red: 0.78, green: 0.74, blue: 0.68).ignoresSafeArea()
                 Canvas { context, size in
-                    ZipperRenderer.draw(in: &context, size: size, progress: model.progress)
+                    ZipperRenderer.draw(in: &context, size: size, progress: progress, teeth: teeth, safeAreaTop: safeAreaTop)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -25,7 +28,7 @@ struct ZipperView: View {
 
 @MainActor
 final class ZipperModel: ObservableObject {
-    static let teeth = 28
+    nonisolated static let teeth = 28
     @Published var progress: CGFloat = 0.18
     private var lastTooth = -1
     private let haptics = HapticPlayer()
@@ -48,11 +51,10 @@ final class ZipperModel: ObservableObject {
 }
 
 private enum ZipperRenderer {
-    static func draw(in context: inout GraphicsContext, size: CGSize, progress: CGFloat) {
-        let top = ViewSpaceMotion.windowSafeAreaTop() + 90
+    static func draw(in context: inout GraphicsContext, size: CGSize, progress: CGFloat, teeth: Int, safeAreaTop: CGFloat) {
+        let top = safeAreaTop + 90
         let bottom = size.height - 80
         let x = size.width * 0.5
-        let teeth = ZipperModel.teeth
         let sliderY = top + progress * (bottom - top)
 
         // Fabric panels

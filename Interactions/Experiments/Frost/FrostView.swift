@@ -5,10 +5,11 @@ struct FrostView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let crystals = model.crystals
             ZStack {
                 Color(red: 0.08, green: 0.11, blue: 0.16).ignoresSafeArea()
                 Canvas { context, size in
-                    FrostRenderer.draw(in: &context, crystals: model.crystals)
+                    FrostRenderer.draw(in: &context, crystals: crystals)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)

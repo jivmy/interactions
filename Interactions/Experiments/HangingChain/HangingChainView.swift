@@ -6,14 +6,15 @@ struct HangingChainView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let nodes = simulation.positions
             ZStack {
                 HangingChainPalette.background
                     .ignoresSafeArea()
 
                 Canvas { context, size in
-                    HangingChainRenderer.draw(in: &context, nodes: simulation.positions, canvasSize: size)
+                    HangingChainRenderer.draw(in: &context, nodes: nodes, canvasSize: size)
                 }
-                .animation(nil, value: simulation.positions)
+                .animation(nil, value: nodes)
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in

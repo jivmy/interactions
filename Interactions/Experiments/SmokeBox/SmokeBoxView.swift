@@ -7,10 +7,12 @@ struct SmokeBoxView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let density = sim.density
+            let n = sim.n
             ZStack {
                 Color.black.ignoresSafeArea()
                 Canvas { context, size in
-                    SmokeRenderer.draw(in: &context, size: size, density: sim.density, n: sim.n)
+                    SmokeRenderer.draw(in: &context, size: size, density: density, n: n)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)

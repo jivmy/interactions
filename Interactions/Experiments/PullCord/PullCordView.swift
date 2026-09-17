@@ -8,13 +8,15 @@ struct PullCordView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let positions = sim.positions
+            let isOn = sim.isOn
             ZStack {
-                (sim.isOn ? Color(red: 0.99, green: 0.93, blue: 0.78) : Color(red: 0.10, green: 0.10, blue: 0.12))
+                (isOn ? Color(red: 0.99, green: 0.93, blue: 0.78) : Color(red: 0.10, green: 0.10, blue: 0.12))
                     .ignoresSafeArea()
-                    .animation(.easeInOut(duration: 0.18), value: sim.isOn)
+                    .animation(.easeInOut(duration: 0.18), value: isOn)
 
                 Canvas { context, size in
-                    PullCordRenderer.draw(in: &context, sim: sim, size: size)
+                    PullCordRenderer.draw(in: &context, nodes: positions, isOn: isOn)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -26,7 +28,7 @@ struct PullCordView: View {
                         }
                 )
 
-                LabHintOverlay(text: sim.isOn ? "Yank again to kill the light" : "Yank the handle — a limp tug fails")
+                LabHintOverlay(text: isOn ? "Yank again to kill the light" : "Yank the handle — a limp tug fails")
             }
             .onAppear {
                 sim.updateViewport(size: geo.size)
@@ -139,10 +141,8 @@ final class PullCordSimulation: ObservableObject {
 }
 
 private enum PullCordRenderer {
-    static func draw(in context: inout GraphicsContext, sim: PullCordSimulation, size: CGSize) {
-        let nodes = sim.positions
+    static func draw(in context: inout GraphicsContext, nodes: [CGPoint], isOn on: Bool) {
         guard nodes.count >= 2 else { return }
-        let on = sim.isOn
 
         let canopy = nodes[0]
         let fixture = CGRect(x: canopy.x - 36, y: canopy.y - 18, width: 72, height: 16)

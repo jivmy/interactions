@@ -7,10 +7,12 @@ struct CompassMercuryView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let heading = model.heading
+            let isHardware = model.isHardware
             ZStack {
                 LabPalette.paper.ignoresSafeArea()
                 Canvas { context, size in
-                    CompassMercuryRenderer.draw(in: &context, size: size, heading: model.heading, hardware: model.isHardware)
+                    CompassMercuryRenderer.draw(in: &context, size: size, heading: heading, hardware: isHardware)
                 }
                 LabHintOverlay(text: hint)
             }

@@ -7,10 +7,14 @@ struct SafeDialView: View {
     var body: some View {
         GeometryReader { geo in
             let center = CGPoint(x: geo.size.width / 2, y: geo.size.height * 0.52)
+            let angle = model.angle
+            let notch = model.notch
+            let isOpen = model.isOpen
+            let notches = SafeDialModel.notches
             ZStack {
                 Color(red: 0.13, green: 0.13, blue: 0.14).ignoresSafeArea()
                 Canvas { context, size in
-                    SafeDialRenderer.draw(in: &context, size: size, angle: model.angle, notch: model.notch, open: model.isOpen)
+                    SafeDialRenderer.draw(in: &context, size: size, angle: angle, notch: notch, open: isOpen, notches: notches)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -21,7 +25,7 @@ struct SafeDialView: View {
                             model.endDrag()
                         }
                 )
-                LabHintOverlay(text: model.isOpen ? "Open. Spin off the drop to close." : "Turn the dial. Last notch clunks.")
+                LabHintOverlay(text: isOpen ? "Open. Spin off the drop to close." : "Turn the dial. Last notch clunks.")
             }
         }
         .ignoresSafeArea()
@@ -30,7 +34,7 @@ struct SafeDialView: View {
 
 @MainActor
 final class SafeDialModel: ObservableObject {
-    static let notches = 40
+    nonisolated static let notches = 40
     /// Unlock sits on notch 0 — the drop.
     let dropNotch = 0
 
@@ -81,7 +85,7 @@ final class SafeDialModel: ObservableObject {
 }
 
 private enum SafeDialRenderer {
-    static func draw(in context: inout GraphicsContext, size: CGSize, angle: Double, notch: Int, open: Bool) {
+    static func draw(in context: inout GraphicsContext, size: CGSize, angle: Double, notch: Int, open: Bool, notches: Int) {
         let center = CGPoint(x: size.width / 2, y: size.height * 0.52)
         let radius: CGFloat = min(size.width, size.height) * 0.34
 
@@ -99,8 +103,8 @@ private enum SafeDialRenderer {
         context.fill(dial, with: .color(Color(white: 0.12)))
         context.stroke(dial, with: .color(Color(white: 0.55)), lineWidth: 10)
 
-        for i in 0..<SafeDialModel.notches {
-            let t = Double(i) / Double(SafeDialModel.notches) * .pi * 2 + angle
+        for i in 0..<notches {
+            let t = Double(i) / Double(notches) * .pi * 2 + angle
             let outer = radius - 8
             let inner = i % 10 == 0 ? radius - 28 : radius - 18
             var tick = Path()

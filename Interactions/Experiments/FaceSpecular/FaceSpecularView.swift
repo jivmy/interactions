@@ -7,10 +7,11 @@ struct FaceSpecularView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let offset = model.offset
             ZStack {
                 Color(red: 0.08, green: 0.08, blue: 0.09).ignoresSafeArea()
                 Canvas { context, size in
-                    FaceSpecularRenderer.draw(in: &context, size: size, offset: model.offset)
+                    FaceSpecularRenderer.draw(in: &context, size: size, offset: offset)
                 }
                 LabHintOverlay(text: hint)
             }

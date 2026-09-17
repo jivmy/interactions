@@ -7,6 +7,8 @@ struct BarometricBalloonView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let balloonY = sim.balloonY
+            let groundY = sim.groundY
             ZStack {
                 LinearGradient(
                     colors: [
@@ -19,7 +21,7 @@ struct BarometricBalloonView: View {
                 .ignoresSafeArea()
 
                 Canvas { context, size in
-                    BalloonRenderer.draw(in: &context, size: size, y: sim.balloonY, stringTo: sim.groundY)
+                    BalloonRenderer.draw(in: &context, size: size, y: balloonY, stringTo: groundY)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)

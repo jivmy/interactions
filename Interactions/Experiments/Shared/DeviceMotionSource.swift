@@ -29,6 +29,7 @@ enum ViewSpaceMotion {
         }
     }
 
+    @MainActor
     static func currentInterfaceOrientation() -> UIInterfaceOrientation {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         if let active = scenes.first(where: { $0.activationState == .foregroundActive }) {
@@ -37,6 +38,7 @@ enum ViewSpaceMotion {
         return scenes.first?.interfaceOrientation ?? .portrait
     }
 
+    @MainActor
     static func windowSafeAreaTop() -> CGFloat {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         let window = scenes.first(where: { $0.activationState == .foregroundActive })?.keyWindow

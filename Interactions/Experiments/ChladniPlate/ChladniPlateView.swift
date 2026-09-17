@@ -6,10 +6,11 @@ struct ChladniPlateView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let grains = model.grains
             ZStack {
                 Color(red: 0.12, green: 0.12, blue: 0.13).ignoresSafeArea()
                 Canvas { context, size in
-                    ChladniRenderer.draw(in: &context, size: size, grains: model.grains)
+                    ChladniRenderer.draw(in: &context, size: size, grains: grains)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)

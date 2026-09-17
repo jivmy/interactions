@@ -5,10 +5,13 @@ struct IronFilingsView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let filings = model.filings
+            let pole = model.pole
+            let poleActive = model.poleActive
             ZStack {
                 Color(red: 0.10, green: 0.10, blue: 0.11).ignoresSafeArea()
                 Canvas { context, size in
-                    FilingsRenderer.draw(in: &context, filings: model.filings, pole: model.pole, active: model.poleActive)
+                    FilingsRenderer.draw(in: &context, filings: filings, pole: pole, active: poleActive)
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)
@@ -33,7 +36,7 @@ struct IronFilingsView: View {
     }
 }
 
-struct Filing {
+struct Filing: Sendable {
     var p: CGPoint
     var angle: CGFloat
 }
