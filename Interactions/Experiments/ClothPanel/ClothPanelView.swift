@@ -27,7 +27,7 @@ struct ClothPanelView: View {
                 .accessibilityValue(sim.usingMotion ? "Tilt" : "Drag")
                 .accessibilityHint(sim.usingMotion ? "Tilt or drag" : "Drag the cloth")
 
-                LabHintOverlay(text: "Drag.")
+                LabHintOverlay(text: sim.usingMotion ? "Tilt." : "Drag.")
             }
             .onAppear {
                 sim.layout(size: geo.size)

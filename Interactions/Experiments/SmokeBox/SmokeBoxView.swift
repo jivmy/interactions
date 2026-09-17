@@ -53,6 +53,7 @@ final class SmokeSimulation: ObservableObject {
     private var d0: [Float]
     private let ticker = FrameTicker()
     private let motion = DeviceMotionSource()
+    private let haptics = HapticPlayer()
     private var lastSplat: CGPoint?
     private var publishAccum: CGFloat = 0
     private var seeded = false
@@ -76,6 +77,7 @@ final class SmokeSimulation: ObservableObject {
             d[(c + 1) * n + c] = 0.18
             seeded = true
         }
+        haptics.startEngine()
         motion.start()
         ticker.onTick = { [weak self] dt in self?.step(dt: dt) }
         ticker.start()
@@ -84,9 +86,14 @@ final class SmokeSimulation: ObservableObject {
     func stop() {
         ticker.stop()
         motion.stop()
+        haptics.shutdown()
     }
 
     func splat(at point: CGPoint, size: CGSize) {
+        if lastSplat == nil {
+            haptics.tick()
+            haptics.startHum(intensity: 0.10, sharpness: 0.16)
+        }
         let n = self.n
         let x = Int(point.x / max(size.width, 1) * CGFloat(n))
         let y = Int(point.y / max(size.height, 1) * CGFloat(n))
@@ -108,12 +115,15 @@ final class SmokeSimulation: ObservableObject {
         }
     }
 
-    func endSplat() { lastSplat = nil }
+    func endSplat() {
+        lastSplat = nil
+        haptics.stopHum()
+    }
 
     private func idx(_ i: Int, _ j: Int) -> Int { j * n + i }
 
     private func step(dt: CGFloat) {
-        usingMotion = motion.isUsingHardware
+        if motion.isUsingHardware != usingMotion { usingMotion = motion.isUsingHardware }
         let a = ViewSpaceMotion.acceleration(motion.acceleration, interface: ViewSpaceMotion.currentInterfaceOrientation())
         let gx = Float(a.dx) * 6
         let gy = Float(a.dy) * 6
@@ -128,7 +138,7 @@ final class SmokeSimulation: ObservableObject {
         velStep(dt: Float(dt))
         densStep(dt: Float(dt))
         publishAccum += dt
-        if publishAccum >= 1.0 / 60.0 {
+        if publishAccum >= LabCadence.publishInterval {
             publishAccum = 0
             density = d
         }

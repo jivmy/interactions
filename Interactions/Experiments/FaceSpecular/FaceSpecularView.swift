@@ -84,10 +84,18 @@ private enum FaceSpecularRenderer {
             Path(ellipseIn: CGRect(x: 18, y: 96, width: size.width - 36, height: size.height - 180)),
             with: .color(Color(red: 0.09, green: 0.08, blue: 0.08))
         )
+        context.fill(
+            Path(ellipseIn: CGRect(x: 36, y: 112, width: size.width - 72, height: 22)),
+            with: .color(Color.white.opacity(0.03))
+        )
 
         context.fill(
             Path(ellipseIn: CGRect(x: center.x - radius + 12, y: center.y - radius + 18, width: radius * 2, height: radius * 2)),
             with: .color(.black.opacity(0.42))
+        )
+        context.fill(
+            Path(ellipseIn: CGRect(x: center.x - radius * 0.72, y: center.y + radius * 0.62, width: radius * 1.44, height: 22)),
+            with: .color(Color.black.opacity(0.28))
         )
 
         context.drawLayer { inner in

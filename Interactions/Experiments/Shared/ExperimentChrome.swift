@@ -10,6 +10,7 @@ struct ExperimentWorkspace: View {
     @State private var currentID: String
     @State private var showSwitcher = false
     @State private var slideForward = true
+    @State private var chromeQuiet = false
 
     init(experimentID: String) {
         _currentID = State(initialValue: experimentID)
@@ -45,6 +46,8 @@ struct ExperimentWorkspace: View {
                     .padding(.bottom, 4)
                     .accessibilitySortPriority(10)
             }
+            .opacity(chromeQuiet ? 0.55 : 1)
+            .animation(LabMotion.adaptive(reduceMotion: reduceMotion, LabMotion.fade), value: chromeQuiet)
             .padding(.top, ViewSpaceMotion.windowSafeAreaTop())
             .padding(.bottom, 6)
         }
@@ -200,7 +203,12 @@ struct ExperimentWorkspace: View {
         guard id != currentID else { return }
         slideForward = ExperimentCatalog.isForward(from: currentID, to: id, in: experiment.section)
         LabSelect.fire()
+        if !reduceMotion { chromeQuiet = true }
         currentID = id
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(200))
+            chromeQuiet = false
+        }
     }
 }
 

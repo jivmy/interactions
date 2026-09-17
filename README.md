@@ -10,7 +10,7 @@ Jimmy’s lab for native iOS interaction experiments. SwiftUI, plus Metal, ARKit
 
 Open the app and you get a catalog of **18 feel prototypes**. Search, filter by track (A–E), favorite, and jump back in from Continue / Recents. Inside an experiment, the bottom chrome switches neighbors in the same track; the sheet jumps anywhere. Deep link with `interactions://experiment/hanging-chain` (or an `A1`-style code).
 
-The chrome is meant to feel like an Apple design prototype: SF Pro, paper/metal materials, interruptible springs, and Core Haptics that mean something. In-track switches ease a short distance; the thumb bar is a page control. Catalog cards carry a track-color index mark so A–E keep a visual beat. Reduce Motion is honored on chrome, not physics. Metal and fluids pause off-screen. Display links and Metal drop to 60 in Low Power Mode; filings, cloth, and sand publish at 60. Haptic engines shut down when you leave. VoiceOver can adjust the zipper, the dial, and in-track neighbors. Coaching is a single word.
+The chrome is meant to feel like an Apple design prototype: SF Pro, paper/metal materials, interruptible springs, and Core Haptics that mean something. In-track switches ease a short distance; the thumb bar is a page control that dims while the next prototype arrives. Catalog cards carry a track-color index mark so A–E keep a visual beat. Reduce Motion is honored on chrome, not physics. Metal and fluids pause off-screen. Display links and Metal drop to 60 in Low Power Mode; filings, cloth, and sand publish at 60. Idle ropes and dry ink skip SwiftUI publishes. Haptic engines shut down when you leave. VoiceOver can adjust the zipper, the dial, and in-track neighbors. Coaching is a single word.
 
 ## Experiments
 

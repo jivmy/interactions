@@ -189,8 +189,19 @@ final class PullCordSimulation: ObservableObject {
             rope.integrate(gravity: g, dt: sub)
             rope.solveConstraints(anchor: canopy)
         }
-        positions = rope.positions
-        handle = rope.positions.last ?? handle
+        let next = rope.positions
+        if dragging || positions.isEmpty || Self.moved(from: positions, to: next) {
+            positions = next
+            handle = next.last ?? handle
+        }
+    }
+
+    private static func moved(from a: [CGPoint], to b: [CGPoint]) -> Bool {
+        guard a.count == b.count else { return true }
+        for i in a.indices {
+            if hypot(a[i].x - b[i].x, a[i].y - b[i].y) > 0.18 { return true }
+        }
+        return false
     }
 }
 
