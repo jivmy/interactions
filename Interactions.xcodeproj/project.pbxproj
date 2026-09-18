@@ -56,7 +56,7 @@
 			children = (
 				B2E000000000000000000001 /* ContentView.swift */,
 				B2E000000000000000000022 /* InteractionsApp.swift */,
-				B2E0000000000000007D0 /* Experiments */,
+				B2E0000000000000000007D0 /* Experiments */,
 				AA11BB22000000000000000C /* Assets.xcassets */,
 				A1E0000000000000000006 /* Info.plist */,
 			);
