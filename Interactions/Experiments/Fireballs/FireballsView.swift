@@ -12,6 +12,7 @@ struct FireballsView: View {
             FireMetalView(fragmentName: "fireballsFragment", uniforms: uniforms)
                 .accessibilityLabel("Fire")
                 .accessibilityValue(firepowerLabel(firepower))
+                .accessibilityHint("Candle, hearth, torch, bonfire")
 
             VStack {
                 Spacer()

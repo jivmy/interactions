@@ -25,7 +25,7 @@ struct FireWhirlView: View {
         )
         .onAppear { simulation.start() }
         .accessibilityLabel("Fire")
-        .accessibilityHint("Spin")
+        .accessibilityHint("Spin a fire whirl")
         .onChange(of: scenePhase) { _, phase in
             phase == .active ? simulation.start() : simulation.stop()
         }

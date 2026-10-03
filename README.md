@@ -8,7 +8,7 @@ One idea at a time. The app opens into the active prototype — full screen, alm
 - Minimum iOS: 17.0
 - iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
 
-The chain is still Verlet + CoreMotion. Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. **Fire** is eight shader styles and one firepower slider. **Breath** is a separate hearth: blow into the microphone to build it; a full fire takes a minute to die. Then lean, trail, whirl, sheet, and strike, each its own room. Switching is only quiet left/right chevrons.
+The chain is still Verlet + CoreMotion. Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. **Fire** is four realistic fuels and one firepower slider. **Breath** is a separate hearth: blow into the microphone to build it; a full fire takes a minute to die. Then lean, trail, whirl, sheet, and strike, each its own room. Switching is only quiet left/right chevrons.
 
 Reduce Motion is honored on chrome (the page spring), not on physics.
 
@@ -21,7 +21,12 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 
 ## Fire
 
-Eight hearths at once, each a different fragment — volume, voxel, ember hash, plasma, ribbons, blue jet, molten, vortex. One slider is firepower. Reduce Motion does not freeze the fire.
+Four realistic hearths, one slider for firepower. Same layered candle character throughout — turbulent tongues, heat haze, smoke, glowing coals, deep red through orange, yellow, white-hot. Reduce Motion does not freeze the fire.
+
+- **Candle** — wax teardrop, white-hot core, yellow body, dark orange rim, slight lean
+- **Hearth** — wood fire: several tongues over a coal bed, sparks, smoke
+- **Torch** — tall oil / pine flame, sootier plume, faster flicker
+- **Bonfire** — wide outdoor fire, four columns, heavy smoke and haze
 
 ## Breath
 
@@ -29,7 +34,7 @@ One shader hearth. The system microphone dialog appears when the room opens. A b
 
 ## Other fire rooms
 
-Each is its own catalog entry: **Lean** (tilt / drag), **Trail** (drag a burning stroke), **Whirl** (spin a funnel), **Sheet** (push a curtain), **Strike** (a fast swipe ignites). All Metal. Reduce Motion does not freeze the fire.
+Each is its own catalog entry: **Lean** (tilt / drag a candle), **Trail** (drag a burning stroke), **Whirl** (spin a fire whirl), **Sheet** (push a fire front), **Strike** (a fast swipe ignites a hearth). All Metal, same realistic fire. Reduce Motion does not freeze the fire.
 
 ## Requirements
 
