@@ -41,7 +41,7 @@ final class BreathFireSimulation: NSObject, ObservableObject {
     private var heat: CGFloat = 0
     private var blow: CGFloat = 0
     private var sparks: [BreathSpark] = []
-    private var rng = BreathRNG(seed: 0xB1_0E_F1_5E)
+    private var rng = BreathRNG(state: 0xB1_0E_F1_5E)
     private var sparkCarry: CGFloat = 0
     nonisolated(unsafe) private var displayLink: CADisplayLink?
     private var lastTimestamp: CFTimeInterval = 0

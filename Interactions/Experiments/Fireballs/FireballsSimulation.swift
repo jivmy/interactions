@@ -65,7 +65,7 @@ final class FireballsSimulation: NSObject, ObservableObject {
     private var drips: [MoltenDrip] = []
     private var pixels: [UInt8]
     private var vortex: [VortexSpark] = []
-    private var rng = FireRNG(seed: 0xF1_5E_B0_11)
+    private var rng = FireRNG(state: 0xF1_5E_B0_11)
     private var emberCarry: CGFloat = 0
     private var dripCarry: CGFloat = 0
     private var vortexCarry: CGFloat = 0
@@ -158,22 +158,27 @@ final class FireballsSimulation: NSObject, ObservableObject {
                 let wander = Int(rng.unit() * 3) - 1
                 let sourceX = min(max(x + wander, 0), width - 1)
                 let below = pixels[(y + 1) * width + sourceX]
-                let cool = UInt8(min(255, mix(coolLo, coolHi, rng.unit())))
-                next[y * width + x] = below > cool ? below - cool : 0
+                let cool = byte(mix(coolLo, coolHi, rng.unit()))
+                if below > cool {
+                    next[y * width + x] = below - cool
+                } else {
+                    next[y * width + x] = 0
+                }
             }
         }
 
         let base = mix(18, 236, power)
         for x in 0..<width {
-            let heat = UInt8(min(255, max(0, base + rng.unit() * mix(10, 28, power))))
+            let flicker = rng.unit() * mix(10, 28, power)
+            let heat = byte(base + flicker)
             next[(height - 1) * width + x] = heat
             if height >= 2, power > 0.55, rng.unit() < power * 0.55 {
-                next[(height - 2) * width + x] = UInt8(min(255, Int(heat) - 18))
+                next[(height - 2) * width + x] = byte(CGFloat(heat) - 18)
             }
         }
         if power < 0.04 {
             for x in 0..<width {
-                next[(height - 1) * width + x] = UInt8(mix(8, 22, rng.unit()))
+                next[(height - 1) * width + x] = byte(mix(8, 22, rng.unit()))
             }
         }
         pixels = next
@@ -257,18 +262,18 @@ final class FireballsSimulation: NSObject, ObservableObject {
         while vortexCarry >= 1, vortex.count < FireballsTuning.maxVortex {
             vortexCarry -= 1
             let arm = Int(rng.unit() * 3)
-            vortex.append(
-                VortexSpark(
-                    angle: (CGFloat(arm) / 3) * .pi * 2 + rng.unit() * 0.4,
-                    radius: rng.unit() * 0.12,
-                    spin: mix(1.6, 5.4, power) * mix(0.75, 1.25, rng.unit()),
-                    life: 1,
-                    maxLife: mix(0.45, 1.4, power),
-                    size: mix(1.6, 4.6, power) * mix(0.7, 1.25, rng.unit()),
-                    arm: arm,
-                    warmth: rng.unit()
-                )
+            let baseAngle = (CGFloat(arm) / 3) * .pi * 2
+            let spark = VortexSpark(
+                angle: baseAngle + rng.unit() * 0.4,
+                radius: rng.unit() * 0.12,
+                spin: mix(1.6, 5.4, power) * mix(0.75, 1.25, rng.unit()),
+                life: 1,
+                maxLife: mix(0.45, 1.4, power),
+                size: mix(1.6, 4.6, power) * mix(0.7, 1.25, rng.unit()),
+                arm: arm,
+                warmth: rng.unit()
             )
+            vortex.append(spark)
         }
         if vortex.count > target {
             vortex.removeFirst(vortex.count - target)
@@ -288,6 +293,11 @@ final class FireballsSimulation: NSObject, ObservableObject {
 
     private func mix(_ a: CGFloat, _ b: CGFloat, _ t: CGFloat) -> CGFloat {
         a + (b - a) * t
+    }
+
+    private func byte(_ value: CGFloat) -> UInt8 {
+        let clamped = max(0, min(255, value))
+        return UInt8(clamped.rounded())
     }
 }
 
