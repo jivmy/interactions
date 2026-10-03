@@ -12,6 +12,8 @@
 		B2E0000000000000000003EA /* PrototypeCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000006 /* PrototypeCatalog.swift */; };
 		B2E0000000000000000003F1 /* HangingChainSimulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000009 /* HangingChainSimulation.swift */; };
 		B2E0000000000000000003F2 /* HangingChainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000000A /* HangingChainView.swift */; };
+		B2E000000000000000000430 /* FireballsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000030 /* FireballsView.swift */; };
+		B2E000000000000000000431 /* FireballsSimulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000031 /* FireballsSimulation.swift */; };
 		B2E0000000000000000003FB /* DeviceMotionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000013 /* DeviceMotionSource.swift */; };
 		B2E0000000000000000003FE /* DisplayCadence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000016 /* DisplayCadence.swift */; };
 		B2E000000000000000000405 /* VerletRope.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000001D /* VerletRope.swift */; };
@@ -23,6 +25,8 @@
 		B2E000000000000000000006 /* PrototypeCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeCatalog.swift; sourceTree = "<group>"; };
 		B2E000000000000000000009 /* HangingChainSimulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangingChainSimulation.swift; sourceTree = "<group>"; };
 		B2E00000000000000000000A /* HangingChainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangingChainView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000030 /* FireballsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireballsView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000031 /* FireballsSimulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireballsSimulation.swift; sourceTree = "<group>"; };
 		B2E000000000000000000013 /* DeviceMotionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMotionSource.swift; sourceTree = "<group>"; };
 		B2E000000000000000000016 /* DisplayCadence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayCadence.swift; sourceTree = "<group>"; };
 		B2E00000000000000000001D /* VerletRope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerletRope.swift; sourceTree = "<group>"; };
@@ -68,9 +72,19 @@
 			children = (
 				B2E000000000000000000006 /* PrototypeCatalog.swift */,
 				B2E00000000000000000083B /* HangingChain */,
+				B2E000000000000000000860 /* Fireballs */,
 				B2E000000000000000000843 /* Shared */,
 			);
 			path = Experiments;
+			sourceTree = "<group>";
+		};
+		B2E000000000000000000860 /* Fireballs */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000031 /* FireballsSimulation.swift */,
+				B2E000000000000000000030 /* FireballsView.swift */,
+			);
+			path = Fireballs;
 			sourceTree = "<group>";
 		};
 		B2E00000000000000000083B /* HangingChain */ = {
@@ -173,6 +187,8 @@
 				B2E0000000000000000003EA /* PrototypeCatalog.swift in Sources */,
 				B2E0000000000000000003F1 /* HangingChainSimulation.swift in Sources */,
 				B2E0000000000000000003F2 /* HangingChainView.swift in Sources */,
+				B2E000000000000000000430 /* FireballsView.swift in Sources */,
+				B2E000000000000000000431 /* FireballsSimulation.swift in Sources */,
 				B2E0000000000000000003FB /* DeviceMotionSource.swift in Sources */,
 				B2E0000000000000000003FE /* DisplayCadence.swift in Sources */,
 				B2E000000000000000000405 /* VerletRope.swift in Sources */,
