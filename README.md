@@ -8,7 +8,7 @@ One idea at a time. The app opens into the active prototype — full screen, alm
 - Minimum iOS: 17.0
 - iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
 
-Three rooms. **Hanging chain** is a metal Verlet rope that hangs from a pin and answers CoreMotion gravity — on Simulator, drag a link. **Fire** puts eight fireball styles on one field with a single firepower slider. **Breath** is a separate hearth: blow into the microphone to build it, then it takes a minute to die if you stop. Switching is only quiet left/right chevrons.
+The chain is still Verlet + CoreMotion. Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. **Fire** is eight shader styles and one firepower slider. **Breath** is a separate hearth: blow into the microphone to build it; a full fire takes a minute to die. Then lean, trail, whirl, sheet, and strike, each its own room. Switching is only quiet left/right chevrons.
 
 Reduce Motion is honored on chrome (the page spring), not on physics.
 
@@ -21,11 +21,15 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 
 ## Fire
 
-Eight hearths at once, each a different construction — candle, pixel grid, ember fountain, plasma orb, silk ribbons, blue jet, molten drip, vortex. One slider is firepower; height, heat, spawn, and glow all move with it. Reduce Motion does not freeze the fire.
+Eight hearths at once, each a different fragment — volume, voxel, ember hash, plasma, ribbons, blue jet, molten, vortex. One slider is firepower. Reduce Motion does not freeze the fire.
 
 ## Breath
 
-One fire, next door to the eight. The system microphone dialog appears when the room opens. A blow builds heat; silence spends it at a constant rate so a fully lit fire takes **60 seconds** to return to cold coals. No slider. Reduce Motion does not freeze the fire.
+One shader hearth. The system microphone dialog appears when the room opens. A blow builds heat; silence spends it at a constant rate so a fully lit fire takes **60 seconds** to return to cold coals. No slider.
+
+## Other fire rooms
+
+Each is its own catalog entry: **Lean** (tilt / drag), **Trail** (drag a burning stroke), **Whirl** (spin a funnel), **Sheet** (push a curtain), **Strike** (a fast swipe ignites). All Metal. Reduce Motion does not freeze the fire.
 
 ## Requirements
 
@@ -142,11 +146,12 @@ Interactions/
   ContentView.swift              Full-screen host + chevrons
   Info.plist                     Motion + microphone usage
   Experiments/
-    PrototypeCatalog.swift       Ordered rooms (chain, fire, breath)
+    PrototypeCatalog.swift       Ordered rooms (chain + fire shaders)
     HangingChain/
     Fireballs/
     BreathFire/
-    Shared/                      Motion, microphone, Verlet, display cadence
+    Flame/                       Lean, trail, whirl, sheet, strike
+    Shared/                      Metal view, shaders, motion, microphone
   Assets.xcassets
 fastlane/
 .github/workflows/testflight.yml

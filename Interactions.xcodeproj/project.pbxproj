@@ -17,6 +17,13 @@
 		B2E000000000000000000432 /* BreathFireView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000032 /* BreathFireView.swift */; };
 		B2E000000000000000000433 /* BreathFireSimulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000033 /* BreathFireSimulation.swift */; };
 		B2E000000000000000000434 /* MicrophoneSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000034 /* MicrophoneSource.swift */; };
+		B2E000000000000000000435 /* FireMetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000035 /* FireMetalView.swift */; };
+		B2E000000000000000000436 /* FireShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000036 /* FireShaders.metal */; };
+		B2E000000000000000000437 /* FireLeanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000037 /* FireLeanView.swift */; };
+		B2E000000000000000000438 /* FireTrailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000038 /* FireTrailView.swift */; };
+		B2E000000000000000000439 /* FireWhirlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000039 /* FireWhirlView.swift */; };
+		B2E00000000000000000043A /* FireSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000003A /* FireSheetView.swift */; };
+		B2E00000000000000000043B /* FireStrikeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000003B /* FireStrikeView.swift */; };
 		B2E0000000000000000003FB /* DeviceMotionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000013 /* DeviceMotionSource.swift */; };
 		B2E0000000000000000003FE /* DisplayCadence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000016 /* DisplayCadence.swift */; };
 		B2E000000000000000000405 /* VerletRope.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000001D /* VerletRope.swift */; };
@@ -33,6 +40,13 @@
 		B2E000000000000000000032 /* BreathFireView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathFireView.swift; sourceTree = "<group>"; };
 		B2E000000000000000000033 /* BreathFireSimulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreathFireSimulation.swift; sourceTree = "<group>"; };
 		B2E000000000000000000034 /* MicrophoneSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicrophoneSource.swift; sourceTree = "<group>"; };
+		B2E000000000000000000035 /* FireMetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireMetalView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000036 /* FireShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = FireShaders.metal; sourceTree = "<group>"; };
+		B2E000000000000000000037 /* FireLeanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireLeanView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000038 /* FireTrailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireTrailView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000039 /* FireWhirlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireWhirlView.swift; sourceTree = "<group>"; };
+		B2E00000000000000000003A /* FireSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireSheetView.swift; sourceTree = "<group>"; };
+		B2E00000000000000000003B /* FireStrikeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireStrikeView.swift; sourceTree = "<group>"; };
 		B2E000000000000000000013 /* DeviceMotionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMotionSource.swift; sourceTree = "<group>"; };
 		B2E000000000000000000016 /* DisplayCadence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayCadence.swift; sourceTree = "<group>"; };
 		B2E00000000000000000001D /* VerletRope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerletRope.swift; sourceTree = "<group>"; };
@@ -80,6 +94,7 @@
 				B2E00000000000000000083B /* HangingChain */,
 				B2E000000000000000000860 /* Fireballs */,
 				B2E000000000000000000870 /* BreathFire */,
+				B2E000000000000000000880 /* Flame */,
 				B2E000000000000000000843 /* Shared */,
 			);
 			path = Experiments;
@@ -103,6 +118,18 @@
 			path = BreathFire;
 			sourceTree = "<group>";
 		};
+		B2E000000000000000000880 /* Flame */ = {
+			isa = PBXGroup;
+			children = (
+				B2E000000000000000000037 /* FireLeanView.swift */,
+				B2E000000000000000000038 /* FireTrailView.swift */,
+				B2E000000000000000000039 /* FireWhirlView.swift */,
+				B2E00000000000000000003A /* FireSheetView.swift */,
+				B2E00000000000000000003B /* FireStrikeView.swift */,
+			);
+			path = Flame;
+			sourceTree = "<group>";
+		};
 		B2E00000000000000000083B /* HangingChain */ = {
 			isa = PBXGroup;
 			children = (
@@ -117,6 +144,8 @@
 			children = (
 				B2E000000000000000000013 /* DeviceMotionSource.swift */,
 				B2E000000000000000000016 /* DisplayCadence.swift */,
+				B2E000000000000000000035 /* FireMetalView.swift */,
+				B2E000000000000000000036 /* FireShaders.metal */,
 				B2E000000000000000000034 /* MicrophoneSource.swift */,
 				B2E00000000000000000001D /* VerletRope.swift */,
 			);
@@ -209,6 +238,13 @@
 				B2E000000000000000000432 /* BreathFireView.swift in Sources */,
 				B2E000000000000000000433 /* BreathFireSimulation.swift in Sources */,
 				B2E000000000000000000434 /* MicrophoneSource.swift in Sources */,
+				B2E000000000000000000435 /* FireMetalView.swift in Sources */,
+				B2E000000000000000000436 /* FireShaders.metal in Sources */,
+				B2E000000000000000000437 /* FireLeanView.swift in Sources */,
+				B2E000000000000000000438 /* FireTrailView.swift in Sources */,
+				B2E000000000000000000439 /* FireWhirlView.swift in Sources */,
+				B2E00000000000000000043A /* FireSheetView.swift in Sources */,
+				B2E00000000000000000043B /* FireStrikeView.swift in Sources */,
 				B2E0000000000000000003FB /* DeviceMotionSource.swift in Sources */,
 				B2E0000000000000000003FE /* DisplayCadence.swift in Sources */,
 				B2E000000000000000000405 /* VerletRope.swift in Sources */,

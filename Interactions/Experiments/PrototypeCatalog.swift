@@ -21,10 +21,35 @@ enum PrototypeCatalog {
         AnyView(BreathFireView())
     }
 
+    static let fireLean = PrototypeDescriptor(id: "fire-lean") {
+        AnyView(FireLeanView())
+    }
+
+    static let fireTrail = PrototypeDescriptor(id: "fire-trail") {
+        AnyView(FireTrailView())
+    }
+
+    static let fireWhirl = PrototypeDescriptor(id: "fire-whirl") {
+        AnyView(FireWhirlView())
+    }
+
+    static let fireSheet = PrototypeDescriptor(id: "fire-sheet") {
+        AnyView(FireSheetView())
+    }
+
+    static let fireStrike = PrototypeDescriptor(id: "fire-strike") {
+        AnyView(FireStrikeView())
+    }
+
     static let all: [PrototypeDescriptor] = [
         hangingChain,
         fireballs,
-        breathFire
+        breathFire,
+        fireLean,
+        fireTrail,
+        fireWhirl,
+        fireSheet,
+        fireStrike
     ]
 
     static func index(of id: String) -> Int? {
