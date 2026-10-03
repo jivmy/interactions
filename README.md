@@ -8,7 +8,7 @@ One idea at a time. The app opens into the active prototype — full screen, alm
 - Minimum iOS: 17.0
 - iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
 
-Two rooms. **Hanging chain** is a metal Verlet rope that hangs from a pin and answers CoreMotion gravity — on Simulator, drag a link. **Fire** puts eight fireball styles on one field with a single firepower slider. Switching is only quiet left/right chevrons.
+Three rooms. **Hanging chain** is a metal Verlet rope that hangs from a pin and answers CoreMotion gravity — on Simulator, drag a link. **Fire** puts eight fireball styles on one field with a single firepower slider. **Breath** is a separate hearth: blow into the microphone to build it, then it takes a minute to die if you stop. Switching is only quiet left/right chevrons.
 
 Reduce Motion is honored on chrome (the page spring), not on physics.
 
@@ -22,6 +22,10 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 ## Fire
 
 Eight hearths at once, each a different construction — candle, pixel grid, ember fountain, plasma orb, silk ribbons, blue jet, molten drip, vortex. One slider is firepower; height, heat, spawn, and glow all move with it. Reduce Motion does not freeze the fire.
+
+## Breath
+
+One fire, next door to the eight. The system microphone dialog appears when the room opens. A blow builds heat; silence spends it at a constant rate so a fully lit fire takes **60 seconds** to return to cold coals. No slider. Reduce Motion does not freeze the fire.
 
 ## Requirements
 
@@ -136,12 +140,13 @@ Interactions.xcodeproj
 Interactions/
   InteractionsApp.swift
   ContentView.swift              Full-screen host + chevrons
-  Info.plist                     Motion usage
+  Info.plist                     Motion + microphone usage
   Experiments/
-    PrototypeCatalog.swift       Ordered rooms (chain, fire)
+    PrototypeCatalog.swift       Ordered rooms (chain, fire, breath)
     HangingChain/
     Fireballs/
-    Shared/                      Motion, Verlet, display cadence
+    BreathFire/
+    Shared/                      Motion, microphone, Verlet, display cadence
   Assets.xcassets
 fastlane/
 .github/workflows/testflight.yml

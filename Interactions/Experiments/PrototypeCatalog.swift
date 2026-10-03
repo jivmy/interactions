@@ -17,9 +17,14 @@ enum PrototypeCatalog {
         AnyView(FireballsView())
     }
 
+    static let breathFire = PrototypeDescriptor(id: "breath-fire") {
+        AnyView(BreathFireView())
+    }
+
     static let all: [PrototypeDescriptor] = [
         hangingChain,
-        fireballs
+        fireballs,
+        breathFire
     ]
 
     static func index(of id: String) -> Int? {
