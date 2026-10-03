@@ -14,25 +14,21 @@ struct FireStrikeView: View {
         uniforms.prevY = simulation.dirY
         uniforms.touching = simulation.striking ? 1 : 0
 
-        return GeometryReader { geo in
-            FireMetalView(fragmentName: "fireStrikeFragment", uniforms: uniforms)
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            simulation.drag(value.location)
-                        }
-                        .onEnded { _ in
-                            simulation.endDrag()
-                        }
-                )
-                .onAppear {
-                    simulation.updateViewport(geo.size)
-                    simulation.start()
+        return FireMetalView(
+            fragmentName: "fireStrikeFragment",
+            uniforms: uniforms,
+            onViewport: { simulation.updateViewport(size: $0) }
+        )
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    simulation.drag(value.location)
                 }
-                .onChange(of: geo.size) { _, size in
-                    simulation.updateViewport(size)
+                .onEnded { _ in
+                    simulation.endDrag()
                 }
-        }
+        )
+        .onAppear { simulation.start() }
         .accessibilityLabel("Fire")
         .accessibilityHint("Strike")
         .onChange(of: scenePhase) { _, phase in
@@ -57,7 +53,7 @@ final class FireStrikeSimulation: NSObject, ObservableObject {
     private var lastPoint: CGPoint?
     private var lastTime: CFTimeInterval = 0
 
-    func updateViewport(_ size: CGSize) {
+    func updateViewport(size: CGSize) {
         viewport = size
     }
 

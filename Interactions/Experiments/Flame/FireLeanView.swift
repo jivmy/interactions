@@ -11,25 +11,21 @@ struct FireLeanView: View {
         uniforms.tiltY = Float(tilt.dy)
         uniforms.intensity = 0.7
 
-        return GeometryReader { geo in
-            FireMetalView(fragmentName: "fireLeanFragment", uniforms: uniforms)
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            simulation.drag(to: value.location)
-                        }
-                        .onEnded { _ in
-                            simulation.endDrag()
-                        }
-                )
-                .onAppear {
-                    simulation.updateViewport(geo.size)
-                    simulation.start()
+        return FireMetalView(
+            fragmentName: "fireLeanFragment",
+            uniforms: uniforms,
+            onViewport: { simulation.updateViewport(size: $0) }
+        )
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    simulation.drag(to: value.location)
                 }
-                .onChange(of: geo.size) { _, size in
-                    simulation.updateViewport(size)
+                .onEnded { _ in
+                    simulation.endDrag()
                 }
-        }
+        )
+        .onAppear { simulation.start() }
         .accessibilityLabel("Fire")
         .accessibilityHint(simulation.usingMotion ? "Tilt the phone" : "Drag to lean")
         .onChange(of: scenePhase) { _, phase in
@@ -51,7 +47,7 @@ final class FireLeanSimulation: NSObject, ObservableObject {
     private var dragging = false
     private var dragTilt = CGVector.zero
 
-    func updateViewport(_ size: CGSize) {
+    func updateViewport(size: CGSize) {
         viewport = size
     }
 

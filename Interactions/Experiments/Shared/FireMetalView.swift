@@ -88,21 +88,37 @@ enum FireUV {
     }
 }
 
+/// Reports point size from layout so rooms never capture GeometryProxy.
+@MainActor
+final class FireFieldView: MTKView {
+    var onViewport: ((CGSize) -> Void)?
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let size = bounds.size
+        if size.width > 1, size.height > 1 {
+            onViewport?(size)
+        }
+    }
+}
+
 /// Fullscreen triangle + named fragment. If Metal is missing the field stays empty — no vector fire.
 struct FireMetalView: UIViewRepresentable {
     var fragmentName: String
     var uniforms: FireUniforms
     var points: [FirePoint] = []
+    var onViewport: ((CGSize) -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator(fragmentName: fragmentName)
     }
 
     @MainActor
-    func makeUIView(context: Context) -> MTKView {
-        let view = MTKView()
+    func makeUIView(context: Context) -> FireFieldView {
+        let view = FireFieldView()
         applyField(view)
         applyCadence(view)
+        view.onViewport = onViewport
         context.coordinator.attach(view)
         context.coordinator.uniforms = uniforms
         context.coordinator.points = padded(points)
@@ -110,16 +126,22 @@ struct FireMetalView: UIViewRepresentable {
     }
 
     @MainActor
-    func updateUIView(_ uiView: MTKView, context: Context) {
+    func updateUIView(_ uiView: FireFieldView, context: Context) {
         context.coordinator.uniforms = uniforms
         context.coordinator.points = padded(points)
         applyCadence(uiView)
+        uiView.onViewport = onViewport
+        let size = uiView.bounds.size
+        if size.width > 1, size.height > 1 {
+            onViewport?(size)
+        }
     }
 
     @MainActor
-    static func dismantleUIView(_ uiView: MTKView, coordinator: Coordinator) {
+    static func dismantleUIView(_ uiView: FireFieldView, coordinator: Coordinator) {
         uiView.isPaused = true
         uiView.delegate = nil
+        uiView.onViewport = nil
     }
 
     @MainActor
@@ -215,7 +237,7 @@ struct FireMetalView: UIViewRepresentable {
                   let pass = view.currentRenderPassDescriptor else { return }
 
             var uniforms = self.uniforms
-            var points = self.points
+            let points = self.points
             let width = max(view.drawableSize.width, 1)
             let height = max(view.drawableSize.height, 1)
             uniforms.time = Float(CACurrentMediaTime() - start)

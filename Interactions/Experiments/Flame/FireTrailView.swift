@@ -9,22 +9,19 @@ struct FireTrailView: View {
         var uniforms = FireUniforms()
         uniforms.p1 = Float(points.count)
 
-        return GeometryReader { geo in
-            FireMetalView(fragmentName: "fireTrailFragment", uniforms: uniforms, points: points)
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            simulation.add(value.location)
-                        }
-                )
-                .onAppear {
-                    simulation.updateViewport(geo.size)
-                    simulation.start()
+        return FireMetalView(
+            fragmentName: "fireTrailFragment",
+            uniforms: uniforms,
+            points: points,
+            onViewport: { simulation.updateViewport(size: $0) }
+        )
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    simulation.add(value.location)
                 }
-                .onChange(of: geo.size) { _, size in
-                    simulation.updateViewport(size)
-                }
-        }
+        )
+        .onAppear { simulation.start() }
         .accessibilityLabel("Fire")
         .accessibilityHint("Drag a trail")
         .onChange(of: scenePhase) { _, phase in
@@ -42,7 +39,7 @@ final class FireTrailSimulation: NSObject, ObservableObject {
     private let clock = FireLinkClock()
     private var viewport: CGSize = .zero
 
-    func updateViewport(_ size: CGSize) {
+    func updateViewport(size: CGSize) {
         viewport = size
     }
 

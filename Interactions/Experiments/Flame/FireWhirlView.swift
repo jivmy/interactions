@@ -9,25 +9,21 @@ struct FireWhirlView: View {
         uniforms.spin = Float(simulation.spin)
         uniforms.intensity = Float(min(1, abs(simulation.spin)))
 
-        return GeometryReader { geo in
-            FireMetalView(fragmentName: "fireWhirlFragment", uniforms: uniforms)
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            simulation.drag(value.location)
-                        }
-                        .onEnded { _ in
-                            simulation.endDrag()
-                        }
-                )
-                .onAppear {
-                    simulation.updateViewport(geo.size)
-                    simulation.start()
+        return FireMetalView(
+            fragmentName: "fireWhirlFragment",
+            uniforms: uniforms,
+            onViewport: { simulation.updateViewport(size: $0) }
+        )
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    simulation.drag(value.location)
                 }
-                .onChange(of: geo.size) { _, size in
-                    simulation.updateViewport(size)
+                .onEnded { _ in
+                    simulation.endDrag()
                 }
-        }
+        )
+        .onAppear { simulation.start() }
         .accessibilityLabel("Fire")
         .accessibilityHint("Spin")
         .onChange(of: scenePhase) { _, phase in
@@ -46,7 +42,7 @@ final class FireWhirlSimulation: NSObject, ObservableObject {
     private var viewport: CGSize = .zero
     private var last: CGPoint?
 
-    func updateViewport(_ size: CGSize) {
+    func updateViewport(size: CGSize) {
         viewport = size
     }
 
