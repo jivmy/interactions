@@ -1,18 +1,31 @@
 import SwiftUI
 
 struct FireballsView: View {
+    var style: Float
+    var styleName: String
+
     @StateObject private var simulation = FireballsSimulation()
 
     var body: some View {
         let firepower = simulation.firepower
         var uniforms = FireUniforms()
         uniforms.intensity = Float(firepower)
+        uniforms.style = style
 
         return ZStack {
             FireMetalView(fragmentName: "fireballsFragment", uniforms: uniforms)
+                .gesture(
+                    DragGesture(minimumDistance: 48)
+                        .onEnded { value in
+                            let dx = value.translation.width
+                            let dy = value.translation.height
+                            guard abs(dx) > abs(dy), abs(dx) > 56 else { return }
+                            RoomPaging.request(forward: dx < 0)
+                        }
+                )
                 .accessibilityLabel("Fire")
                 .accessibilityValue(firepowerLabel(firepower))
-                .accessibilityHint("Candle, hearth, torch, bonfire")
+                .accessibilityHint(styleName)
 
             VStack {
                 Spacer()
@@ -32,5 +45,5 @@ struct FireballsView: View {
 }
 
 #Preview {
-    FireballsView()
+    FireballsView(style: 0, styleName: "Candle")
 }

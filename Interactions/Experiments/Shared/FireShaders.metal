@@ -75,29 +75,143 @@ static float fbm(float2 p) {
 
 static float fbm3(float2 p) {
     float v = 0.0;
-    float a = 0.5;
-    v += a * valueNoise(p);
+    v += 0.5 * valueNoise(p);
     p = p * 2.11 + float2(1.3, 4.7);
-    a = 0.25;
-    v += a * valueNoise(p);
+    v += 0.25 * valueNoise(p);
     p = p * 2.09 + float2(2.1, 8.3);
     v += 0.125 * valueNoise(p);
     return v;
 }
 
-/// Deep red → orange → yellow → small white-hot core. Not a filled white blob.
-static float3 blackbody(float t) {
+/// Bright only: orange → yellow → white-hot. No near-black rim.
+static float3 flameColor(float t) {
     t = saturate(t);
-    float3 c = mix(float3(0.10, 0.01, 0.00), float3(0.62, 0.05, 0.00), smoothstep(0.00, 0.20, t));
-    c = mix(c, float3(0.95, 0.20, 0.01), smoothstep(0.20, 0.40, t));
-    c = mix(c, float3(1.00, 0.48, 0.05), smoothstep(0.40, 0.58, t));
-    c = mix(c, float3(1.00, 0.82, 0.20), smoothstep(0.58, 0.74, t));
-    c = mix(c, float3(1.00, 0.96, 0.70), smoothstep(0.74, 0.88, t));
-    c = mix(c, float3(1.00, 0.99, 0.94), smoothstep(0.88, 1.00, t));
+    float3 c = mix(float3(1.00, 0.42, 0.06), float3(1.00, 0.62, 0.10), smoothstep(0.00, 0.35, t));
+    c = mix(c, float3(1.00, 0.82, 0.20), smoothstep(0.35, 0.60, t));
+    c = mix(c, float3(1.00, 0.96, 0.70), smoothstep(0.60, 0.82, t));
+    c = mix(c, float3(1.00, 0.99, 0.94), smoothstep(0.82, 1.00, t));
     return c;
 }
 
-/// Organic candle silhouette: wide low, pointed tip.
+static float2 qbez(float2 a, float2 c, float2 b, float t) {
+    float u = 1.0 - t;
+    return u * u * a + 2.0 * u * t * c + t * t * b;
+}
+
+static float rayHits(float2 p, float2 a, float2 c, float2 b) {
+    float A = a.y - 2.0 * c.y + b.y;
+    float B = 2.0 * (c.y - a.y);
+    float C = a.y - p.y;
+    float hits = 0.0;
+    if (abs(A) < 1e-6) {
+        if (abs(B) > 1e-6) {
+            float t = -C / B;
+            if (t >= 0.0 && t <= 1.0) {
+                float2 q = qbez(a, c, b, t);
+                if (q.x > p.x) {
+                    hits += 1.0;
+                }
+            }
+        }
+    } else {
+        float disc = B * B - 4.0 * A * C;
+        if (disc >= 0.0) {
+            float s = sqrt(disc);
+            float inv = 0.5 / A;
+            float t0 = (-B - s) * inv;
+            float t1 = (-B + s) * inv;
+            if (t0 >= 0.0 && t0 <= 1.0) {
+                float2 q = qbez(a, c, b, t0);
+                if (q.x > p.x) {
+                    hits += 1.0;
+                }
+            }
+            if (t1 >= 0.0 && t1 <= 1.0) {
+                float2 q = qbez(a, c, b, t1);
+                if (q.x > p.x) {
+                    hits += 1.0;
+                }
+            }
+        }
+    }
+    return hits;
+}
+
+static float bezDist(float2 p, float2 a, float2 c, float2 b) {
+    float d = 8.0;
+    for (int i = 0; i <= 10; i++) {
+        float t = float(i) / 10.0;
+        d = min(d, length(p - qbez(a, c, b, t)));
+    }
+    return d;
+}
+
+/// Exact Canvas `flamePath` from FireballKind.candle (commit 7c44861).
+static float canvasFlameMask(float2 canvasP, float w, float h) {
+    float2 tip = float2(0.0, -h);
+    float2 left = float2(-w * 0.5, -h * 0.22);
+    float2 right = float2(w * 0.5, -h * 0.22);
+    float2 bottom = float2(0.0, w * 0.10);
+    float2 cTL = float2(-w * 0.58, -h * 0.58);
+    float2 cLB = float2(-w * 0.40, w * 0.28);
+    float2 cBR = float2(w * 0.40, w * 0.28);
+    float2 cRT = float2(w * 0.58, -h * 0.58);
+
+    float hits = 0.0;
+    hits += rayHits(canvasP, tip, cTL, left);
+    hits += rayHits(canvasP, left, cLB, bottom);
+    hits += rayHits(canvasP, bottom, cBR, right);
+    hits += rayHits(canvasP, right, cRT, tip);
+    float inside = step(0.5, fmod(hits, 2.0));
+
+    float ud = bezDist(canvasP, tip, cTL, left);
+    ud = min(ud, bezDist(canvasP, left, cLB, bottom));
+    ud = min(ud, bezDist(canvasP, bottom, cBR, right));
+    ud = min(ud, bezDist(canvasP, right, cRT, tip));
+    float sd = mix(ud, -ud, inside);
+    return saturate(0.5 - sd / 0.0065);
+}
+
+static float2 toCanvas(float2 p, float lean) {
+    float2 c = float2(p.x, -p.y);
+    float cs = cos(lean);
+    float sn = sin(lean);
+    return float2(cs * c.x - sn * c.y, sn * c.x + cs * c.y);
+}
+
+/// Layered organic teardrop: dark orange outer, yellow body, white-hot core, lean + flicker.
+static float4 canvasCandle(float2 p, float time, float power, float extraLean) {
+    power = saturate(power);
+    float roar = power * power;
+    float flicker = 0.80 + 0.20 * sin(time * 11.2) * sin(time * 6.7 + 0.4);
+    float lean = sin(time * 2.35) * mix(0.02, 0.16, power) + extraLean;
+    float h = mix(0.055, 0.46, power) * flicker;
+    float w = mix(0.031, 0.25, power);
+    float2 q = toCanvas(p, lean);
+
+    float3 col = kField;
+    float stainR = mix(0.10, 0.28, power);
+    float stain = exp(-length(float2(p.x / stainR, p.y / (stainR * 1.15))) ) * mix(0.05, 0.22, power);
+    col = mix(col, float3(1.00, 0.45, 0.08), saturate(stain));
+
+    float a0 = canvasFlameMask(q, w * 1.55, h * 1.12) * mix(0.16, 0.42, power);
+    col = mix(col, float3(0.95, 0.22, 0.04), a0);
+    float a1 = canvasFlameMask(q, w * 1.12, h) * 0.92;
+    col = mix(col, float3(1.00, 0.42, 0.06), a1);
+    float a2 = canvasFlameMask(q, w * 0.70, h * 0.78) * 0.95;
+    col = mix(col, float3(1.00, 0.78, 0.16), a2);
+    float a3 = canvasFlameMask(q, w * 0.34, h * 0.42) * 0.96;
+    col = mix(col, float3(1.00, 0.97, 0.82), a3);
+
+    float coreH = mix(0.016, 0.055 + roar * 0.038, power);
+    float2 core = q - float2(0.0, -coreH * 0.05);
+    core.x /= max(w * 0.10, 1e-4);
+    core.y /= max(coreH * 0.50, 1e-4);
+    float coreM = saturate(1.0 - dot(core, core));
+    col = mix(col, float3(0.65, 0.82, 1.00), coreM * mix(0.15, 0.75, power) * a1);
+    return float4(col, 1.0);
+}
+
 static float teardrop(float2 p, float h, float w) {
     float yy = p.y / max(h, 1e-4);
     float base = smoothstep(-0.04, 0.07, p.y);
@@ -147,44 +261,19 @@ static void addTongue(
 
     float yy = saturate(q.y / max(h, 1e-4));
     float holes = fbm(float2(q.x * 6.4, q.y * 4.6 - time * 2.6 + phase));
-    float dens = env * mix(0.58, 1.18, holes);
-    dens *= 1.0 - yy * 0.22;
+    float dens = env * mix(0.62, 1.12, holes);
+    dens *= 1.0 - yy * 0.18;
 
     float2 core = float2(lean * h * 0.08, h * 0.14);
     float cx = (q.x - core.x) / max(w * 0.42, 1e-4);
     float cy = (q.y - core.y) / max(h * 0.26, 1e-4);
     float coreHeat = exp(-dot(float2(cx, cy), float2(cx, cy)) * 2.6);
-    float edgeCool = 1.0 - smoothstep(0.45, 1.0, abs(q.x) / max(w, 1e-4));
     float tipCool = 1.0 - smoothstep(0.55, 1.02, yy);
-    float localHeat = saturate(coreHeat * 1.12 + env * 0.28 * edgeCool);
-    localHeat *= mix(0.82, 1.08, holes);
-    localHeat *= tipCool;
+    float localHeat = saturate(coreHeat * 1.12 + env * 0.42);
+    localHeat *= mix(0.86, 1.08, holes) * tipCool;
 
     density = saturate(density + dens);
     heat = max(heat, saturate(localHeat));
-}
-
-static float coalBed(float2 p, float time, float w, float amount) {
-    if (amount < 0.01) {
-        return 0.0;
-    }
-    float bed = smoothstep(0.075, 0.0, abs(p.y + 0.008)) * smoothstep(w * 1.55, w * 0.15, abs(p.x));
-    float crack = fbm(float2(p.x * 16.0, p.y * 22.0 + time * 0.28));
-    float pulse = 0.78 + 0.22 * fbm3(float2(time * 1.1, p.x * 8.0));
-    return saturate(bed * mix(0.18, 1.0, pow(crack, 1.35)) * pulse * amount);
-}
-
-static float smokePlume(float2 p, float time, float h, float w, float amount) {
-    if (amount < 0.01 || p.y < h * 0.28) {
-        return 0.0;
-    }
-    float2 s = p;
-    s.x += (fbm3(float2(p.y * 1.6, time * 0.22)) - 0.5) * w * 1.8;
-    s.y -= time * 0.12;
-    float n = fbm(s * float2(2.4, 1.55) + float2(0.0, -time * 0.35));
-    float rise = smoothstep(h * 0.40, h * 0.92, p.y) * smoothstep(h * 2.15, h * 1.05, p.y);
-    float column = smoothstep(w * 2.8, 0.0, abs(s.x));
-    return saturate(n * rise * column * amount);
 }
 
 static float sparkField(float2 p, float time, float h, float w, float amount, float seed) {
@@ -199,8 +288,7 @@ static float sparkField(float2 p, float time, float h, float w, float amount, fl
         float2 pos = float2((rnd.x - 0.5) * w * 1.7, life * h * (0.55 + 0.7 * amount));
         pos.x += sin(life * 8.0 + id) * w * 0.22;
         float r = mix(0.012, 0.004, life) * mix(0.7, 1.25, amount);
-        float d = length(p - pos);
-        acc += smoothstep(r, 0.0, d) * (1.0 - life);
+        acc += smoothstep(r, 0.0, length(p - pos)) * (1.0 - life);
     }
     return saturate(acc);
 }
@@ -212,110 +300,73 @@ static float heatHaze(float2 p, float time, float h, float w, float amount) {
     return saturate(n * column * rise * amount);
 }
 
-static float4 composeFire(float density, float heat, float coals, float smoke, float sparks, float haze) {
+static float4 composeBright(float density, float heat, float sparks, float haze) {
     float3 col = kField;
-    col = mix(col, float3(1.00, 0.93, 0.84), haze * 0.10);
-
-    float3 soot = float3(0.42, 0.40, 0.38);
-    col = mix(col, soot, saturate(smoke * 0.55));
-
-    float3 ember = blackbody(0.42 + coals * 0.45);
-    col = mix(col, ember, saturate(coals));
-
-    float glow = saturate(density * 0.55);
-    col = mix(col, blackbody(heat * 0.55), glow * 0.65);
-
-    float body = saturate(density);
-    col = mix(col, blackbody(heat), body);
-
-    col += sparks * float3(1.00, 0.72, 0.28);
-    col += saturate(heat - 0.78) * density * float3(0.35, 0.22, 0.08);
+    col = mix(col, float3(1.00, 0.55, 0.14), saturate(haze) * 0.09);
+    col = mix(col, float3(1.00, 0.42, 0.06), saturate(density * 0.45) * 0.40);
+    col = mix(col, flameColor(heat), saturate(density));
+    col += sparks * float3(1.00, 0.88, 0.40);
     return float4(col, 1.0);
 }
 
-/// kind 0 candle, 1 hearth, 2 torch, 3 bonfire
-static float4 realisticFire(float2 p, float time, int kind, float power) {
+/// kind 1 hearth, 2 torch, 3 bonfire
+static float4 brightFuel(float2 p, float time, int kind, float power) {
     power = saturate(power);
     float flick = flicker(time, float(kind) * 13.7);
     float dens = 0.0;
     float heat = 0.0;
-    float coals = 0.0;
-    float smoke = 0.0;
     float sparks = 0.0;
     float haze = 0.0;
     float t = time * mix(0.85, 1.25, power);
 
-    if (kind == 0) {
-        float h = mix(0.18, 0.40, power) * flick;
-        float w = mix(0.055, 0.098, power);
-        float lean = 0.10 * sin(t * 1.15 + fbm3(float2(t * 0.4, 1.2)) * 2.0);
-        addTongue(p, t, h, w, lean, mix(0.16, 0.30, power), 0.0, dens, heat);
-        coals = coalBed(p, t, w * 0.55, mix(0.12, 0.28, power));
-        float wick = smoothstep(0.018, 0.0, length(float2(p.x * 4.5, p.y - 0.01)));
-        coals = max(coals, wick * 0.45);
-        smoke = smokePlume(p, t, h, w, mix(0.10, 0.28, power));
-        haze = heatHaze(p, t, h, w, mix(0.18, 0.40, power));
-    } else if (kind == 1) {
-        float h = mix(0.14, 0.36, power) * flick;
-        float w = mix(0.14, 0.28, power);
-        addTongue(p + float2(-w * 0.28, 0.0), t, h * 0.92, w * 0.42, 0.06, mix(0.28, 0.48, power), 0.4, dens, heat);
-        addTongue(p, t, h, w * 0.48, -0.03, mix(0.30, 0.52, power), 1.7, dens, heat);
-        addTongue(p + float2(w * 0.30, 0.0), t, h * 0.84, w * 0.40, -0.08, mix(0.26, 0.46, power), 2.9, dens, heat);
-        coals = coalBed(p, t, w, mix(0.45, 1.0, power));
-        smoke = smokePlume(p, t, h, w, mix(0.28, 0.62, power));
-        sparks = sparkField(p, t, h, w, power * 0.7, 11.0);
-        haze = heatHaze(p, t, h, w, mix(0.28, 0.55, power));
+    if (kind == 1) {
+        float h = mix(0.16, 0.42, power) * flick;
+        float w = mix(0.16, 0.32, power);
+        addTongue(p + float2(-w * 0.28, 0.0), t, h * 0.92, w * 0.42, 0.06, mix(0.22, 0.40, power), 0.4, dens, heat);
+        addTongue(p, t, h, w * 0.48, -0.03, mix(0.24, 0.44, power), 1.7, dens, heat);
+        addTongue(p + float2(w * 0.30, 0.0), t, h * 0.84, w * 0.40, -0.08, mix(0.20, 0.38, power), 2.9, dens, heat);
+        sparks = sparkField(p, t, h, w, power * 0.55, 11.0);
+        haze = heatHaze(p, t, h, w, mix(0.10, 0.22, power));
     } else if (kind == 2) {
-        float h = mix(0.28, 0.68, power) * flick;
-        float w = mix(0.06, 0.13, power);
+        float h = mix(0.30, 0.70, power) * flick;
+        float w = mix(0.07, 0.14, power);
         float lean = 0.16 * sin(t * 0.95) + 0.08 * (fbm3(float2(t * 0.55, 3.1)) - 0.5);
-        addTongue(p, t, h, w, lean, mix(0.36, 0.64, power), 0.2, dens, heat);
-        addTongue(p + float2(w * 0.15, 0.0), t, h * 0.78, w * 0.62, lean + 0.12, mix(0.32, 0.58, power), 3.3, dens, heat);
-        coals = coalBed(p, t, w * 0.8, mix(0.18, 0.40, power));
-        smoke = smokePlume(p, t, h, w, mix(0.42, 0.88, power));
-        sparks = sparkField(p, t, h, w, power * 0.5, 23.0);
-        haze = heatHaze(p, t, h, w, mix(0.22, 0.48, power));
+        addTongue(p, t, h, w, lean, mix(0.28, 0.50, power), 0.2, dens, heat);
+        addTongue(p + float2(w * 0.15, 0.0), t, h * 0.78, w * 0.62, lean + 0.12, mix(0.24, 0.46, power), 3.3, dens, heat);
+        sparks = sparkField(p, t, h, w, power * 0.4, 23.0);
+        haze = heatHaze(p, t, h, w, mix(0.08, 0.18, power));
     } else {
-        float h = mix(0.22, 0.58, power) * flick;
-        float w = mix(0.20, 0.40, power);
-        addTongue(p + float2(-w * 0.38, 0.0), t, h * 0.82, w * 0.36, 0.10, mix(0.40, 0.70, power), 0.6, dens, heat);
-        addTongue(p + float2(-w * 0.12, 0.0), t, h * 1.02, w * 0.40, -0.04, mix(0.44, 0.76, power), 1.8, dens, heat);
-        addTongue(p + float2(w * 0.14, 0.0), t, h * 0.94, w * 0.38, 0.05, mix(0.42, 0.72, power), 3.1, dens, heat);
-        addTongue(p + float2(w * 0.40, 0.0), t, h * 0.76, w * 0.34, -0.12, mix(0.38, 0.68, power), 4.4, dens, heat);
-        coals = coalBed(p, t, w, mix(0.55, 1.0, power));
-        smoke = smokePlume(p, t, h, w * 1.15, mix(0.48, 0.95, power));
-        sparks = sparkField(p, t, h, w, power * 0.9, 37.0);
-        haze = heatHaze(p, t, h, w, mix(0.40, 0.72, power));
+        float h = mix(0.24, 0.60, power) * flick;
+        float w = mix(0.22, 0.42, power);
+        addTongue(p + float2(-w * 0.38, 0.0), t, h * 0.82, w * 0.36, 0.10, mix(0.30, 0.52, power), 0.6, dens, heat);
+        addTongue(p + float2(-w * 0.12, 0.0), t, h * 1.02, w * 0.40, -0.04, mix(0.32, 0.56, power), 1.8, dens, heat);
+        addTongue(p + float2(w * 0.14, 0.0), t, h * 0.94, w * 0.38, 0.05, mix(0.30, 0.54, power), 3.1, dens, heat);
+        addTongue(p + float2(w * 0.40, 0.0), t, h * 0.76, w * 0.34, -0.12, mix(0.28, 0.50, power), 4.4, dens, heat);
+        sparks = sparkField(p, t, h, w, power * 0.7, 37.0);
+        haze = heatHaze(p, t, h, w, mix(0.12, 0.24, power));
     }
 
     dens *= mix(0.55, 1.0, power);
-    heat *= mix(0.72, 1.0, power);
-    return composeFire(dens, heat, coals, smoke, sparks, haze);
+    heat *= mix(0.78, 1.0, power);
+    return composeBright(dens, heat, sparks, haze);
+}
+
+static float4 oneFire(float2 p, float time, int kind, float power) {
+    if (kind <= 0) {
+        return canvasCandle(p, time, power, 0.0);
+    }
+    return brightFuel(p, time, kind, power);
 }
 
 fragment float4 fireballsFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    float2 uv = in.uv;
-    float top = 0.070;
-    float bottom = 0.145;
-    float usable = 1.0 - top - bottom;
-    if (uv.y < bottom || uv.y > 1.0 - top) {
-        return float4(kField, 1.0);
-    }
-
-    float gx = uv.x * 2.0;
-    float gy = (uv.y - bottom) / usable * 2.0;
-    int col = int(clamp(floor(gx), 0.0, 1.0));
-    int row = int(clamp(floor(gy), 0.0, 1.0));
-    int kind = (1 - row) * 2 + col;
-    float2 local = float2(fract(gx), fract(gy));
-    float cellAspect = (u.aspect * 0.5) / max(usable * 0.5, 1e-4);
-    float2 p = float2((local.x - 0.5) * cellAspect, local.y - 0.12);
-    return realisticFire(p, u.time, kind, saturate(u.intensity));
+    float2 p = float2((in.uv.x - 0.5) * u.aspect, in.uv.y - 0.20);
+    int kind = int(clamp(u.style + 0.5, 0.0, 3.0));
+    return oneFire(p, u.time, kind, saturate(u.intensity));
 }
 
 fragment float4 breathFireFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
     float2 p = float2((in.uv.x - 0.5) * u.aspect, in.uv.y - 0.20);
-    return realisticFire(p, u.time, 1, saturate(u.intensity));
+    return brightFuel(p, u.time, 1, saturate(u.intensity));
 }
 
 fragment float4 fireLeanFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
@@ -323,7 +374,7 @@ fragment float4 fireLeanFragment(FireVertOut in [[stage_in]], constant FireUnifo
     p.x -= u.tiltX * p.y * 1.05;
     p.y += u.tiltY * 0.07;
     float power = saturate(0.52 + length(float2(u.tiltX, u.tiltY)) * 0.32);
-    return realisticFire(p, u.time, 0, power);
+    return canvasCandle(p, u.time, power, u.tiltX * 0.18);
 }
 
 fragment float4 fireTrailFragment(FireVertOut in [[stage_in]],
@@ -332,28 +383,21 @@ fragment float4 fireTrailFragment(FireVertOut in [[stage_in]],
     float2 p = float2(in.uv.x * u.aspect, in.uv.y);
     float dens = 0.0;
     float heat = 0.0;
-    float coals = 0.0;
-    float smoke = 0.0;
-    float sparks = 0.0;
     float haze = 0.0;
     for (int i = 0; i < 24; i++) {
         float s = points[i].strength;
         if (s < 0.02) {
             continue;
         }
-        float age = saturate(points[i].age);
-        float live = (1.0 - age) * s;
+        float live = (1.0 - saturate(points[i].age)) * s;
         float2 q = p - float2(points[i].x * u.aspect, points[i].y);
         q.y -= 0.01;
         float h = mix(0.05, 0.16, live);
         float w = mix(0.03, 0.07, live);
-        addTongue(q, u.time + float(i) * 0.37, h, w, 0.05, 0.34, float(i), dens, heat);
-        coals = max(coals, coalBed(q, u.time, w, live * 0.45));
-        smoke = max(smoke, smokePlume(q, u.time, h, w, live * 0.35));
-        haze = max(haze, heatHaze(q, u.time, h, w, live * 0.3));
+        addTongue(q, u.time + float(i) * 0.37, h, w, 0.05, 0.28, float(i), dens, heat);
+        haze = max(haze, heatHaze(q, u.time, h, w, live * 0.18));
     }
-    sparks = 0.0;
-    return composeFire(dens, heat, coals, smoke, sparks, haze);
+    return composeBright(dens, heat, 0.0, haze);
 }
 
 fragment float4 fireWhirlFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
@@ -367,13 +411,11 @@ fragment float4 fireWhirlFragment(FireVertOut in [[stage_in]], constant FireUnif
     float w = mix(0.07, 0.15, power);
     float dens = 0.0;
     float heat = 0.0;
-    addTongue(q, u.time, h, w, spin * 0.08, mix(0.40, 0.72, power), 0.0, dens, heat);
-    addTongue(q + float2(w * 0.22, 0.0), u.time, h * 0.82, w * 0.7, spin * 0.12, mix(0.36, 0.64, power), 2.2, dens, heat);
-    float coals = coalBed(p, u.time, w * 1.3, power * 0.7);
-    float smoke = smokePlume(q, u.time, h, w, mix(0.35, 0.80, power));
-    float sparks = sparkField(q, u.time, h, w, power * 0.55, 19.0);
-    float haze = heatHaze(p, u.time, h, w, mix(0.30, 0.60, power));
-    return composeFire(dens, heat, coals, smoke, sparks, haze);
+    addTongue(q, u.time, h, w, spin * 0.08, mix(0.30, 0.52, power), 0.0, dens, heat);
+    addTongue(q + float2(w * 0.22, 0.0), u.time, h * 0.82, w * 0.7, spin * 0.12, mix(0.28, 0.48, power), 2.2, dens, heat);
+    float sparks = sparkField(q, u.time, h, w, power * 0.45, 19.0);
+    float haze = heatHaze(p, u.time, h, w, mix(0.10, 0.20, power));
+    return composeBright(dens, heat, sparks, haze);
 }
 
 fragment float4 fireSheetFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
@@ -382,23 +424,21 @@ fragment float4 fireSheetFragment(FireVertOut in [[stage_in]], constant FireUnif
     float heat = 0.0;
     float h = 0.52;
     float w = 0.10;
-    addTongue(p + float2(-0.28, 0.0), u.time, h * 0.88, w, 0.04, 0.48, 0.5, dens, heat);
-    addTongue(p + float2(-0.10, 0.0), u.time, h, w, -0.03, 0.52, 1.6, dens, heat);
-    addTongue(p + float2(0.08, 0.0), u.time, h * 0.94, w, 0.05, 0.50, 2.8, dens, heat);
-    addTongue(p + float2(0.26, 0.0), u.time, h * 0.82, w, -0.06, 0.46, 3.9, dens, heat);
+    addTongue(p + float2(-0.28, 0.0), u.time, h * 0.88, w, 0.04, 0.40, 0.5, dens, heat);
+    addTongue(p + float2(-0.10, 0.0), u.time, h, w, -0.03, 0.44, 1.6, dens, heat);
+    addTongue(p + float2(0.08, 0.0), u.time, h * 0.94, w, 0.05, 0.42, 2.8, dens, heat);
+    addTongue(p + float2(0.26, 0.0), u.time, h * 0.82, w, -0.06, 0.38, 3.9, dens, heat);
     float curtain = smoothstep(0.46, 0.10, abs(p.x));
     dens *= curtain;
     heat *= curtain;
-    float coals = coalBed(p, u.time, 0.38, 0.85) * curtain;
-    float smoke = smokePlume(p, u.time, h, 0.22, 0.7) * curtain;
-    float haze = heatHaze(p, u.time, h, 0.22, 0.5) * curtain;
-    return composeFire(dens, heat, coals, smoke, 0.0, haze);
+    float haze = heatHaze(p, u.time, h, 0.22, 0.16) * curtain;
+    return composeBright(dens, heat, 0.0, haze);
 }
 
 fragment float4 fireStrikeFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
     float2 p = float2((in.uv.x - 0.5) * u.aspect, in.uv.y - 0.20);
     float heatIn = saturate(u.intensity);
-    float4 fire = realisticFire(p, u.time, 1, heatIn);
+    float4 fire = brightFuel(p, u.time, 1, heatIn);
     if (u.touching < 0.5 || heatIn < 0.02) {
         return fire;
     }
@@ -406,6 +446,6 @@ fragment float4 fireStrikeFragment(FireVertOut in [[stage_in]], constant FireUni
     float along = p.x * dir.x + p.y * dir.y;
     float across = p.x * dir.y - p.y * dir.x;
     float streak = exp(-across * across * 42.0) * smoothstep(0.35, -0.02, along) * 0.28;
-    float3 col = fire.rgb + streak * blackbody(0.7);
+    float3 col = fire.rgb + streak * float3(1.00, 0.82, 0.28);
     return float4(col, 1.0);
 }

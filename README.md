@@ -8,7 +8,7 @@ One idea at a time. The app opens into the active prototype — full screen, alm
 - Minimum iOS: 17.0
 - iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
 
-The chain is still Verlet + CoreMotion. Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. **Fire** is four realistic fuels and one firepower slider. **Breath** is a separate hearth: blow into the microphone to build it; a full fire takes a minute to die. Then lean, trail, whirl, sheet, and strike, each its own room. Switching is only quiet left/right chevrons.
+The chain is still Verlet + CoreMotion. Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. One fire on screen at a time. Chevrons or a swipe page the styles. Each slider room has a firepower control. **Breath** is a separate hearth: blow into the microphone to build it; a full fire takes a minute to die. Then lean, trail, whirl, sheet, and strike.
 
 Reduce Motion is honored on chrome (the page spring), not on physics.
 
@@ -21,12 +21,12 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 
 ## Fire
 
-Four realistic hearths, one slider for firepower. Same layered candle character throughout — turbulent tongues, heat haze, smoke, glowing coals, deep red through orange, yellow, white-hot. Reduce Motion does not freeze the fire.
+One fire at a time. No grid. Bright orange / yellow / white-hot — no black soot. One slider is firepower. Swipe or the chevrons move between styles. Reduce Motion does not freeze the fire.
 
-- **Candle** — wax teardrop, white-hot core, yellow body, dark orange rim, slight lean
-- **Hearth** — wood fire: several tongues over a coal bed, sparks, smoke
-- **Torch** — tall oil / pine flame, sootier plume, faster flicker
-- **Bonfire** — wide outdoor fire, four columns, heavy smoke and haze
+- **Candle** — the original Canvas teardrop (`FireballKind.candle`): layered organic flame, dark orange outer, yellow body, white-hot core, slight lean and flicker
+- **Hearth** — wood fire, several bright tongues
+- **Torch** — tall oil / pine flame
+- **Bonfire** — wide outdoor fire, four columns
 
 ## Breath
 

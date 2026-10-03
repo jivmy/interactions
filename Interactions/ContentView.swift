@@ -7,6 +7,14 @@ enum Stage {
     static let spring = Animation.spring(response: 0.50, dampingFraction: 0.92)
 }
 
+enum RoomPaging {
+    static let requested = Notification.Name("interactions.pageRooms")
+
+    static func request(forward: Bool) {
+        NotificationCenter.default.post(name: requested, object: nil, userInfo: ["forward": forward])
+    }
+}
+
 /// Full-screen active prototype. Switching is only two icon-only chevrons.
 struct ContentView: View {
     @State private var index = 0
@@ -49,6 +57,10 @@ struct ContentView: View {
                 .padding(.horizontal, 4)
             }
             .zIndex(2)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: RoomPaging.requested)) { note in
+            let forward = (note.userInfo?["forward"] as? Bool) ?? true
+            page(forward: forward, count: rooms.count)
         }
         .animation(reduceMotion ? .easeOut(duration: 0.16) : Stage.spring, value: index)
     }
