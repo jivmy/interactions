@@ -8,7 +8,7 @@ One idea at a time. The app opens into the active prototype — full screen, alm
 - Minimum iOS: 17.0
 - iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
 
-The chain is still Verlet + CoreMotion. Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. One fire on screen at a time. Chevrons or a swipe page the styles. Each slider room has a firepower control. **Breath** is a separate hearth: blow into the microphone to build it; a full fire takes a minute to die. Then lean, trail, whirl, sheet, and strike.
+Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. Two grids of six, one flame in each cell. Chevrons or a swipe move between those two grids only. One slider is firepower.
 
 Reduce Motion is honored on chrome (the page spring), not on physics.
 
@@ -21,20 +21,16 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 
 ## Fire
 
-One fire at a time. No grid. Bright orange / yellow / white-hot — no black soot. One slider is firepower. Swipe or the chevrons move between styles. Reduce Motion does not freeze the fire.
+Two screens. Each is a 2×3 grid of **one** flame per cell — no stacked tongues. Bright orange / yellow / white-hot, no black soot. Calm flicker. The slider is firepower for the grid on screen. Swipe or the chevrons move between the two grids only.
 
-- **Candle** — the original Canvas teardrop (`FireballKind.candle`): layered organic flame, dark orange outer, yellow body, white-hot core, slight lean and flicker
-- **Hearth** — wood fire, several bright tongues
-- **Torch** — tall oil / pine flame
-- **Bonfire** — wide outdoor fire, four columns
+- **Layered** — Canvas teardrop family. Top-left is the original `FireballKind.candle` look: dark orange outer, yellow body, white-hot core
+- **Soft** — the same six silhouettes with a continuous volume wash instead of hard layers
 
 ## Breath
 
 One shader hearth. The system microphone dialog appears when the room opens. A blow builds heat; silence spends it at a constant rate so a fully lit fire takes **60 seconds** to return to cold coals. No slider.
 
-## Other fire rooms
-
-Each is its own catalog entry: **Lean** (tilt / drag a candle), **Trail** (drag a burning stroke), **Whirl** (spin a fire whirl), **Sheet** (push a fire front), **Strike** (a fast swipe ignites a hearth). All Metal, same realistic fire. Reduce Motion does not freeze the fire.
+Paging is only the two fire grids. Reduce Motion does not freeze the fire.
 
 ## Requirements
 

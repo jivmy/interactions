@@ -45,5 +45,5 @@ struct FireballsView: View {
 }
 
 #Preview {
-    FireballsView(style: 0, styleName: "Candle")
+    FireballsView(style: 0, styleName: "Layered")
 }

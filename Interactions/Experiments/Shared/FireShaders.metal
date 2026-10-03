@@ -179,36 +179,82 @@ static float2 toCanvas(float2 p, float lean) {
     return float2(cs * c.x - sn * c.y, sn * c.x + cs * c.y);
 }
 
-/// Layered organic teardrop: dark orange outer, yellow body, white-hot core, lean + flicker.
+static float2 leanP(float2 p, float a) {
+    float c = cos(a);
+    float s = sin(a);
+    return float2(c * p.x - s * p.y, s * p.x + c * p.y);
+}
+
+/// Smooth teardrop coverage. One body, soft edge — no jagged bezier crawl.
+static float flameCover(float2 p, float h, float w) {
+    float t = p.y / max(h, 1e-4);
+    float base = smoothstep(-0.045, 0.055, p.y);
+    float tip = smoothstep(1.07, 0.80, t);
+    float waist = w * (1.03 - t * t);
+    waist *= 0.68 + 0.32 * smoothstep(-0.02, 0.18, t);
+    waist *= 0.12 + 0.88 * tip;
+    float nx = abs(p.x) / max(waist * 0.5, 1e-4);
+    float radial = smoothstep(1.06, 0.52, nx);
+    return saturate(radial * base * tip);
+}
+
+static float calmFlicker(float time, float phase) {
+    return 0.985 + 0.015 * sin(time * 1.65 + phase) * sin(time * 1.12 + phase * 0.7);
+}
+
+static float calmLean(float time, float phase, float power) {
+    return 0.026 * sin(time * 0.46 + phase) * mix(0.35, 1.0, power);
+}
+
+/// Old Canvas candle layers: orange outer, yellow body, white-hot core.
+static float3 paintLayered(float3 col, float2 p, float h, float w, float power) {
+    float stainR = mix(0.07, 0.18, power);
+    float stain = exp(-length(float2(p.x / stainR, p.y / (stainR * 1.15)))) * mix(0.04, 0.16, power);
+    col = mix(col, float3(1.00, 0.45, 0.08), saturate(stain));
+    col = mix(col, float3(0.95, 0.22, 0.04), flameCover(p, h * 1.12, w * 1.55) * mix(0.16, 0.42, power));
+    col = mix(col, float3(1.00, 0.42, 0.06), flameCover(p, h, w * 1.12) * 0.92);
+    col = mix(col, float3(1.00, 0.78, 0.16), flameCover(p, h * 0.78, w * 0.70) * 0.95);
+    col = mix(col, float3(1.00, 0.97, 0.82), flameCover(p, h * 0.42, w * 0.34) * 0.96);
+    return col;
+}
+
 static float4 canvasCandle(float2 p, float time, float power, float extraLean) {
     power = saturate(power);
-    float roar = power * power;
-    float flicker = 0.80 + 0.20 * sin(time * 11.2) * sin(time * 6.7 + 0.4);
-    float lean = sin(time * 2.35) * mix(0.02, 0.16, power) + extraLean;
-    float h = mix(0.055, 0.46, power) * flicker;
-    float w = mix(0.031, 0.25, power);
-    float2 q = toCanvas(p, lean);
+    float flick = calmFlicker(time, 0.0);
+    float lean = calmLean(time, 0.0, power) + extraLean * 0.25;
+    float h = mix(0.10, 0.44, power) * flick;
+    float w = mix(0.055, 0.22, power);
+    float2 q = leanP(p, lean);
+    return float4(paintLayered(kField, q, h, w, power), 1.0);
+}
 
+static float4 layeredCell(float2 p, float time, float power, float hScale, float wScale, float phase) {
+    power = saturate(power);
+    float flick = calmFlicker(time, phase);
+    float lean = calmLean(time, phase, power);
+    float h = mix(0.12, 0.58, power) * flick * hScale;
+    float w = mix(0.06, 0.26, power) * wScale;
+    float2 q = leanP(p, lean);
+    return float4(paintLayered(kField, q, h, w, power), 1.0);
+}
+
+/// Soft volume flame — one body, slow shimmer, no sparks.
+static float4 volumeCell(float2 p, float time, float power, float hScale, float wScale, float phase) {
+    power = saturate(power);
+    float flick = calmFlicker(time, phase + 1.7);
+    float lean = calmLean(time, phase + 0.9, power);
+    float2 q = leanP(p, lean);
+    float n = fbm3(float2(q.x * 2.0, q.y * 1.45 - time * 0.28 + phase));
+    q.x += (n - 0.5) * 0.028 * max(q.y, 0.0);
+    float h = mix(0.12, 0.58, power) * flick * hScale;
+    float w = mix(0.07, 0.27, power) * wScale;
+    float cover = flameCover(q, h, w);
+    float t = saturate(q.y / max(h, 1e-4));
+    float heat = saturate((1.0 - t * 0.52) * (0.58 + 0.42 * cover));
+    heat *= 0.82 + 0.12 * fbm3(float2(q.x * 2.6, q.y * 1.8 - time * 0.32 + phase));
     float3 col = kField;
-    float stainR = mix(0.10, 0.28, power);
-    float stain = exp(-length(float2(p.x / stainR, p.y / (stainR * 1.15))) ) * mix(0.05, 0.22, power);
-    col = mix(col, float3(1.00, 0.45, 0.08), saturate(stain));
-
-    float a0 = canvasFlameMask(q, w * 1.55, h * 1.12) * mix(0.16, 0.42, power);
-    col = mix(col, float3(0.95, 0.22, 0.04), a0);
-    float a1 = canvasFlameMask(q, w * 1.12, h) * 0.92;
-    col = mix(col, float3(1.00, 0.42, 0.06), a1);
-    float a2 = canvasFlameMask(q, w * 0.70, h * 0.78) * 0.95;
-    col = mix(col, float3(1.00, 0.78, 0.16), a2);
-    float a3 = canvasFlameMask(q, w * 0.34, h * 0.42) * 0.96;
-    col = mix(col, float3(1.00, 0.97, 0.82), a3);
-
-    float coreH = mix(0.016, 0.055 + roar * 0.038, power);
-    float2 core = q - float2(0.0, -coreH * 0.05);
-    core.x /= max(w * 0.10, 1e-4);
-    core.y /= max(coreH * 0.50, 1e-4);
-    float coreM = saturate(1.0 - dot(core, core));
-    col = mix(col, float3(0.65, 0.82, 1.00), coreM * mix(0.15, 0.75, power) * a1);
+    col = mix(col, float3(1.00, 0.50, 0.10), cover * 0.22);
+    col = mix(col, flameColor(heat), cover);
     return float4(col, 1.0);
 }
 
@@ -322,28 +368,19 @@ static float4 brightFuel(float2 p, float time, int kind, float power) {
     if (kind == 1) {
         float h = mix(0.16, 0.42, power) * flick;
         float w = mix(0.16, 0.32, power);
-        addTongue(p + float2(-w * 0.28, 0.0), t, h * 0.92, w * 0.42, 0.06, mix(0.22, 0.40, power), 0.4, dens, heat);
-        addTongue(p, t, h, w * 0.48, -0.03, mix(0.24, 0.44, power), 1.7, dens, heat);
-        addTongue(p + float2(w * 0.30, 0.0), t, h * 0.84, w * 0.40, -0.08, mix(0.20, 0.38, power), 2.9, dens, heat);
-        sparks = sparkField(p, t, h, w, power * 0.55, 11.0);
-        haze = heatHaze(p, t, h, w, mix(0.10, 0.22, power));
+        addTongue(p, t, h, w * 0.48, -0.02, mix(0.12, 0.22, power), 0.4, dens, heat);
+        haze = heatHaze(p, t, h, w, mix(0.08, 0.16, power));
     } else if (kind == 2) {
         float h = mix(0.30, 0.70, power) * flick;
         float w = mix(0.07, 0.14, power);
-        float lean = 0.16 * sin(t * 0.95) + 0.08 * (fbm3(float2(t * 0.55, 3.1)) - 0.5);
-        addTongue(p, t, h, w, lean, mix(0.28, 0.50, power), 0.2, dens, heat);
-        addTongue(p + float2(w * 0.15, 0.0), t, h * 0.78, w * 0.62, lean + 0.12, mix(0.24, 0.46, power), 3.3, dens, heat);
-        sparks = sparkField(p, t, h, w, power * 0.4, 23.0);
-        haze = heatHaze(p, t, h, w, mix(0.08, 0.18, power));
+        float lean = 0.05 * sin(t * 0.45);
+        addTongue(p, t, h, w, lean, mix(0.12, 0.22, power), 0.2, dens, heat);
+        haze = heatHaze(p, t, h, w, mix(0.06, 0.12, power));
     } else {
         float h = mix(0.24, 0.60, power) * flick;
-        float w = mix(0.22, 0.42, power);
-        addTongue(p + float2(-w * 0.38, 0.0), t, h * 0.82, w * 0.36, 0.10, mix(0.30, 0.52, power), 0.6, dens, heat);
-        addTongue(p + float2(-w * 0.12, 0.0), t, h * 1.02, w * 0.40, -0.04, mix(0.32, 0.56, power), 1.8, dens, heat);
-        addTongue(p + float2(w * 0.14, 0.0), t, h * 0.94, w * 0.38, 0.05, mix(0.30, 0.54, power), 3.1, dens, heat);
-        addTongue(p + float2(w * 0.40, 0.0), t, h * 0.76, w * 0.34, -0.12, mix(0.28, 0.50, power), 4.4, dens, heat);
-        sparks = sparkField(p, t, h, w, power * 0.7, 37.0);
-        haze = heatHaze(p, t, h, w, mix(0.12, 0.24, power));
+        float w = mix(0.18, 0.32, power);
+        addTongue(p, t, h, w, 0.03, mix(0.14, 0.24, power), 0.6, dens, heat);
+        haze = heatHaze(p, t, h, w, mix(0.08, 0.16, power));
     }
 
     dens *= mix(0.55, 1.0, power);
@@ -351,17 +388,54 @@ static float4 brightFuel(float2 p, float time, int kind, float power) {
     return composeBright(dens, heat, sparks, haze);
 }
 
-static float4 oneFire(float2 p, float time, int kind, float power) {
-    if (kind <= 0) {
-        return canvasCandle(p, time, power, 0.0);
+static float4 gridCell(float2 p, float time, float power, int grid, int cell) {
+    if (grid == 0) {
+        if (cell == 0) {
+            return layeredCell(p, time, power, 1.00, 1.00, 0.0);
+        } else if (cell == 1) {
+            return layeredCell(p, time, power, 1.18, 0.70, 1.3);
+        } else if (cell == 2) {
+            return layeredCell(p, time, power, 0.74, 1.28, 2.1);
+        } else if (cell == 3) {
+            return layeredCell(p, time, power, 0.82, 0.84, 3.4);
+        } else if (cell == 4) {
+            return layeredCell(p, time, power, 1.06, 1.10, 4.2);
+        }
+        return layeredCell(p, time, power, 1.22, 0.58, 5.5);
     }
-    return brightFuel(p, time, kind, power);
+    if (cell == 0) {
+        return volumeCell(p, time, power, 1.00, 1.00, 0.4);
+    } else if (cell == 1) {
+        return volumeCell(p, time, power, 1.20, 0.68, 1.8);
+    } else if (cell == 2) {
+        return volumeCell(p, time, power, 0.72, 1.30, 2.6);
+    } else if (cell == 3) {
+        return volumeCell(p, time, power, 0.88, 0.86, 3.9);
+    } else if (cell == 4) {
+        return volumeCell(p, time, power, 1.08, 1.12, 4.7);
+    }
+    return volumeCell(p, time, power, 1.24, 0.56, 6.1);
 }
 
 fragment float4 fireballsFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    float2 p = float2((in.uv.x - 0.5) * u.aspect, in.uv.y - 0.20);
-    int kind = int(clamp(u.style + 0.5, 0.0, 3.0));
-    return oneFire(p, u.time, kind, saturate(u.intensity));
+    float2 uv = in.uv;
+    float top = 0.070;
+    float bottom = 0.145;
+    float usable = 1.0 - top - bottom;
+    if (uv.y < bottom || uv.y > 1.0 - top) {
+        return float4(kField, 1.0);
+    }
+
+    float gx = uv.x * 2.0;
+    float gy = (uv.y - bottom) / usable * 3.0;
+    int col = int(clamp(floor(gx), 0.0, 1.0));
+    int row = int(clamp(floor(gy), 0.0, 2.0));
+    int cell = (2 - row) * 2 + col;
+    int grid = int(clamp(u.style + 0.5, 0.0, 1.0));
+    float2 local = float2(fract(gx), fract(gy));
+    float cellAspect = (u.aspect * 0.5) / max(usable / 3.0, 1e-4);
+    float2 p = float2((local.x - 0.5) * cellAspect, local.y - 0.16);
+    return gridCell(p, u.time, saturate(u.intensity), grid, cell);
 }
 
 fragment float4 breathFireFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
@@ -411,11 +485,9 @@ fragment float4 fireWhirlFragment(FireVertOut in [[stage_in]], constant FireUnif
     float w = mix(0.07, 0.15, power);
     float dens = 0.0;
     float heat = 0.0;
-    addTongue(q, u.time, h, w, spin * 0.08, mix(0.30, 0.52, power), 0.0, dens, heat);
-    addTongue(q + float2(w * 0.22, 0.0), u.time, h * 0.82, w * 0.7, spin * 0.12, mix(0.28, 0.48, power), 2.2, dens, heat);
-    float sparks = sparkField(q, u.time, h, w, power * 0.45, 19.0);
-    float haze = heatHaze(p, u.time, h, w, mix(0.10, 0.20, power));
-    return composeBright(dens, heat, sparks, haze);
+    addTongue(q, u.time, h, w, spin * 0.04, mix(0.14, 0.24, power), 0.0, dens, heat);
+    float haze = heatHaze(p, u.time, h, w, mix(0.08, 0.14, power));
+    return composeBright(dens, heat, 0.0, haze);
 }
 
 fragment float4 fireSheetFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
@@ -424,10 +496,7 @@ fragment float4 fireSheetFragment(FireVertOut in [[stage_in]], constant FireUnif
     float heat = 0.0;
     float h = 0.52;
     float w = 0.10;
-    addTongue(p + float2(-0.28, 0.0), u.time, h * 0.88, w, 0.04, 0.40, 0.5, dens, heat);
-    addTongue(p + float2(-0.10, 0.0), u.time, h, w, -0.03, 0.44, 1.6, dens, heat);
-    addTongue(p + float2(0.08, 0.0), u.time, h * 0.94, w, 0.05, 0.42, 2.8, dens, heat);
-    addTongue(p + float2(0.26, 0.0), u.time, h * 0.82, w, -0.06, 0.38, 3.9, dens, heat);
+    addTongue(p, u.time, h, w * 1.4, 0.02, 0.18, 0.5, dens, heat);
     float curtain = smoothstep(0.46, 0.10, abs(p.x));
     dens *= curtain;
     heat *= curtain;
