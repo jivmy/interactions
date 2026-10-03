@@ -14,16 +14,22 @@ struct FireWhirlView: View {
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            simulation.drag(value, in: geo.size)
+                            simulation.drag(value.location)
                         }
                         .onEnded { _ in
                             simulation.endDrag()
                         }
                 )
+                .onAppear {
+                    simulation.updateViewport(geo.size)
+                    simulation.start()
+                }
+                .onChange(of: geo.size) { _, size in
+                    simulation.updateViewport(size)
+                }
         }
         .accessibilityLabel("Fire")
         .accessibilityHint("Spin")
-        .onAppear { simulation.start() }
         .onChange(of: scenePhase) { _, phase in
             phase == .active ? simulation.start() : simulation.stop()
         }
@@ -37,7 +43,12 @@ final class FireWhirlSimulation: NSObject, ObservableObject {
     @Published private(set) var spin: CGFloat = 0.18
 
     private let clock = FireLinkClock()
+    private var viewport: CGSize = .zero
     private var last: CGPoint?
+
+    func updateViewport(_ size: CGSize) {
+        viewport = size
+    }
 
     func start() {
         clock.onTick = { [weak self] dt in
@@ -52,9 +63,9 @@ final class FireWhirlSimulation: NSObject, ObservableObject {
         clock.stop()
     }
 
-    func drag(_ value: DragGesture.Value, in size: CGSize) {
+    func drag(_ current: CGPoint) {
+        let size = viewport
         let center = CGPoint(x: size.width * 0.5, y: size.height * 0.62)
-        let current = value.location
         if let last {
             let ax = last.x - center.x
             let ay = last.y - center.y

@@ -16,16 +16,22 @@ struct FireLeanView: View {
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            simulation.drag(to: value.location, in: geo.size)
+                            simulation.drag(to: value.location)
                         }
                         .onEnded { _ in
                             simulation.endDrag()
                         }
                 )
+                .onAppear {
+                    simulation.updateViewport(geo.size)
+                    simulation.start()
+                }
+                .onChange(of: geo.size) { _, size in
+                    simulation.updateViewport(size)
+                }
         }
         .accessibilityLabel("Fire")
         .accessibilityHint(simulation.usingMotion ? "Tilt the phone" : "Drag to lean")
-        .onAppear { simulation.start() }
         .onChange(of: scenePhase) { _, phase in
             phase == .active ? simulation.start() : simulation.stop()
         }
@@ -41,8 +47,13 @@ final class FireLeanSimulation: NSObject, ObservableObject {
 
     private let motion = DeviceMotionSource()
     private let clock = FireLinkClock()
+    private var viewport: CGSize = .zero
     private var dragging = false
     private var dragTilt = CGVector.zero
+
+    func updateViewport(_ size: CGSize) {
+        viewport = size
+    }
 
     func start() {
         motion.start()
@@ -55,8 +66,9 @@ final class FireLeanSimulation: NSObject, ObservableObject {
         motion.stop()
     }
 
-    func drag(to point: CGPoint, in size: CGSize) {
+    func drag(to point: CGPoint) {
         dragging = true
+        let size = viewport
         let x = (point.x / max(size.width, 1) - 0.5) * 2
         let y = (0.5 - point.y / max(size.height, 1)) * 2
         dragTilt = CGVector(dx: max(-1.4, min(1.4, x)), dy: max(-1.4, min(1.4, y)))

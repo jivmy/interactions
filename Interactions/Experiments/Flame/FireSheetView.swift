@@ -14,16 +14,22 @@ struct FireSheetView: View {
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            simulation.drag(to: value.location, in: geo.size)
+                            simulation.drag(to: value.location)
                         }
                         .onEnded { _ in
                             simulation.endDrag()
                         }
                 )
+                .onAppear {
+                    simulation.updateViewport(geo.size)
+                    simulation.start()
+                }
+                .onChange(of: geo.size) { _, size in
+                    simulation.updateViewport(size)
+                }
         }
         .accessibilityLabel("Fire")
         .accessibilityHint("Push the sheet")
-        .onAppear { simulation.start() }
         .onChange(of: scenePhase) { _, phase in
             phase == .active ? simulation.start() : simulation.stop()
         }
@@ -37,8 +43,13 @@ final class FireSheetSimulation: NSObject, ObservableObject {
     @Published private(set) var offset: CGFloat = 0
 
     private let clock = FireLinkClock()
+    private var viewport: CGSize = .zero
     private var target: CGFloat = 0
     private var dragging = false
+
+    func updateViewport(_ size: CGSize) {
+        viewport = size
+    }
 
     func start() {
         clock.onTick = { [weak self] dt in
@@ -55,9 +66,9 @@ final class FireSheetSimulation: NSObject, ObservableObject {
         clock.stop()
     }
 
-    func drag(to point: CGPoint, in size: CGSize) {
+    func drag(to point: CGPoint) {
         dragging = true
-        target = (point.x / max(size.width, 1) - 0.5) * 1.35
+        target = (point.x / max(viewport.width, 1) - 0.5) * 1.35
     }
 
     func endDrag() {

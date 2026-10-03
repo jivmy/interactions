@@ -14,13 +14,19 @@ struct FireTrailView: View {
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            simulation.add(value.location, in: geo.size)
+                            simulation.add(value.location)
                         }
                 )
+                .onAppear {
+                    simulation.updateViewport(geo.size)
+                    simulation.start()
+                }
+                .onChange(of: geo.size) { _, size in
+                    simulation.updateViewport(size)
+                }
         }
         .accessibilityLabel("Fire")
         .accessibilityHint("Drag a trail")
-        .onAppear { simulation.start() }
         .onChange(of: scenePhase) { _, phase in
             phase == .active ? simulation.start() : simulation.stop()
         }
@@ -34,6 +40,11 @@ final class FireTrailSimulation: NSObject, ObservableObject {
     @Published private(set) var points: [FirePoint] = []
 
     private let clock = FireLinkClock()
+    private var viewport: CGSize = .zero
+
+    func updateViewport(_ size: CGSize) {
+        viewport = size
+    }
 
     func start() {
         clock.onTick = { [weak self] dt in self?.age(dt) }
@@ -44,8 +55,8 @@ final class FireTrailSimulation: NSObject, ObservableObject {
         clock.stop()
     }
 
-    func add(_ point: CGPoint, in size: CGSize) {
-        let uv = FireUV.point(point, in: size)
+    func add(_ point: CGPoint) {
+        let uv = FireUV.point(point, in: viewport)
         points.append(FirePoint(x: uv.x, y: uv.y, age: 0, strength: 1))
         if points.count > 24 {
             points.removeFirst(points.count - 24)

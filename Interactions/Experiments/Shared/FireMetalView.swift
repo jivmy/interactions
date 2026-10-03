@@ -4,7 +4,7 @@ import QuartzCore
 import SwiftUI
 
 /// GPU uniforms. Layout must match FireShaders.metal.
-struct FireUniforms {
+struct FireUniforms: Sendable {
     var time: Float = 0
     var aspect: Float = 1
     var width: Float = 1
@@ -23,7 +23,7 @@ struct FireUniforms {
     var p1: Float = 0
 }
 
-struct FirePoint {
+struct FirePoint: Sendable {
     var x: Float = 0
     var y: Float = 0
     var age: Float = 1
@@ -98,23 +98,45 @@ struct FireMetalView: UIViewRepresentable {
         Coordinator(fragmentName: fragmentName)
     }
 
+    @MainActor
     func makeUIView(context: Context) -> MTKView {
         let view = MTKView()
-        context.coordinator.configure(view)
+        applyField(view)
+        applyCadence(view)
+        context.coordinator.attach(view)
         context.coordinator.uniforms = uniforms
         context.coordinator.points = padded(points)
         return view
     }
 
+    @MainActor
     func updateUIView(_ uiView: MTKView, context: Context) {
         context.coordinator.uniforms = uniforms
         context.coordinator.points = padded(points)
-        context.coordinator.applyCadence(uiView)
+        applyCadence(uiView)
     }
 
+    @MainActor
     static func dismantleUIView(_ uiView: MTKView, coordinator: Coordinator) {
         uiView.isPaused = true
         uiView.delegate = nil
+    }
+
+    @MainActor
+    private func applyField(_ view: MTKView) {
+        let field = Stage.fieldWhite
+        view.clearColor = MTLClearColor(red: field, green: field, blue: field, alpha: 1)
+        view.colorPixelFormat = .bgra8Unorm
+        view.framebufferOnly = true
+        view.isOpaque = true
+        view.enableSetNeedsDisplay = false
+        view.isPaused = false
+        view.backgroundColor = UIColor(white: field, alpha: 1)
+    }
+
+    @MainActor
+    private func applyCadence(_ view: MTKView) {
+        view.preferredFramesPerSecond = ProcessInfo.processInfo.isLowPowerModeEnabled ? 30 : 60
     }
 
     private func padded(_ points: [FirePoint]) -> [FirePoint] {
@@ -126,37 +148,51 @@ struct FireMetalView: UIViewRepresentable {
     }
 
     final class Coordinator: NSObject, MTKViewDelegate {
-        var uniforms = FireUniforms()
-        var points: [FirePoint] = Array(repeating: FirePoint(), count: 24)
         private let fragmentName: String
+        private let lock = NSLock()
+        private var latestUniforms = FireUniforms()
+        private var latestPoints: [FirePoint] = Array(repeating: FirePoint(), count: 24)
         private var queue: MTLCommandQueue?
         private var pipeline: MTLRenderPipelineState?
         private let start = CACurrentMediaTime()
+
+        var uniforms: FireUniforms {
+            get {
+                lock.lock()
+                defer { lock.unlock() }
+                return latestUniforms
+            }
+            set {
+                lock.lock()
+                latestUniforms = newValue
+                lock.unlock()
+            }
+        }
+
+        var points: [FirePoint] {
+            get {
+                lock.lock()
+                defer { lock.unlock() }
+                return latestPoints
+            }
+            set {
+                lock.lock()
+                latestPoints = newValue
+                lock.unlock()
+            }
+        }
 
         init(fragmentName: String) {
             self.fragmentName = fragmentName
         }
 
-        func configure(_ view: MTKView) {
-            let field = Stage.fieldWhite
-            view.clearColor = MTLClearColor(red: field, green: field, blue: field, alpha: 1)
-            view.colorPixelFormat = .bgra8Unorm
-            view.framebufferOnly = true
-            view.isOpaque = true
-            view.enableSetNeedsDisplay = false
-            view.isPaused = false
-            view.backgroundColor = UIColor(white: field, alpha: 1)
-            applyCadence(view)
-
+        @MainActor
+        func attach(_ view: MTKView) {
             guard let device = MTLCreateSystemDefaultDevice() else { return }
             view.device = device
             view.delegate = self
             queue = device.makeCommandQueue()
             buildPipeline(device: device, pixelFormat: view.colorPixelFormat)
-        }
-
-        func applyCadence(_ view: MTKView) {
-            view.preferredFramesPerSecond = ProcessInfo.processInfo.isLowPowerModeEnabled ? 30 : 60
         }
 
         private func buildPipeline(device: MTLDevice, pixelFormat: MTLPixelFormat) {
@@ -179,6 +215,7 @@ struct FireMetalView: UIViewRepresentable {
                   let pass = view.currentRenderPassDescriptor else { return }
 
             var uniforms = self.uniforms
+            var points = self.points
             let width = max(view.drawableSize.width, 1)
             let height = max(view.drawableSize.height, 1)
             uniforms.time = Float(CACurrentMediaTime() - start)
