@@ -8,7 +8,7 @@ One idea at a time. The app opens into the active prototype — full screen, alm
 - Minimum iOS: 17.0
 - iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
 
-Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. The fire room is the original layered teardrop candle. One slider is firepower.
+Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. The fire room is one living flame. One slider is firepower.
 
 Reduce Motion is honored on chrome (the page spring), not on physics.
 
@@ -21,13 +21,13 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 
 ## Fire
 
-One screen, one flame: the original `FireballKind.candle` teardrop, drawn in Metal. Dark orange outer, yellow body, white-hot core, a blueish wick. It leans and flickers. Bright, no black soot. The slider is firepower: it changes how that candle burns (reach, lean, halo, core heat), not a frozen picture.
+One screen, one flame. A Metal density plume — bright hot base, yellow-white body, orange outer, soft irregular edges, continuous rise and flicker. Not a stacked teardrop icon. Bright, no black soot. The slider is firepower: volume, turbulence, brightness, and reach of that flame.
 
 ## Breath
 
 One shader hearth. The system microphone dialog appears when the room opens. A blow builds heat; silence spends it at a constant rate so a fully lit fire takes **60 seconds** to return to cold coals. No slider.
 
-Paging is unused while only the candle is on. Reduce Motion does not freeze the fire.
+Paging is unused while only the flame is on. Reduce Motion does not freeze the fire.
 
 ## Requirements
 

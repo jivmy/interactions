@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// One Metal candle: the original layered teardrop.
+/// One Metal flame. The slider is firepower.
 struct FireballsView: View {
     @StateObject private var simulation = FireballsSimulation()
 
@@ -13,7 +13,7 @@ struct FireballsView: View {
             FireMetalView(fragmentName: "fireballsFragment", uniforms: uniforms)
                 .accessibilityLabel("Fire")
                 .accessibilityValue(firepowerLabel(firepower))
-                .accessibilityHint("Candle")
+                .accessibilityHint("Flame")
 
             VStack {
                 Spacer()

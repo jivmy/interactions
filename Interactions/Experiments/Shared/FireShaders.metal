@@ -249,32 +249,54 @@ static float4 canvasCandle(float2 p, float time, float power, float extraLean) {
     return float4(paintLayered(kField, q, h, w, power), 1.0);
 }
 
-/// Original FireballKind.candle (f070bc5 / 7c44861). One layered teardrop.
-/// Height flicker + lean from that draw; no domain warp, no soot coal.
-static float4 originalCandle(float2 p, float time, float power) {
+/// One living plume. Rising noise carves a single envelope — not stacked blobs.
+static float4 livingFlame(float2 p, float time, float power) {
     power = saturate(power);
-    float roar = power * power;
-    float flicker = 0.80 + 0.20 * sin(time * 11.2) * sin(time * 6.7 + 0.4);
-    float lean = sin(time * 2.35) * mix(0.02, 0.16, power);
-    float h = mix(0.16, 0.46, power) * flicker;
-    float w = mix(0.08, 0.24, power);
-    float2 canvas = toCanvas(p, lean);
-    float2 q = leanP(p, lean);
+    float h = 0.48 * mix(0.93, 1.12, power);
+    float w = 0.072 * mix(0.95, 1.22, power);
+    float rise = mix(0.70, 1.45, power);
+    float turb = mix(0.07, 0.20, power);
+    float flick = 0.90 + 0.10 * sin(time * 1.88) * sin(time * 1.18 + 0.4);
+    float lean = mix(0.04, 0.11, power) * sin(time * 0.76);
+
+    float2 q = p;
+    q.x -= lean * q.y;
+
+    float ty = saturate(q.y / max(h, 1e-4));
+    float2 adv = float2(q.x * 4.6, q.y * 1.65 - time * rise);
+    float n0 = fbm(adv);
+    q.x += (n0 - 0.5) * turb * (0.40 + 1.70 * ty);
+    q.y += (fbm(adv * 1.9 + float2(2.2, -time * 0.55)) - 0.5) * turb * 0.22 * ty;
+
+    float t = saturate(q.y / max(h, 1e-4));
+    float width = w * mix(1.08, 0.16, pow(t, 0.65));
+    float nx = q.x / max(width, 1e-4);
+    float env = exp(-nx * nx * 2.1);
+    env *= smoothstep(-0.018, 0.045, q.y);
+    env *= 1.0 - smoothstep(0.72, 1.10, t);
+
+    float nA = fbm(float2(q.x * 5.4, q.y * 2.3 - time * rise));
+    float nB = fbm3(float2(q.x * 11.0, q.y * 3.8 - time * rise * 1.35));
+    float carve = mix(0.30, 0.54, power) * mix(0.38, 1.0, t);
+    float raw = env - nA * carve - nB * carve * 0.40;
+    float dens = saturate(raw * mix(1.7, 2.5, power) * flick);
+
+    float fil = fbm(float2(q.x * 12.0, q.y * 2.4 - time * rise * 1.6));
+    float temp = saturate((1.0 - abs(nx) * 0.48) * (1.12 - t * 0.88) * mix(0.74, 1.06, power));
+    temp *= 0.55 + 0.50 * fil;
+    float core = exp(-(q.x * q.x) / max(w * w * 0.38, 1e-5) - pow(q.y - h * 0.10, 2.0) / max(h * h * 0.035, 1e-5));
+    temp = max(temp, core * mix(0.50, 1.0, power));
+    temp *= dens;
+
+    float halo = exp(-(p.x * p.x) / max(w * w * 5.5, 1e-5) - (p.y * p.y) / max(h * h * 0.22, 1e-5));
+    halo *= mix(0.05, 0.16, power);
+
+    float3 fire = mix(float3(1.00, 0.36, 0.03), float3(1.00, 0.78, 0.12), smoothstep(0.12, 0.52, temp));
+    fire = mix(fire, float3(1.00, 0.97, 0.78), smoothstep(0.52, 0.95, temp));
 
     float3 col = kField;
-    float stainR = mix(0.07, 0.20, power);
-    float stain = exp(-length(float2(q.x / stainR, q.y / (stainR * 1.15)))) * mix(0.05, 0.22, power);
-    col = mix(col, float3(1.00, 0.45, 0.08), saturate(stain));
-
-    col = mix(col, float3(0.95, 0.22, 0.04), canvasFlameMask(canvas, w * 1.55, h * 1.12) * mix(0.16, 0.42, power));
-    col = mix(col, float3(1.00, 0.42, 0.06), canvasFlameMask(canvas, w * 1.12, h) * 0.92);
-    col = mix(col, float3(1.00, 0.78, 0.16), canvasFlameMask(canvas, w * 0.70, h * 0.78) * 0.95);
-    col = mix(col, float3(1.00, 0.97, 0.82), canvasFlameMask(canvas, w * 0.34, h * 0.42) * 0.96);
-
-    float coreH = mix(0.012, 0.042 + roar * 0.030, power);
-    float2 ep = float2(q.x / max(w * 0.10, 1e-4), (q.y - coreH * 0.05) / max(coreH * 0.50, 1e-4));
-    float core = exp(-dot(ep, ep));
-    col = mix(col, float3(0.65, 0.82, 1.00), saturate(core) * mix(0.15, 0.75, power));
+    col = mix(col, float3(1.00, 0.44, 0.06), saturate(halo));
+    col = mix(col, fire, dens);
     return float4(col, 1.0);
 }
 
@@ -409,8 +431,8 @@ static float4 brightFuel(float2 p, float time, int kind, float power) {
 }
 
 fragment float4 fireballsFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    float2 p = float2((in.uv.x - 0.5) * u.aspect, in.uv.y - 0.22);
-    return originalCandle(p, u.time, saturate(u.intensity));
+    float2 p = float2((in.uv.x - 0.5) * u.aspect, in.uv.y - 0.20);
+    return livingFlame(p, u.time, saturate(u.intensity));
 }
 
 fragment float4 breathFireFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
