@@ -4,5 +4,7 @@
 <dict>
 	<key>NSMotionUsageDescription</key>
 	<string>Motion swings the hanging chain.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Blowing into the microphone keeps the fire lit.</string>
 </dict>
 </plist>

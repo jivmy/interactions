@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// Ordered rooms the chevrons can page through.
-/// Only hanging chain is real in this reset; keep the list so arrows have somewhere to go later.
+/// Ordered rooms the chevrons page through.
 @MainActor
 struct PrototypeDescriptor: Identifiable {
     let id: String
@@ -14,8 +13,36 @@ enum PrototypeCatalog {
         AnyView(HangingChainView())
     }
 
+    static let fireCandle = PrototypeDescriptor(id: "fire-candle") {
+        AnyView(FireballsView())
+    }
+
+    static let breathFire = PrototypeDescriptor(id: "breath-fire") {
+        AnyView(BreathFireView())
+    }
+
+    static let fireLean = PrototypeDescriptor(id: "fire-lean") {
+        AnyView(FireLeanView())
+    }
+
+    static let fireTrail = PrototypeDescriptor(id: "fire-trail") {
+        AnyView(FireTrailView())
+    }
+
+    static let fireWhirl = PrototypeDescriptor(id: "fire-whirl") {
+        AnyView(FireWhirlView())
+    }
+
+    static let fireSheet = PrototypeDescriptor(id: "fire-sheet") {
+        AnyView(FireSheetView())
+    }
+
+    static let fireStrike = PrototypeDescriptor(id: "fire-strike") {
+        AnyView(FireStrikeView())
+    }
+
     static let all: [PrototypeDescriptor] = [
-        hangingChain
+        fireCandle
     ]
 
     static func index(of id: String) -> Int? {

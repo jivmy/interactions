@@ -1,0 +1,37 @@
+import SwiftUI
+
+/// One Metal flame. The slider is firepower.
+struct FireballsView: View {
+    @StateObject private var simulation = FireballsSimulation()
+
+    var body: some View {
+        let firepower = simulation.firepower
+        var uniforms = FireUniforms()
+        uniforms.intensity = Float(firepower)
+
+        return ZStack {
+            FireMetalView(fragmentName: "fireballsFragment", uniforms: uniforms)
+                .accessibilityLabel("Fire")
+                .accessibilityValue(firepowerLabel(firepower))
+                .accessibilityHint("Flame")
+
+            VStack {
+                Spacer()
+                Slider(value: $simulation.firepower, in: 0...1, step: 0.25)
+                    .tint(Color(red: 0.20, green: 0.14, blue: 0.10).opacity(0.55))
+                    .padding(.horizontal, 62)
+                    .padding(.bottom, 54)
+                    .accessibilityLabel("Firepower")
+            }
+        }
+        .ignoresSafeArea()
+    }
+
+    private func firepowerLabel(_ value: CGFloat) -> String {
+        "State \(Int((value * 4.0).rounded()) + 1) of 5"
+    }
+}
+
+#Preview {
+    FireballsView()
+}

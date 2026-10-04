@@ -8,7 +8,7 @@ One idea at a time. The app opens into the active prototype — full screen, alm
 - Minimum iOS: 17.0
 - iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
 
-Right now the only real room is **Hanging chain**: a metal Verlet rope that hangs from a pin and answers CoreMotion gravity. On Simulator, drag a link. Switching, when there is more than one room, is only quiet left/right chevrons.
+Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. The fire room is one living flame. One slider is firepower.
 
 Reduce Motion is honored on chrome (the page spring), not on physics.
 
@@ -18,6 +18,16 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 
 - **Device:** tilt or flick the phone
 - **Simulator:** drag a link — there is no motion hardware
+
+## Fire
+
+One screen, one flame. A Metal candle like a photo: white-yellow core, orange rim, soft glow. Continuous rise and flicker. Not a stacked teardrop icon. No black soot. The slider snaps among five burn states — how it burns changes, not the object.
+
+## Breath
+
+One shader hearth. The system microphone dialog appears when the room opens. A blow builds heat; silence spends it at a constant rate so a fully lit fire takes **60 seconds** to return to cold coals. No slider.
+
+Paging is unused while only the flame is on. Reduce Motion does not freeze the fire.
 
 ## Requirements
 
@@ -41,7 +51,7 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 1. In the Xcode toolbar, click the destination control (to the right of the Run ▶ button).
 2. Under **iOS Simulator**, pick an iPhone (any iOS 17+ simulator is fine).
 3. Press **Run** (▶) or **Command-R**.
-4. The chain hangs under default gravity. Drag a link. Chevrons stay quiet until another room exists.
+4. The chain hangs under default gravity. Drag a link. Chevrons page to the fire room.
 
 If no simulators are listed: **Xcode → Settings → Platforms** (or **Components**) and download an iOS simulator runtime.
 
@@ -123,7 +133,7 @@ Full walkthrough (create the ASC app, API key, secrets, run the workflow, instal
 
 ## Switching
 
-Left / right chevrons only — icon, 44pt hit, low contrast, no pills. Next arrives from the right on one spring. No catalog, search, favorites, track chips, or copy. The ordered list lives in `PrototypeCatalog`; arrows stay disabled while there is only one room.
+Left / right chevrons only — icon, 44pt hit, low contrast, no pills. Next arrives from the right on one spring. No catalog, search, favorites, track chips, or copy. The ordered list lives in `PrototypeCatalog`.
 
 ## Project layout
 
@@ -132,11 +142,14 @@ Interactions.xcodeproj
 Interactions/
   InteractionsApp.swift
   ContentView.swift              Full-screen host + chevrons
-  Info.plist                     Motion usage
+  Info.plist                     Motion + microphone usage
   Experiments/
-    PrototypeCatalog.swift       Ordered rooms (chain only)
+    PrototypeCatalog.swift       Ordered rooms (chain + fire shaders)
     HangingChain/
-    Shared/                      Motion, Verlet, display cadence
+    Fireballs/
+    BreathFire/
+    Flame/                       Lean, trail, whirl, sheet, strike
+    Shared/                      Metal view, shaders, motion, microphone
   Assets.xcassets
 fastlane/
 .github/workflows/testflight.yml
