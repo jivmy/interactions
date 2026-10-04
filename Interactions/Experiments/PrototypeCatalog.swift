@@ -13,12 +13,8 @@ enum PrototypeCatalog {
         AnyView(HangingChainView())
     }
 
-    static let fireGridA = PrototypeDescriptor(id: "fire-grid-a") {
-        AnyView(FireballsView(style: 0, styleName: "Grid A"))
-    }
-
-    static let fireGridB = PrototypeDescriptor(id: "fire-grid-b") {
-        AnyView(FireballsView(style: 1, styleName: "Grid B"))
+    static let fireCandle = PrototypeDescriptor(id: "fire-candle") {
+        AnyView(FireballsView())
     }
 
     static let breathFire = PrototypeDescriptor(id: "breath-fire") {
@@ -46,8 +42,7 @@ enum PrototypeCatalog {
     }
 
     static let all: [PrototypeDescriptor] = [
-        fireGridA,
-        fireGridB
+        fireCandle
     ]
 
     static func index(of id: String) -> Int? {

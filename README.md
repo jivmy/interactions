@@ -8,7 +8,7 @@ One idea at a time. The app opens into the active prototype — full screen, alm
 - Minimum iOS: 17.0
 - iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
 
-Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. Two grids of six, one flame in each cell. Chevrons or a swipe move between those two grids only. One slider is firepower.
+Every fire room is a Metal vertex/fragment shader on a fullscreen triangle — no Canvas, SpriteKit, or Core Animation fallback. The fire room is the original layered teardrop candle. One slider is firepower.
 
 Reduce Motion is honored on chrome (the page spring), not on physics.
 
@@ -21,16 +21,13 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 
 ## Fire
 
-Two screens. Each is a 2×3 grid of **one** flame per cell — no stacked tongues. Each cell is its own Metal fragment shader (silhouette, structure, and motion), not one flame scaled six ways. Bright orange / yellow / white-hot, no black soot. Each cell keeps moving: flicker, rise, and shape change. The slider is firepower for the grid on screen: it changes how that shader burns (volume, turbulence, brightness, reach), not a uniform scale. Swipe or the chevrons move between the two grids only.
-
-- **Grid A** — candle layers, S-curve spine, parallel column, votive bowl, knife blade, convection orb
-- **Grid B** — warped volume, curl advection, polar cardioid, kiln strata, wick flare, mushroom bloom
+One screen, one flame: the original `FireballKind.candle` teardrop, drawn in Metal. Dark orange outer, yellow body, white-hot core, a blueish wick. It leans and flickers. Bright, no black soot. The slider is firepower: it changes how that candle burns (reach, lean, halo, core heat), not a frozen picture.
 
 ## Breath
 
 One shader hearth. The system microphone dialog appears when the room opens. A blow builds heat; silence spends it at a constant rate so a fully lit fire takes **60 seconds** to return to cold coals. No slider.
 
-Paging is only the two fire grids. Reduce Motion does not freeze the fire.
+Paging is unused while only the candle is on. Reduce Motion does not freeze the fire.
 
 ## Requirements
 

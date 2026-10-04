@@ -139,8 +139,8 @@ static float rayHits(float2 p, float2 a, float2 c, float2 b) {
 
 static float bezDist(float2 p, float2 a, float2 c, float2 b) {
     float d = 8.0;
-    for (int i = 0; i <= 10; i++) {
-        float t = float(i) / 10.0;
+    for (int i = 0; i <= 16; i++) {
+        float t = float(i) / 16.0;
         d = min(d, length(p - qbez(a, c, b, t)));
     }
     return d;
@@ -169,7 +169,7 @@ static float canvasFlameMask(float2 canvasP, float w, float h) {
     ud = min(ud, bezDist(canvasP, bottom, cBR, right));
     ud = min(ud, bezDist(canvasP, right, cRT, tip));
     float sd = mix(ud, -ud, inside);
-    return saturate(0.5 - sd / 0.0065);
+    return saturate(0.5 - sd / 0.010);
 }
 
 static float2 toCanvas(float2 p, float lean) {
@@ -249,244 +249,33 @@ static float4 canvasCandle(float2 p, float time, float power, float extraLean) {
     return float4(paintLayered(kField, q, h, w, power), 1.0);
 }
 
-/// Bright composite. No soot, no charcoal rim.
-static float4 emitFire(float cover, float heat) {
-    float3 col = kField;
-    col = mix(col, float3(1.00, 0.48, 0.08), saturate(cover) * 0.30);
-    col = mix(col, flameColor(saturate(heat)), saturate(cover));
-    return float4(col, 1.0);
-}
-
-static float2 cellP(float2 uv, float aspect) {
-    return float2((uv.x - 0.5) * aspect, uv.y - 0.18);
-}
-
-/// Grid A0 — concentric Canvas teardrop layers. Power: hotter core, more tip warp.
-static float4 shadeCandle(float2 p, float time, float power) {
+/// Original FireballKind.candle (f070bc5 / 7c44861). One layered teardrop.
+/// Height flicker + lean from that draw; no domain warp, no soot coal.
+static float4 originalCandle(float2 p, float time, float power) {
     power = saturate(power);
-    float flick = liveFlicker(time, 0.15);
-    float lean = liveLean(time, 0.0, power);
+    float roar = power * power;
+    float flicker = 0.80 + 0.20 * sin(time * 11.2) * sin(time * 6.7 + 0.4);
+    float lean = sin(time * 2.35) * mix(0.02, 0.16, power);
+    float h = mix(0.16, 0.46, power) * flicker;
+    float w = mix(0.08, 0.24, power);
+    float2 canvas = toCanvas(p, lean);
     float2 q = leanP(p, lean);
-    q = liveRise(q, time, 0.0, mix(0.045, 0.13, power));
-    float h = 0.34 * mix(0.94, 1.10, power) * flick;
-    float w = 0.145 * (0.97 + 0.03 * sin(time * 1.48));
-    return float4(paintLayered(kField, q, h, w, power), 1.0);
-}
 
-/// Grid A1 — one tongue along a traveling S-curve. Power: more bend, spine heat, width noise.
-static float4 shadeSpine(float2 p, float time, float power) {
-    power = saturate(power);
-    float h = 0.40;
-    float t = p.y / h;
-    float amp = mix(0.028, 0.078, power);
-    float cl = amp * sin(p.y * 5.4 + time * 1.55);
-    cl += amp * 0.38 * sin(p.y * 9.2 + time * 0.92 + 1.1);
-    float2 q = float2(p.x - cl, p.y);
-    q = liveRise(q, time, 2.2, mix(0.03, 0.10, power));
-    float halfW = mix(0.048, 0.072, power) * (1.02 - t * t);
-    halfW *= 0.15 + 0.85 * smoothstep(1.06, 0.70, t);
-    halfW *= smoothstep(-0.035, 0.055, q.y);
-    float d = abs(q.x) / max(halfW, 1e-4);
-    float cover = saturate(smoothstep(1.08, 0.42, d) * smoothstep(-0.04, 0.05, q.y) * smoothstep(1.08, 0.74, t));
-    float n = fbm3(float2(q.x * 7.5, q.y * 4.6 - time * mix(0.55, 1.35, power)));
-    cover *= 0.80 + 0.20 * n;
-    float heat = saturate((1.0 - d * 0.62) * (1.0 - saturate(t) * 0.28));
-    heat *= mix(0.52, 1.0, power);
-    heat *= 0.72 + 0.28 * n;
-    return emitFire(cover, heat);
-}
+    float3 col = kField;
+    float stainR = mix(0.07, 0.20, power);
+    float stain = exp(-length(float2(q.x / stainR, q.y / (stainR * 1.15)))) * mix(0.05, 0.22, power);
+    col = mix(col, float3(1.00, 0.45, 0.08), saturate(stain));
 
-/// Grid A2 — parallel-sided column, taper only at the tip. Power: boil, mouth flare, brightness.
-static float4 shadeColumn(float2 p, float time, float power) {
-    power = saturate(power);
-    float h = 0.46;
-    float t = p.y / h;
-    float2 q = leanP(p, liveLean(time, 1.4, power) * 0.45);
-    q.x += mix(0.004, 0.016, power) * sin(time * 1.7 + q.y * 6.0);
-    float halfW = 0.052;
-    halfW += mix(0.0, 0.028, power) * smoothstep(0.52, 0.92, t);
-    halfW *= smoothstep(1.07, 0.80, t);
-    halfW *= smoothstep(-0.03, 0.05, q.y);
-    float d = abs(q.x) / max(halfW, 1e-4);
-    float cover = saturate(smoothstep(1.04, 0.48, d) * smoothstep(-0.03, 0.05, q.y) * smoothstep(1.08, 0.78, t));
-    float bands = fbm3(float2(q.x * 16.0, q.y * 2.8 - time * mix(0.70, 1.90, power)));
-    float boil = mix(0.06, 0.32, power);
-    cover *= 1.0 - boil * (1.0 - bands);
-    float heat = saturate((1.0 - d * 0.50) * (0.62 + 0.38 * bands));
-    heat *= mix(0.48, 1.0, power);
-    return emitFire(cover, heat);
-}
+    col = mix(col, float3(0.95, 0.22, 0.04), canvasFlameMask(canvas, w * 1.55, h * 1.12) * mix(0.16, 0.42, power));
+    col = mix(col, float3(1.00, 0.42, 0.06), canvasFlameMask(canvas, w * 1.12, h) * 0.92);
+    col = mix(col, float3(1.00, 0.78, 0.16), canvasFlameMask(canvas, w * 0.70, h * 0.78) * 0.95);
+    col = mix(col, float3(1.00, 0.97, 0.82), canvasFlameMask(canvas, w * 0.34, h * 0.42) * 0.96);
 
-/// Grid A3 — votive bowl: wide pool, short lift. Power: white-hot pool, more lift, shimmer.
-static float4 shadeBowl(float2 p, float time, float power) {
-    power = saturate(power);
-    float2 q = p;
-    q.x += mix(0.004, 0.014, power) * sin(time * 1.15 + 0.6);
-    q.y += 0.012 * sin(time * 1.85) * mix(0.4, 1.0, power);
-    float2 ep = float2(q.x / 0.18, (q.y - 0.025) / mix(0.075, 0.11, power));
-    float pool = exp(-dot(ep, ep) * mix(1.15, 0.82, power));
-    float shimmer = fbm3(float2(q.x * 9.0 + time * 0.4, q.y * 6.0 - time * mix(0.4, 1.1, power)));
-    pool *= 0.78 + 0.22 * shimmer;
-    float tip = flameCover(q - float2(0.0, 0.04), mix(0.12, 0.18, power), mix(0.055, 0.08, power));
-    tip *= 0.70 + 0.30 * fbm3(float2(q.x * 6.0, q.y * 5.0 - time * 0.9));
-    float cover = max(pool * 0.96, tip * 0.90);
-    float heat = pool * mix(0.55, 1.02, power) + tip * mix(0.35, 0.70, power);
-    return emitFire(cover, saturate(heat));
-}
-
-/// Grid A4 — thin blade, one hotter edge. Power: edge temperature, tip flutter, brightness.
-static float4 shadeBlade(float2 p, float time, float power) {
-    power = saturate(power);
-    float h = 0.44;
-    float t = saturate(p.y / h);
-    float flutter = mix(0.006, 0.024, power) * sin(time * 2.15 + p.y * 9.5);
-    float2 q = float2(p.x - flutter * t, p.y);
-    float left = 0.016;
-    float right = mix(0.028, 0.046, power);
-    float halfW = (q.x < 0.0) ? left : right;
-    halfW *= (1.04 - t * t);
-    halfW *= 0.12 + 0.88 * smoothstep(1.06, 0.72, t);
-    halfW *= smoothstep(-0.03, 0.05, q.y);
-    float d = abs(q.x) / max(halfW, 1e-4);
-    float cover = saturate(smoothstep(1.06, 0.38, d) * smoothstep(-0.03, 0.05, q.y) * smoothstep(1.08, 0.74, t));
-    float n = fbm3(float2(q.x * 12.0, q.y * 5.5 - time * mix(0.6, 1.5, power)));
-    cover *= 0.82 + 0.18 * n;
-    float edge = saturate(q.x / max(right, 1e-4));
-    float heat = saturate((1.0 - d * 0.55) * mix(0.55, 1.0, edge));
-    heat *= mix(0.50, 1.0, power);
-    heat *= 0.74 + 0.26 * n;
-    return emitFire(cover, heat);
-}
-
-/// Grid A5 — round orb on a short neck. Power: corona volume, convection speed, brightness.
-static float4 shadeOrb(float2 p, float time, float power) {
-    power = saturate(power);
-    float2 c = float2(0.0, 0.145);
-    float2 q = p - c;
-    float ang = atan2(q.x, q.y);
-    float rad = length(q / float2(0.115, 0.125));
-    float swirl = time * mix(0.45, 1.25, power);
-    float n = fbm3(float2(rad * 3.6, ang * 1.4 + swirl));
-    float corona = mix(1.02, 1.22, power);
-    float cover = smoothstep(corona, 0.48, rad);
-    cover *= 0.76 + 0.24 * n;
-    float neck = flameCover(p, 0.11, 0.038);
-    cover = max(cover, neck * 0.82);
-    float heat = saturate((1.0 - rad * 0.72) * (0.55 + 0.45 * n));
-    heat *= mix(0.50, 1.0, power);
-    return emitFire(saturate(cover), heat);
-}
-
-/// Grid B0 — domain-warped FBM density. Power: warp, fill, temperature.
-static float4 shadeVolume(float2 p, float time, float power) {
-    power = saturate(power);
-    float warp = mix(0.035, 0.13, power);
-    float2 q = p;
-    q.x += (fbm3(float2(p.x * 3.1, p.y * 2.2 - time * 0.82)) - 0.5) * warp;
-    q.y += (fbm3(float2(p.x * 2.4 + 3.0, p.y * 3.0 - time * 0.48)) - 0.5) * warp * 0.35;
-    float env = flameCover(q, 0.40, 0.155);
-    float dens = fbm(float2(q.x * 5.2, q.y * 4.1 - time * mix(0.55, 1.45, power)));
-    dens = saturate(dens * mix(0.65, 1.28, power)) * env;
-    float t = saturate(q.y / 0.40);
-    float heat = saturate(dens * (1.05 - t * 0.32) * mix(0.55, 1.0, power));
-    return emitFire(dens, heat);
-}
-
-/// Grid B1 — curl-noise advection of one plume. Power: curl strength, twist, brightness.
-static float4 shadeCurl(float2 p, float time, float power) {
-    power = saturate(power);
-    float e = 0.018;
-    float ty = time * mix(0.50, 1.20, power);
-    float nL = fbm3(float2((p.x - e) * 4.0, p.y * 3.0 - ty));
-    float nR = fbm3(float2((p.x + e) * 4.0, p.y * 3.0 - ty));
-    float nD = fbm3(float2(p.x * 4.0, (p.y - e) * 3.0 - ty));
-    float nU = fbm3(float2(p.x * 4.0, (p.y + e) * 3.0 - ty));
-    float2 grad = float2(nR - nL, nU - nD) / (2.0 * e);
-    float2 curl = float2(-grad.y, grad.x);
-    float2 q = p + curl * mix(0.025, 0.095, power);
-    float env = flameCover(q, 0.42, 0.12);
-    float dens = env * (0.70 + 0.30 * fbm3(float2(q.x * 6.0, q.y * 4.4 - ty)));
-    dens *= mix(0.55, 1.0, power);
-    float heat = saturate((1.0 - saturate(q.y / 0.42) * 0.30) * dens * mix(0.70, 1.15, power));
-    return emitFire(dens, heat);
-}
-
-/// Grid B2 — polar cardioid with angular heat drift. Power: scallop, radial flicker, heat.
-static float4 shadePolar(float2 p, float time, float power) {
-    power = saturate(power);
-    float2 o = float2(p.x, p.y + 0.01);
-    float r = length(o);
-    float th = atan2(o.x, o.y);
-    float card = pow(max(0.0, 0.5 * (1.0 + cos(th))), 1.28);
-    float scallop = 1.0 + mix(0.03, 0.14, power) * sin(th * 3.0 + time * 1.05);
-    float rMax = 0.40 * card * scallop;
-    float cover = saturate(smoothstep(rMax * 1.06, rMax * 0.46, r) * smoothstep(1.85, 1.15, abs(th)));
-    float n = fbm3(float2(th * 1.8 + time * mix(0.35, 0.95, power), r * 5.0 - time * 0.7));
-    cover *= 0.78 + 0.22 * n;
-    float heat = saturate((1.0 - r / max(rMax, 1e-4) * 0.55) * mix(0.52, 1.0, power));
-    heat *= 0.70 + 0.30 * n;
-    return emitFire(cover, heat);
-}
-
-/// Grid B3 — wide kiln mouth, rising horizontal strata. Power: band contrast, lift, fill.
-static float4 shadeForge(float2 p, float time, float power) {
-    power = saturate(power);
-    float2 q = p;
-    q.x += (fbm3(float2(p.x * 2.2, p.y * 3.4 - time * 0.6)) - 0.5) * mix(0.02, 0.07, power);
-    float wide = 0.24;
-    float tall = mix(0.20, 0.28, power);
-    float env = smoothstep(wide, wide * 0.35, abs(q.x));
-    env *= smoothstep(-0.03, 0.045, q.y);
-    env *= smoothstep(tall, tall * 0.28, q.y);
-    float lift = time * mix(0.16, 0.42, power);
-    float bands = 0.52 + 0.48 * sin((q.y - lift) * mix(16.0, 26.0, power));
-    float n = fbm3(float2(q.x * 5.5, q.y * 7.5 - time * mix(0.45, 1.15, power)));
-    float dens = env * bands * (0.68 + 0.32 * n) * mix(0.50, 1.0, power);
-    float heat = saturate(dens * (1.05 - saturate(q.y / tall) * 0.25) * mix(0.70, 1.15, power));
-    return emitFire(dens, heat);
-}
-
-/// Grid B4 — thin wick stem, flare only near the top. Power: flare volume, tip dance, heat.
-static float4 shadeWick(float2 p, float time, float power) {
-    power = saturate(power);
-    float h = 0.44;
-    float t = saturate(p.y / h);
-    float dance = mix(0.005, 0.020, power) * sin(time * 2.05 + 0.8) * smoothstep(0.45, 0.85, t);
-    float2 q = float2(p.x - dance, p.y);
-    float stem = 0.016;
-    float flare = mix(0.028, 0.095, power) * smoothstep(0.40, 0.76, t);
-    float halfW = (stem + flare) * (0.12 + 0.88 * smoothstep(1.06, 0.74, t));
-    halfW *= smoothstep(-0.03, 0.05, q.y);
-    float d = abs(q.x) / max(halfW, 1e-4);
-    float cover = saturate(smoothstep(1.06, 0.40, d) * smoothstep(-0.03, 0.05, q.y) * smoothstep(1.08, 0.75, t));
-    float n = fbm3(float2(q.x * 10.0, q.y * 6.0 - time * mix(0.55, 1.40, power)));
-    cover *= 0.80 + 0.20 * n;
-    float heat = saturate((1.0 - d * 0.58) * mix(0.45, 0.72, t));
-    heat *= mix(0.50, 1.0, power);
-    heat *= 0.72 + 0.28 * n;
-    return emitFire(cover, heat);
-}
-
-/// Grid B5 — mushroom bloom: narrow then a sudden crown. Power: crown open, head boil, heat.
-static float4 shadeBloom(float2 p, float time, float power) {
-    power = saturate(power);
-    float h = 0.42;
-    float t = saturate(p.y / h);
-    float2 q = leanP(p, liveLean(time, 3.1, power) * 0.55);
-    q = liveRise(q, time, 5.0, mix(0.04, 0.12, power));
-    float stem = 0.038;
-    float open = mix(0.04, 0.14, power);
-    float crown = open * smoothstep(0.34, 0.58, t) * (1.0 - smoothstep(0.68, 1.02, t));
-    float halfW = (stem + crown) * smoothstep(-0.03, 0.05, q.y);
-    float d = abs(q.x) / max(halfW, 1e-4);
-    float cover = saturate(smoothstep(1.06, 0.44, d) * smoothstep(-0.03, 0.05, q.y) * smoothstep(1.08, 0.76, t));
-    float boil = fbm3(float2(q.x * 7.0, q.y * 5.2 - time * mix(0.50, 1.35, power)));
-    float head = smoothstep(0.36, 0.62, t);
-    cover *= 1.0 - mix(0.04, 0.22, power) * head * (1.0 - boil);
-    float heat = saturate((1.0 - d * 0.55) * mix(0.50, 1.0, 0.35 + 0.65 * head));
-    heat *= mix(0.50, 1.0, power);
-    heat *= 0.70 + 0.30 * boil;
-    return emitFire(cover, heat);
+    float coreH = mix(0.012, 0.042 + roar * 0.030, power);
+    float2 ep = float2(q.x / max(w * 0.10, 1e-4), (q.y - coreH * 0.05) / max(coreH * 0.50, 1e-4));
+    float core = exp(-dot(ep, ep));
+    col = mix(col, float3(0.65, 0.82, 1.00), saturate(core) * mix(0.15, 0.75, power));
+    return float4(col, 1.0);
 }
 
 static float teardrop(float2 p, float h, float w) {
@@ -619,52 +408,9 @@ static float4 brightFuel(float2 p, float time, int kind, float power) {
     return composeBright(dens, heat, sparks, haze);
 }
 
-fragment float4 fireShadeCandle(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadeCandle(cellP(in.uv, u.aspect), u.time, u.intensity);
-}
-
-fragment float4 fireShadeSpine(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadeSpine(cellP(in.uv, u.aspect), u.time, u.intensity);
-}
-
-fragment float4 fireShadeColumn(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadeColumn(cellP(in.uv, u.aspect), u.time, u.intensity);
-}
-
-fragment float4 fireShadeBowl(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadeBowl(cellP(in.uv, u.aspect), u.time, u.intensity);
-}
-
-fragment float4 fireShadeBlade(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadeBlade(cellP(in.uv, u.aspect), u.time, u.intensity);
-}
-
-fragment float4 fireShadeOrb(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadeOrb(cellP(in.uv, u.aspect), u.time, u.intensity);
-}
-
-fragment float4 fireShadeVolume(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadeVolume(cellP(in.uv, u.aspect), u.time, u.intensity);
-}
-
-fragment float4 fireShadeCurl(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadeCurl(cellP(in.uv, u.aspect), u.time, u.intensity);
-}
-
-fragment float4 fireShadePolar(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadePolar(cellP(in.uv, u.aspect), u.time, u.intensity);
-}
-
-fragment float4 fireShadeForge(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadeForge(cellP(in.uv, u.aspect), u.time, u.intensity);
-}
-
-fragment float4 fireShadeWick(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadeWick(cellP(in.uv, u.aspect), u.time, u.intensity);
-}
-
-fragment float4 fireShadeBloom(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
-    return shadeBloom(cellP(in.uv, u.aspect), u.time, u.intensity);
+fragment float4 fireballsFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
+    float2 p = float2((in.uv.x - 0.5) * u.aspect, in.uv.y - 0.22);
+    return originalCandle(p, u.time, saturate(u.intensity));
 }
 
 fragment float4 breathFireFragment(FireVertOut in [[stage_in]], constant FireUniforms &u [[buffer(0)]]) {
