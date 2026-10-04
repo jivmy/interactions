@@ -206,6 +206,27 @@ static float calmLean(float time, float phase, float power) {
     return 0.026 * sin(time * 0.46 + phase) * mix(0.35, 1.0, power);
 }
 
+/// Visible but smooth. Build 25's 1.5% / 1.5° motion read as a still.
+static float liveFlicker(float time, float phase) {
+    float a = sin(time * 2.05 + phase);
+    float b = sin(time * 1.28 + phase * 1.4);
+    return 0.935 + 0.065 * (0.58 * a + 0.42 * b);
+}
+
+static float liveLean(float time, float phase, float power) {
+    return mix(0.04, 0.08, power) * sin(time * 0.82 + phase);
+}
+
+static float2 liveRise(float2 p, float time, float phase, float amount) {
+    float tip = saturate(p.y * 1.85);
+    float2 adv = float2(p.x * 2.15 + phase, p.y * 1.5 - time * 0.78);
+    float n0 = fbm3(adv);
+    float n1 = fbm3(adv * 1.8 + float2(2.8, -time * 0.33));
+    p.x += (n0 - 0.5) * amount * (0.22 + 0.78 * tip);
+    p.y += (n1 - 0.5) * amount * 0.20 * tip;
+    return p;
+}
+
 /// Old Canvas candle layers: orange outer, yellow body, white-hot core.
 static float3 paintLayered(float3 col, float2 p, float h, float w, float power) {
     float stainR = mix(0.07, 0.18, power);
@@ -230,28 +251,30 @@ static float4 canvasCandle(float2 p, float time, float power, float extraLean) {
 
 static float4 layeredCell(float2 p, float time, float power, float hScale, float wScale, float phase) {
     power = saturate(power);
-    float flick = calmFlicker(time, phase);
-    float lean = calmLean(time, phase, power);
+    float flick = liveFlicker(time, phase);
+    float wFlick = 0.96 + 0.04 * sin(time * 1.52 + phase + 1.1);
+    float lean = liveLean(time, phase, power);
     float h = mix(0.12, 0.58, power) * flick * hScale;
-    float w = mix(0.06, 0.26, power) * wScale;
+    float w = mix(0.06, 0.26, power) * wFlick * wScale;
     float2 q = leanP(p, lean);
+    q = liveRise(q, time, phase, 0.10);
     return float4(paintLayered(kField, q, h, w, power), 1.0);
 }
 
-/// Soft volume flame — one body, slow shimmer, no sparks.
+/// Soft volume flame — one body, rising wash, no sparks.
 static float4 volumeCell(float2 p, float time, float power, float hScale, float wScale, float phase) {
     power = saturate(power);
-    float flick = calmFlicker(time, phase + 1.7);
-    float lean = calmLean(time, phase + 0.9, power);
+    float flick = liveFlicker(time, phase + 1.7);
+    float wFlick = 0.96 + 0.04 * sin(time * 1.48 + phase + 0.6);
+    float lean = liveLean(time, phase + 0.9, power);
     float2 q = leanP(p, lean);
-    float n = fbm3(float2(q.x * 2.0, q.y * 1.45 - time * 0.28 + phase));
-    q.x += (n - 0.5) * 0.028 * max(q.y, 0.0);
+    q = liveRise(q, time, phase + 0.4, 0.12);
     float h = mix(0.12, 0.58, power) * flick * hScale;
-    float w = mix(0.07, 0.27, power) * wScale;
+    float w = mix(0.07, 0.27, power) * wFlick * wScale;
     float cover = flameCover(q, h, w);
     float t = saturate(q.y / max(h, 1e-4));
     float heat = saturate((1.0 - t * 0.52) * (0.58 + 0.42 * cover));
-    heat *= 0.82 + 0.12 * fbm3(float2(q.x * 2.6, q.y * 1.8 - time * 0.32 + phase));
+    heat *= 0.78 + 0.22 * fbm3(float2(q.x * 2.4, q.y * 1.7 - time * 0.70 + phase));
     float3 col = kField;
     col = mix(col, float3(1.00, 0.50, 0.10), cover * 0.22);
     col = mix(col, flameColor(heat), cover);
