@@ -14,7 +14,7 @@ Reduce Motion is honored on chrome (the page spring), not on the flame. The flam
 
 ## Candle
 
-A photographed candle tongue — bright white-yellow core, thin orange rim, soft glow — about three times as tall as it is wide. It leans and reshapes slowly the whole time. Power only changes how strongly this same flame burns.
+A photographed candle tongue — bright white-yellow core, thin orange rim, soft glow — centered and shorter than the first upload. Power retunes the core, rim, and body separately; it does not scale one picture, and the ambient wash stays put.
 
 - **Device / Simulator:** drag the power slider
 - No microphone. No motion permission. No other rooms.
