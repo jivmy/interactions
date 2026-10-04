@@ -10,23 +10,19 @@
 		AA11BB22000000000000000F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA11BB22000000000000000C /* Assets.xcassets */; };
 		B2E0000000000000000003E9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000001 /* ContentView.swift */; };
 		B2E0000000000000000003EA /* PrototypeCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000006 /* PrototypeCatalog.swift */; };
-		B2E0000000000000000003F1 /* HangingChainSimulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000009 /* HangingChainSimulation.swift */; };
-		B2E0000000000000000003F2 /* HangingChainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000000A /* HangingChainView.swift */; };
-		B2E0000000000000000003FB /* DeviceMotionSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000013 /* DeviceMotionSource.swift */; };
-		B2E0000000000000000003FE /* DisplayCadence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000016 /* DisplayCadence.swift */; };
-		B2E000000000000000000405 /* VerletRope.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E00000000000000000001D /* VerletRope.swift */; };
+		B2E0000000000000000003B0 /* CandleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000030 /* CandleView.swift */; };
+		B2E0000000000000000003B1 /* CandleMetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000031 /* CandleMetalView.swift */; };
+		B2E0000000000000000003B2 /* CandleShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000032 /* CandleShaders.metal */; };
 		B2E00000000000000000040A /* InteractionsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E000000000000000000022 /* InteractionsApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		B2E000000000000000000001 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B2E000000000000000000006 /* PrototypeCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeCatalog.swift; sourceTree = "<group>"; };
-		B2E000000000000000000009 /* HangingChainSimulation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangingChainSimulation.swift; sourceTree = "<group>"; };
-		B2E00000000000000000000A /* HangingChainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HangingChainView.swift; sourceTree = "<group>"; };
-		B2E000000000000000000013 /* DeviceMotionSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceMotionSource.swift; sourceTree = "<group>"; };
-		B2E000000000000000000016 /* DisplayCadence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayCadence.swift; sourceTree = "<group>"; };
-		B2E00000000000000000001D /* VerletRope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerletRope.swift; sourceTree = "<group>"; };
 		B2E000000000000000000022 /* InteractionsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionsApp.swift; sourceTree = "<group>"; };
+		B2E000000000000000000030 /* CandleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CandleView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000031 /* CandleMetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CandleMetalView.swift; sourceTree = "<group>"; };
+		B2E000000000000000000032 /* CandleShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = CandleShaders.metal; sourceTree = "<group>"; };
 		AA11BB220000000000000003 /* Interactions.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Interactions.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA11BB22000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1E0000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -67,29 +63,19 @@
 			isa = PBXGroup;
 			children = (
 				B2E000000000000000000006 /* PrototypeCatalog.swift */,
-				B2E00000000000000000083B /* HangingChain */,
-				B2E000000000000000000843 /* Shared */,
+				B2E000000000000000000850 /* Candle */,
 			);
 			path = Experiments;
 			sourceTree = "<group>";
 		};
-		B2E00000000000000000083B /* HangingChain */ = {
+		B2E000000000000000000850 /* Candle */ = {
 			isa = PBXGroup;
 			children = (
-				B2E000000000000000000009 /* HangingChainSimulation.swift */,
-				B2E00000000000000000000A /* HangingChainView.swift */,
+				B2E000000000000000000030 /* CandleView.swift */,
+				B2E000000000000000000031 /* CandleMetalView.swift */,
+				B2E000000000000000000032 /* CandleShaders.metal */,
 			);
-			path = HangingChain;
-			sourceTree = "<group>";
-		};
-		B2E000000000000000000843 /* Shared */ = {
-			isa = PBXGroup;
-			children = (
-				B2E000000000000000000013 /* DeviceMotionSource.swift */,
-				B2E000000000000000000016 /* DisplayCadence.swift */,
-				B2E00000000000000000001D /* VerletRope.swift */,
-			);
-			path = Shared;
+			path = Candle;
 			sourceTree = "<group>";
 		};
 		AA11BB220000000000000009 /* Products */ = {
@@ -171,11 +157,9 @@
 			files = (
 				B2E0000000000000000003E9 /* ContentView.swift in Sources */,
 				B2E0000000000000000003EA /* PrototypeCatalog.swift in Sources */,
-				B2E0000000000000000003F1 /* HangingChainSimulation.swift in Sources */,
-				B2E0000000000000000003F2 /* HangingChainView.swift in Sources */,
-				B2E0000000000000000003FB /* DeviceMotionSource.swift in Sources */,
-				B2E0000000000000000003FE /* DisplayCadence.swift in Sources */,
-				B2E000000000000000000405 /* VerletRope.swift in Sources */,
+				B2E0000000000000000003B0 /* CandleView.swift in Sources */,
+				B2E0000000000000000003B1 /* CandleMetalView.swift in Sources */,
+				B2E0000000000000000003B2 /* CandleShaders.metal in Sources */,
 				B2E00000000000000000040A /* InteractionsApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -315,7 +299,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Interactions;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
-				INFOPLIST_KEY_NSMotionUsageDescription = "Motion swings the hanging chain.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -350,7 +333,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Interactions;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
-				INFOPLIST_KEY_NSMotionUsageDescription = "Motion swings the hanging chain.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
