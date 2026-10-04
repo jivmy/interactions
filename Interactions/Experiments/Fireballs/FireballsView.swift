@@ -1,31 +1,59 @@
 import SwiftUI
 
+/// Two swipeable 2×3 grids. Each cell is its own Metal fragment shader.
 struct FireballsView: View {
     var style: Float
     var styleName: String
 
     @StateObject private var simulation = FireballsSimulation()
 
+    private static let gridA = [
+        "fireShadeCandle",
+        "fireShadeSpine",
+        "fireShadeColumn",
+        "fireShadeBowl",
+        "fireShadeBlade",
+        "fireShadeOrb"
+    ]
+
+    private static let gridB = [
+        "fireShadeVolume",
+        "fireShadeCurl",
+        "fireShadePolar",
+        "fireShadeForge",
+        "fireShadeWick",
+        "fireShadeBloom"
+    ]
+
     var body: some View {
         let firepower = simulation.firepower
-        var uniforms = FireUniforms()
-        uniforms.intensity = Float(firepower)
-        uniforms.style = style
+        let names = style < 0.5 ? Self.gridA : Self.gridB
 
         return ZStack {
-            FireMetalView(fragmentName: "fireballsFragment", uniforms: uniforms)
-                .gesture(
-                    DragGesture(minimumDistance: 48)
-                        .onEnded { value in
-                            let dx = value.translation.width
-                            let dy = value.translation.height
-                            guard abs(dx) > abs(dy), abs(dx) > 56 else { return }
-                            RoomPaging.request(forward: dx < 0)
+            VStack(spacing: 0) {
+                ForEach(0..<3, id: \.self) { row in
+                    HStack(spacing: 0) {
+                        ForEach(0..<2, id: \.self) { col in
+                            cell(names[row * 2 + col], firepower: firepower)
                         }
-                )
-                .accessibilityLabel("Fire")
-                .accessibilityValue(firepowerLabel(firepower))
-                .accessibilityHint(styleName)
+                    }
+                }
+            }
+            .padding(.top, 28)
+            .padding(.bottom, 118)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 48)
+                    .onEnded { value in
+                        let dx = value.translation.width
+                        let dy = value.translation.height
+                        guard abs(dx) > abs(dy), abs(dx) > 56 else { return }
+                        RoomPaging.request(forward: dx < 0)
+                    }
+            )
+            .accessibilityLabel("Fire")
+            .accessibilityValue(firepowerLabel(firepower))
+            .accessibilityHint(styleName)
 
             VStack {
                 Spacer()
@@ -36,7 +64,14 @@ struct FireballsView: View {
                     .accessibilityLabel("Firepower")
             }
         }
+        .background(Color(white: Stage.fieldWhite))
         .ignoresSafeArea()
+    }
+
+    private func cell(_ fragmentName: String, firepower: CGFloat) -> some View {
+        var uniforms = FireUniforms()
+        uniforms.intensity = Float(firepower)
+        return FireMetalView(fragmentName: fragmentName, uniforms: uniforms)
     }
 
     private func firepowerLabel(_ value: CGFloat) -> String {
@@ -45,5 +80,5 @@ struct FireballsView: View {
 }
 
 #Preview {
-    FireballsView(style: 0, styleName: "Layered")
+    FireballsView(style: 0, styleName: "Grid A")
 }

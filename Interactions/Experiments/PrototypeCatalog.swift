@@ -14,11 +14,11 @@ enum PrototypeCatalog {
     }
 
     static let fireGridA = PrototypeDescriptor(id: "fire-grid-a") {
-        AnyView(FireballsView(style: 0, styleName: "Layered"))
+        AnyView(FireballsView(style: 0, styleName: "Grid A"))
     }
 
     static let fireGridB = PrototypeDescriptor(id: "fire-grid-b") {
-        AnyView(FireballsView(style: 1, styleName: "Soft"))
+        AnyView(FireballsView(style: 1, styleName: "Grid B"))
     }
 
     static let breathFire = PrototypeDescriptor(id: "breath-fire") {

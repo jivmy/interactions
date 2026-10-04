@@ -21,10 +21,10 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 
 ## Fire
 
-Two screens. Each is a 2×3 grid of **one** flame per cell — no stacked tongues. Bright orange / yellow / white-hot, no black soot. Each cell keeps moving: flicker, rise, and shape change. The slider is firepower for the grid on screen. Swipe or the chevrons move between the two grids only.
+Two screens. Each is a 2×3 grid of **one** flame per cell — no stacked tongues. Each cell is its own Metal fragment shader (silhouette, structure, and motion), not one flame scaled six ways. Bright orange / yellow / white-hot, no black soot. Each cell keeps moving: flicker, rise, and shape change. The slider is firepower for the grid on screen: it changes how that shader burns (volume, turbulence, brightness, reach), not a uniform scale. Swipe or the chevrons move between the two grids only.
 
-- **Layered** — Canvas teardrop family. Top-left is the original `FireballKind.candle` look: dark orange outer, yellow body, white-hot core
-- **Soft** — the same six silhouettes with a continuous volume wash instead of hard layers
+- **Grid A** — candle layers, S-curve spine, parallel column, votive bowl, knife blade, convection orb
+- **Grid B** — warped volume, curl advection, polar cardioid, kiln strata, wick flare, mushroom bloom
 
 ## Breath
 
