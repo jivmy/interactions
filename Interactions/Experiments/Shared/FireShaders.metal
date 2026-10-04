@@ -249,16 +249,16 @@ static float4 canvasCandle(float2 p, float time, float power, float extraLean) {
     return float4(paintLayered(kField, q, h, w, power), 1.0);
 }
 
-/// Soap-film / oil-slick hues. Stays bright — no soot.
+/// Soap-film sheen. Never the body color.
 static float3 iridesce(float phase) {
     float3 c;
-    c.x = 0.62 + 0.38 * cos(phase);
-    c.y = 0.55 + 0.42 * cos(phase + 2.094395);
-    c.z = 0.64 + 0.36 * cos(phase + 4.188790);
-    return saturate(c * 0.82 + 0.22);
+    c.x = 0.55 + 0.45 * cos(phase);
+    c.y = 0.50 + 0.45 * cos(phase + 2.094395);
+    c.z = 0.58 + 0.42 * cos(phase + 4.188790);
+    return saturate(c);
 }
 
-/// One living plume. Five snapped burn states, same 1.5× box. No crossfade.
+/// One living plume. Fire first, then a light sheen. Five snapped burn states.
 static float4 livingFlame(float2 p, float time, float power) {
     int state = int(clamp(floor(saturate(power) * 4.0 + 0.5), 0.0, 4.0));
 
@@ -267,131 +267,119 @@ static float4 livingFlame(float2 p, float time, float power) {
     float w = reach * 0.50;
 
     float rise = 0.70;
-    float turb = 0.06;
-    float carve = 0.22;
-    float fill = 2.0;
-    float flickAmp = 0.08;
-    float flickA = 1.7;
-    float flickB = 1.1;
-    float leanAmp = 0.04;
+    float turb = 0.05;
+    float carve = 0.10;
+    float fill = 2.2;
+    float flickAmp = 0.07;
+    float flickA = 1.6;
+    float flickB = 1.05;
+    float leanAmp = 0.035;
     float leanHz = 0.70;
-    float advX = 4.2;
-    float advY = 2.4;
-    float nScale = 5.4;
-    float filX = 11.0;
-    float filY = 3.0;
-    float phaseMul = 7.2;
-    float phaseHz = 1.1;
-    float goldAmt = 0.42;
+    float advX = 3.6;
+    float advY = 2.2;
+    float nScale = 4.2;
+    float filX = 8.0;
+    float filY = 2.6;
+    float phaseHz = 0.70;
+    float sheenAmt = 0.10;
+    float warpUp = 0.55;
     float haloAmt = 0.10;
-    float warpUp = 0.70;
-    float tempFall = 0.35;
 
     if (state == 0) {
-        rise = 0.48;
-        turb = 0.035;
-        carve = 0.12;
-        fill = 1.65;
+        rise = 0.50;
+        turb = 0.032;
+        carve = 0.06;
+        fill = 2.05;
         flickAmp = 0.05;
-        flickA = 1.15;
-        flickB = 0.82;
+        flickA = 1.20;
+        flickB = 0.85;
         leanAmp = 0.022;
-        leanHz = 0.48;
-        advX = 2.8;
-        advY = 1.7;
-        nScale = 3.6;
-        filX = 6.2;
-        filY = 1.8;
-        phaseMul = 4.6;
-        phaseHz = 0.42;
-        goldAmt = 0.55;
-        haloAmt = 0.06;
-        warpUp = 0.35;
-        tempFall = 0.22;
+        leanHz = 0.50;
+        advX = 2.9;
+        advY = 1.8;
+        nScale = 3.4;
+        filX = 6.0;
+        filY = 2.0;
+        phaseHz = 0.40;
+        sheenAmt = 0.07;
+        warpUp = 0.30;
+        haloAmt = 0.07;
     } else if (state == 1) {
-        rise = 0.78;
-        turb = 0.07;
-        carve = 0.22;
-        fill = 1.95;
-        flickAmp = 0.08;
-        flickA = 1.55;
-        flickB = 2.05;
-        leanAmp = 0.055;
-        leanHz = 0.92;
-        advX = 5.1;
-        advY = 2.0;
-        nScale = 6.4;
-        filX = 9.0;
-        filY = 2.6;
-        phaseMul = 6.4;
-        phaseHz = 0.95;
-        goldAmt = 0.38;
-        haloAmt = 0.09;
-        warpUp = 0.55;
-        tempFall = 0.30;
-    } else if (state == 2) {
-        rise = 1.15;
-        turb = 0.09;
-        carve = 0.30;
-        fill = 2.25;
-        flickAmp = 0.10;
-        flickA = 2.15;
-        flickB = 1.35;
-        leanAmp = 0.04;
-        leanHz = 0.70;
-        advX = 4.0;
-        advY = 3.2;
-        nScale = 8.2;
-        filX = 13.5;
-        filY = 3.8;
-        phaseMul = 8.8;
-        phaseHz = 1.45;
-        goldAmt = 0.28;
-        haloAmt = 0.11;
-        warpUp = 0.80;
-        tempFall = 0.38;
-    } else if (state == 3) {
-        rise = 0.62;
-        turb = 0.13;
-        carve = 0.26;
-        fill = 2.10;
+        rise = 0.72;
+        turb = 0.048;
+        carve = 0.09;
+        fill = 2.15;
         flickAmp = 0.07;
-        flickA = 0.95;
-        flickB = 2.40;
-        leanAmp = 0.07;
-        leanHz = 1.25;
-        advX = 7.4;
-        advY = 1.4;
-        nScale = 5.0;
-        filX = 8.5;
-        filY = 4.6;
-        phaseMul = 9.6;
-        phaseHz = 1.80;
-        goldAmt = 0.22;
-        haloAmt = 0.12;
-        warpUp = 0.25;
-        tempFall = 0.28;
-    } else {
-        rise = 1.40;
-        turb = 0.15;
-        carve = 0.36;
-        fill = 2.55;
-        flickAmp = 0.11;
-        flickA = 1.90;
-        flickB = 1.20;
-        leanAmp = 0.06;
-        leanHz = 0.84;
-        advX = 4.8;
-        advY = 2.6;
-        nScale = 9.0;
-        filX = 14.0;
+        flickA = 1.55;
+        flickB = 1.15;
+        leanAmp = 0.045;
+        leanHz = 0.78;
+        advX = 3.8;
+        advY = 2.1;
+        nScale = 4.2;
+        filX = 7.6;
         filY = 2.4;
-        phaseMul = 7.0;
-        phaseHz = 2.10;
-        goldAmt = 0.34;
-        haloAmt = 0.15;
-        warpUp = 0.95;
-        tempFall = 0.40;
+        phaseHz = 0.65;
+        sheenAmt = 0.10;
+        warpUp = 0.50;
+        haloAmt = 0.09;
+    } else if (state == 2) {
+        rise = 0.95;
+        turb = 0.060;
+        carve = 0.12;
+        fill = 2.25;
+        flickAmp = 0.08;
+        flickA = 1.85;
+        flickB = 1.25;
+        leanAmp = 0.035;
+        leanHz = 0.66;
+        advX = 3.4;
+        advY = 2.7;
+        nScale = 5.0;
+        filX = 9.2;
+        filY = 3.1;
+        phaseHz = 0.90;
+        sheenAmt = 0.12;
+        warpUp = 0.70;
+        haloAmt = 0.11;
+    } else if (state == 3) {
+        rise = 0.68;
+        turb = 0.075;
+        carve = 0.10;
+        fill = 2.20;
+        flickAmp = 0.06;
+        flickA = 1.10;
+        flickB = 1.75;
+        leanAmp = 0.060;
+        leanHz = 0.95;
+        advX = 5.2;
+        advY = 1.7;
+        nScale = 4.0;
+        filX = 7.2;
+        filY = 3.4;
+        phaseHz = 0.80;
+        sheenAmt = 0.11;
+        warpUp = 0.28;
+        haloAmt = 0.10;
+    } else {
+        rise = 1.10;
+        turb = 0.085;
+        carve = 0.14;
+        fill = 2.35;
+        flickAmp = 0.09;
+        flickA = 1.70;
+        flickB = 1.12;
+        leanAmp = 0.048;
+        leanHz = 0.74;
+        advX = 4.0;
+        advY = 2.4;
+        nScale = 5.4;
+        filX = 10.0;
+        filY = 2.5;
+        phaseHz = 1.15;
+        sheenAmt = 0.14;
+        warpUp = 0.80;
+        haloAmt = 0.13;
     }
 
     float flick = (1.0 - flickAmp) + flickAmp * sin(time * flickA) * sin(time * flickB + 0.4);
@@ -403,40 +391,40 @@ static float4 livingFlame(float2 p, float time, float power) {
     float ty = saturate(q.y / max(h, 1e-4));
     float2 adv = float2(q.x * advX, q.y * advY - time * rise);
     float n0 = fbm(adv);
-    q.x += (n0 - 0.5) * turb * (0.55 + warpUp * ty);
-    q.y += (fbm(adv * 1.9 + float2(2.2, -time * 0.55)) - 0.5) * turb * 0.28 * ty;
+    q.x += (n0 - 0.5) * turb * (0.45 + warpUp * ty);
+    q.y += (fbm(adv * 1.9 + float2(2.2, -time * 0.55)) - 0.5) * turb * 0.22 * ty;
 
     float t = saturate(q.y / max(h, 1e-4));
-    float width = w * mix(1.04, 0.82, t);
+    float width = w * mix(1.06, 0.58, pow(t, 0.75));
     float nx = q.x / max(width, 1e-4);
     float env = exp(-nx * nx * 1.85);
     env *= smoothstep(-0.018, 0.045, q.y);
-    env *= 1.0 - smoothstep(0.78, 1.08, t);
+    env *= 1.0 - smoothstep(0.60, 1.06, t);
 
     float nA = fbm(float2(q.x * nScale, q.y * (nScale * 0.52) - time * rise));
-    float nB = fbm3(float2(q.x * (nScale * 1.9), q.y * (nScale * 0.78) - time * rise * 1.35));
-    float raw = env - nA * carve - nB * carve * 0.36;
+    float nB = fbm3(float2(q.x * (nScale * 1.7), q.y * (nScale * 0.70) - time * rise * 1.25));
+    float raw = env - nA * carve - nB * carve * 0.28;
     float dens = saturate(raw * fill * flick);
 
-    float fil = fbm(float2(q.x * filX, q.y * filY - time * rise * 1.55));
-    float temp = saturate((1.0 - abs(nx) * 0.42) * (1.06 - t * tempFall));
-    temp *= 0.55 + 0.50 * fil;
-    float core = exp(-(q.x * q.x) / max(w * w * 0.55, 1e-5) - pow(q.y - h * 0.28, 2.0) / max(h * h * 0.10, 1e-5));
-    temp = max(temp, core * (0.55 + 0.10 * float(state)));
+    float fil = fbm(float2(q.x * filX, q.y * filY - time * rise * 1.45));
+    float temp = saturate((1.0 - abs(nx) * 0.48) * (1.10 - t * 0.55));
+    temp *= 0.70 + 0.30 * fil;
+    float core = exp(-(q.x * q.x) / max(w * w * 0.50, 1e-5) - pow(q.y - h * 0.22, 2.0) / max(h * h * 0.08, 1e-5));
+    temp = max(temp, core * 0.85);
     temp *= dens;
 
-    float thick = nA * 1.35 + nB * 0.85 + fil * 1.15 + t * 1.8;
-    float phase = thick * phaseMul + time * phaseHz + float(state) * 1.3;
-    float3 slick = iridesce(phase);
-    float3 gold = float3(1.00, 0.84, 0.32);
-    float3 fire = mix(slick, gold, smoothstep(0.40, 0.92, temp) * goldAmt);
-    fire = mix(fire, iridesce(phase + 1.7 + fil * 2.4), 0.28 + 0.22 * fil);
+    float3 fire = mix(float3(1.00, 0.36, 0.03), float3(1.00, 0.78, 0.12), smoothstep(0.12, 0.50, temp));
+    fire = mix(fire, float3(1.00, 0.97, 0.80), smoothstep(0.50, 0.92, temp));
+
+    float phase = nA * 5.0 + fil * 3.2 + t * 2.4 + time * phaseHz + float(state) * 0.8;
+    float sheen = sheenAmt * dens * (1.0 - temp * 0.65);
+    fire = mix(fire, iridesce(phase), saturate(sheen));
 
     float halo = exp(-(p.x * p.x) / max(w * w * 4.2, 1e-5) - (p.y * p.y) / max(h * h * 0.55, 1e-5));
     halo *= haloAmt;
 
     float3 col = kField;
-    col = mix(col, slick * float3(1.00, 0.92, 0.88), saturate(halo));
+    col = mix(col, float3(1.00, 0.44, 0.06), saturate(halo));
     col = mix(col, fire, dens);
     return float4(col, 1.0);
 }
