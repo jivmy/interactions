@@ -6,18 +6,18 @@ One idea at a time. The app opens into the active prototype — full screen, alm
 - Bundle ID: `com.jimmy.interactions`
 - Language / UI: Swift 6 + SwiftUI
 - Minimum iOS: 17.0
-- iPhone orientation: **portrait** (tilt should move the physics, not rotate the chrome)
+- iPhone orientation: **portrait**
 
-Right now the only real room is **Hanging chain**: a metal Verlet rope that hangs from a pin and answers CoreMotion gravity. On Simulator, drag a link. Switching, when there is more than one room, is only quiet left/right chevrons.
+Right now the only room is **Candle**: one Metal flame on the field. A quiet slider at the bottom makes that same candle more or less powerful. It does not snap between looks. If Metal is missing, the field stays empty.
 
-Reduce Motion is honored on chrome (the page spring), not on physics.
+Reduce Motion is honored on chrome (the page spring), not on the flame. The flame keeps moving.
 
-## Hanging chain
+## Candle
 
-A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gravity is filtered and stepped in substeps so the links stay taut. Catching a link ticks once; there is no decorative haptic spray.
+A photographed candle tongue — bright white-yellow core, thin orange rim, soft glow — centered and shorter than the first upload. Power retunes the core, rim, and body separately; it does not scale one picture, and the ambient wash stays put.
 
-- **Device:** tilt or flick the phone
-- **Simulator:** drag a link — there is no motion hardware
+- **Device / Simulator:** drag the power slider
+- No microphone. No motion permission. No other rooms.
 
 ## Requirements
 
@@ -41,7 +41,7 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 1. In the Xcode toolbar, click the destination control (to the right of the Run ▶ button).
 2. Under **iOS Simulator**, pick an iPhone (any iOS 17+ simulator is fine).
 3. Press **Run** (▶) or **Command-R**.
-4. The chain hangs under default gravity. Drag a link. Chevrons stay quiet until another room exists.
+4. The candle sits on the field and keeps moving. Drag the slider. Chevrons stay quiet until another room exists.
 
 If no simulators are listed: **Xcode → Settings → Platforms** (or **Components**) and download an iOS simulator runtime.
 
@@ -119,7 +119,7 @@ Full walkthrough (create the ASC app, API key, secrets, run the workflow, instal
 1. **Actions → TestFlight → Run workflow** (optional: push a `v*` tag).
 2. Marketing version is **1.0**. The build number is `github.run_number`.
 3. When App Store Connect finishes processing, add the build to an Internal Testing group and install from the **TestFlight** iOS app.
-4. On device the app should open on the chain. Tilt — it should hang with gravity.
+4. On device the app should open on the candle. The flame should already be moving. Drag the slider — same candle, more or less power.
 
 ## Switching
 
@@ -132,11 +132,10 @@ Interactions.xcodeproj
 Interactions/
   InteractionsApp.swift
   ContentView.swift              Full-screen host + chevrons
-  Info.plist                     Motion usage
+  Info.plist
   Experiments/
-    PrototypeCatalog.swift       Ordered rooms (chain only)
-    HangingChain/
-    Shared/                      Motion, Verlet, display cadence
+    PrototypeCatalog.swift       Ordered rooms (candle only)
+    Candle/                      Metal candle + power slider
   Assets.xcassets
 fastlane/
 .github/workflows/testflight.yml

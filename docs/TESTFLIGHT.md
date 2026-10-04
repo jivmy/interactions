@@ -153,7 +153,7 @@ On the iPhone:
 1. Install **TestFlight** from the App Store.
 2. Accept the tester invite email / redeem code, or open TestFlight while signed into the same Apple ID.
 3. Install **Interactions**.
-4. The app opens on the **hanging chain**. Tilt the phone — the chain should swing with gravity. Simulator has no CoreMotion hardware — drag a link instead.
+4. The app opens on the **candle**. The flame should already be moving. Drag the power slider — same candle, more or less power.
 
 External testers need Beta App Review the first time, plus compliance details. The app sets `ITSAppUsesNonExemptEncryption = NO` so export-compliance questions do not block processing.
 
@@ -168,7 +168,7 @@ External testers need Beta App Review the first time, plus compliance details. T
 | Signing | Archive unsigned; export automatic App Store (cloud-managed Distribution) |
 | Team | `DEVELOPMENT_TEAM` secret (CI only; not committed) |
 
-CI injects the team id and build number through `xcodebuild` / Fastlane and does not commit those edits. The hanging chain experiment is in git; it does not change signing.
+CI injects the team id and build number through `xcodebuild` / Fastlane and does not commit those edits. The candle experiment is in git; it does not change signing.
 
 ## Local Fastlane (optional)
 
