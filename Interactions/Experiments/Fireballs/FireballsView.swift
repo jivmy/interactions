@@ -17,7 +17,7 @@ struct FireballsView: View {
 
             VStack {
                 Spacer()
-                Slider(value: $simulation.firepower, in: 0...1)
+                Slider(value: $simulation.firepower, in: 0...1, step: 0.25)
                     .tint(Color(red: 0.20, green: 0.14, blue: 0.10).opacity(0.55))
                     .padding(.horizontal, 62)
                     .padding(.bottom, 54)
@@ -28,7 +28,7 @@ struct FireballsView: View {
     }
 
     private func firepowerLabel(_ value: CGFloat) -> String {
-        "\(Int((value * 100).rounded())) percent"
+        "State \(Int((value * 4.0).rounded()) + 1) of 5"
     }
 }
 

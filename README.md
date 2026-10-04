@@ -21,7 +21,7 @@ A Jakobsen-style rope, 60/120 fps (`CADisplayLink`; 60 in Low Power). Device gra
 
 ## Fire
 
-One screen, one flame. A Metal density plume — bright hot base, yellow-white body, orange outer, soft irregular edges, continuous rise and flicker. Not a stacked teardrop icon. Bright, no black soot. The slider is firepower: volume, turbulence, brightness, and reach of that flame.
+One screen, one flame. A Metal density plume about 1.5× as tall as it is wide, with iridescent oil-film color (blue, green, magenta, gold) moving through it. Soft irregular edges, continuous rise and flicker. Not a stacked teardrop icon. No black soot. The slider snaps among five burn states — structure and motion change, the box does not.
 
 ## Breath
 
